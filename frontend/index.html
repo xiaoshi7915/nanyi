@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>南意秋棠 - 汉文化布料设计</title>
+    
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- 引入图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 引入样式文件 -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="static/css/responsive.css">
+    
+    <!-- 引入API客户端 -->
+    <script src="js/api.js"></script>
+    <script src="js/components.js"></script>
+    <script src="static/js/main.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-leaf"></i>
+                        <span>南意秋棠</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 英雄区 -->
+        <section class="hero-section">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-image" v-if="heroImageExists">
+                        <img src="static/images/hero-banner.jpg" alt="南意秋棠" @error="heroImageExists = false">
+                    </div>
+                    <div v-else class="hero-placeholder">
+                        <h2>传承经典 创新未来</h2>
+                        <p>汉文化布料设计的艺术之美</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 搜索和筛选区 -->
+        <section class="filter-section">
+            <div class="container">
+                <!-- 搜索栏 -->
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input 
+                        v-model="searchQuery" 
+                        type="text" 
+                        placeholder="搜索品牌名称..."
+                        class="search-input"
+                        @input="filterBrands"
+                    >
+                </div>
+
+                <!-- 清除筛选按钮 -->
+                <div class="filter-header" v-if="hasActiveFilters">
+                    <button @click="clearAllFilters" class="clear-filters-btn">
+                        <i class="fas fa-times-circle"></i>
+                        清除所有筛选
+                    </button>
+                </div>
+
+                <!-- 筛选标签 -->
+                <div class="filter-sections">
+                    <!-- 按年份 -->
+                    <div class="filter-group">
+                        <div class="filter-title">按年份</div>
+                        <div class="filter-tags-container">
+                            <button 
+                                v-for="year in filterOptions.years" 
+                                :key="'year-' + year"
+                                @click="toggleFilter('year', year)"
+                                :class="['filter-tag', { active: activeFilters.year === year }]"
+                            >
+                                {{ year }}
+                                <span v-if="brandCounts.years && brandCounts.years[year]" class="count">
+                                    ({{ brandCounts.years[year] }})
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 按材质 -->
+                    <div class="filter-group">
+                        <div class="filter-title">按材质</div>
+                        <div class="filter-tags-container">
+                            <button 
+                                v-for="material in filterOptions.materials" 
+                                :key="'material-' + material"
+                                @click="toggleFilter('materials', material)"
+                                :class="['filter-tag', { 
+                                    active: (Array.isArray(activeFilters.materials) && activeFilters.materials.includes(material)) || 
+                                           activeFilters.materials === material 
+                                }]"
+                            >
+                                {{ material }}
+                                <span v-if="brandCounts.materials && brandCounts.materials[material]" class="count">
+                                    ({{ brandCounts.materials[material] }})
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 按主题系列 -->
+                    <div class="filter-group">
+                        <div class="filter-title">按主题系列</div>
+                        <div class="filter-tags-container">
+                            <button 
+                                v-for="series in filterOptions.theme_series" 
+                                :key="'series-' + series"
+                                @click="toggleFilter('theme_series', series)"
+                                :class="['filter-tag', { 
+                                    active: (Array.isArray(activeFilters.theme_series) && activeFilters.theme_series.includes(series)) || 
+                                           activeFilters.theme_series === series 
+                                }]"
+                            >
+                                {{ series }}
+                                <span v-if="brandCounts.theme_series && brandCounts.theme_series[series]" class="count">
+                                    ({{ brandCounts.theme_series[series] }})
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 按印制尺寸 -->
+                    <div class="filter-group">
+                        <div class="filter-title">按印制尺寸</div>
+                        <div class="filter-tags-container">
+                            <button 
+                                v-for="size in filterOptions.print_sizes" 
+                                :key="'size-' + size"
+                                @click="toggleFilter('print_sizes', size)"
+                                :class="['filter-tag', { 
+                                    active: (Array.isArray(activeFilters.print_sizes) && activeFilters.print_sizes.includes(size)) || 
+                                           activeFilters.print_sizes === size 
+                                }]"
+                            >
+                                {{ size }}
+                                <span v-if="brandCounts.print_sizes && brandCounts.print_sizes[size]" class="count">
+                                    ({{ brandCounts.print_sizes[size] }})
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 主要内容 -->
+        <main class="main-content">
+            <div class="container">
+                <!-- 加载状态 -->
+                <div v-if="loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>加载中...</p>
+                </div>
+
+                <!-- 错误状态 -->
+                <div v-else-if="error" class="error-state">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>加载失败</h3>
+                    <p>{{ error }}</p>
+                    <button @click="loadData" class="retry-btn">重试</button>
+                </div>
+
+                <!-- 品牌网格 -->
+                <div v-else-if="filteredBrands.length > 0" class="brands-grid">
+                    <div 
+                        v-for="brand in filteredBrands" 
+                        :key="brand.name"
+                        class="brand-card"
+                        @click="openBrandDetail(brand)"
+                    >
+                        <div class="brand-image-container">
+                            <img 
+                                :src="getBrandCoverImage(brand)" 
+                                :alt="brand.name"
+                                class="brand-image"
+                                loading="lazy"
+                                @error="handleImageError"
+                            >
+                        </div>
+                        <div class="brand-info">
+                            <h3 class="brand-name">{{ brand.name }}</h3>
+                            <div class="brand-meta">
+                                <span v-if="brand.year && brand.year !== 'N/A' && brand.year !== ''" class="meta-tag">{{ brand.year }}年</span>
+                                <span v-if="brand.material && brand.material !== 'N/A' && brand.material !== ''" class="meta-tag">{{ brand.material }}</span>
+                                <span v-if="brand.theme_series && brand.theme_series !== 'N/A' && brand.theme_series !== ''" class="meta-tag">{{ brand.theme_series }}</span>
+                                <span v-if="brand.print_size && brand.print_size !== 'N/A' && brand.print_size !== ''" class="meta-tag">{{ brand.print_size }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 空状态 -->
+                <div v-else class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h3>没有找到匹配的品牌</h3>
+                    <p>尝试调整搜索条件或筛选选项</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- 品牌详情模态框 -->
+        <div v-if="selectedBrand" :class="['modal-overlay', { active: showModal }]" @click="closeModal">
+            <div class="modal-content" @click.stop>
+                <div class="modal-header">
+                    <h2 class="modal-title">{{ selectedBrand.name || selectedBrand.brand_name }}</h2>
+                    <button @click="closeModal" class="close-btn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- 基本信息 -->
+                    <div class="detail-section">
+                        <h3 class="section-title">基本信息</h3>
+                        <div class="detail-tags">
+                            <span v-if="selectedBrand.year && selectedBrand.year !== 'N/A' && selectedBrand.year !== ''" class="detail-tag">{{ selectedBrand.year }}年发布</span>
+                            <span v-if="selectedBrand.material && selectedBrand.material !== 'N/A' && selectedBrand.material !== ''" class="detail-tag">{{ selectedBrand.material }}</span>
+                            <span v-if="selectedBrand.theme_series && selectedBrand.theme_series !== 'N/A' && selectedBrand.theme_series !== ''" class="detail-tag">{{ selectedBrand.theme_series }}</span>
+                            <span v-if="selectedBrand.print_size && selectedBrand.print_size !== 'N/A' && selectedBrand.print_size !== ''" class="detail-tag">{{ selectedBrand.print_size }}</span>
+                        </div>
+                    </div>
+
+                    <!-- 设计灵感 -->
+                    <div v-if="selectedBrand.inspiration_origin" class="detail-section">
+                        <h3 class="section-title">设计灵感</h3>
+                        <div class="inspiration-text">{{ selectedBrand.inspiration_origin }}</div>
+                    </div>
+
+                    <!-- 设计图片 -->
+                    <div class="detail-section">
+                        <h3 class="section-title">设计图片</h3>
+                        <div class="image-gallery">
+                            <div 
+                                v-for="image in getDesignImages()" 
+                                :key="image.filename"
+                                class="gallery-item"
+                                @click="openImagePreview(image)"
+                            >
+                                <img 
+                                    :src="getImageURL(image)" 
+                                    :alt="image.filename"
+                                    class="gallery-image"
+                                    @error="handleImageError"
+                                >
+                                <div class="image-type-badge">{{ image.image_type }}</div>
+                                <div class="image-actions">
+                                    <button @click.stop="downloadImage(image)" class="action-btn download-btn">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button @click.stop="openImagePreview(image)" class="action-btn zoom-btn">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 布料图片 -->
+                    <div class="detail-section">
+                        <h3 class="section-title">布料图片</h3>
+                        <div class="image-gallery">
+                            <div 
+                                v-for="image in getFabricImages()" 
+                                :key="image.filename"
+                                class="gallery-item"
+                                @click="openImagePreview(image)"
+                            >
+                                <img 
+                                    :src="getImageURL(image)" 
+                                    :alt="image.filename"
+                                    class="gallery-image"
+                                    @error="handleImageError"
+                                >
+                                <div class="image-type-badge">{{ image.image_type }}</div>
+                                <div class="image-actions">
+                                    <button @click.stop="downloadImage(image)" class="action-btn download-btn">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <button @click.stop="openImagePreview(image)" class="action-btn zoom-btn">
+                                        <i class="fas fa-search-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 分享按钮 -->
+                    <div class="share-actions">
+                        <button @click="shareCard" class="share-btn">
+                            <i class="fas fa-share-alt"></i>
+                            分享卡片
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图片预览模态框 -->
+        <div v-if="previewImage" class="image-preview-overlay" @click="closeImagePreview">
+            <div class="image-preview-content" @click.stop>
+                <button @click="closeImagePreview" class="preview-close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <img 
+                    :src="getImageURL(previewImage)" 
+                    :alt="previewImage.filename"
+                    class="preview-image"
+                    @error="handleImageError"
+                >
+                <div class="preview-actions">
+                    <button @click="downloadImage(previewImage)" class="preview-action-btn">
+                        <i class="fas fa-download"></i>
+                        下载图片
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    loading: true,
+                    error: null,
+                    searchQuery: '',
+                    heroImageExists: true,
+                    activeFilters: {
+                        year: null,
+                        material: null,
+                        theme_series: null,
+                        print_size: null
+                    },
+                    filterOptions: {
+                        years: [],
+                        materials: [],
+                        theme_series: [],
+                        print_sizes: []
+                    },
+                    brandCounts: {},
+                    allImages: [],
+                    brandData: {},
+                    filteredBrands: [],
+                    selectedBrand: null,
+                    brandImages: [],
+                    showModal: false,
+                    previewImage: null
+                };
+            },
+            
+            async mounted() {
+                console.log('Vue应用已挂载，开始加载数据...');
+                await this.loadData();
+            },
+
+            computed: {
+                hasActiveFilters() {
+                    return Object.values(this.activeFilters).some(value => 
+                        value !== null && value !== undefined && 
+                        (Array.isArray(value) ? value.length > 0 : true)
+                    );
+                }
+            },
+
+            watch: {
+                searchQuery() {
+                    this.filterBrands();
+                }
+            },
+
+            methods: {
+                async loadData() {
+                    this.loading = true;
+                    this.error = null;
+                    
+                    try {
+                        console.log('开始加载数据...');
+                        
+                        // 并行加载数据
+                        const [filtersResponse, imagesResponse] = await Promise.all([
+                            api.getFilters(),
+                            api.getImages()
+                        ]);
+
+                        console.log('筛选选项响应:', filtersResponse);
+                        console.log('图片数据响应:', imagesResponse);
+
+                        if (filtersResponse.success) {
+                            this.filterOptions = filtersResponse.filters;
+                            this.brandCounts = filtersResponse.brand_counts || {};
+                        }
+
+                        if (imagesResponse.success) {
+                            this.allImages = imagesResponse.images;
+                            
+                            // 如果后端返回了brands数据，直接使用
+                            if (imagesResponse.brands) {
+                                this.brandData = {};
+                                imagesResponse.brands.forEach(brand => {
+                                    this.brandData[brand.name] = brand;
+                                });
+                                this.filteredBrands = imagesResponse.brands;
+                            } else {
+                                this.processBrandData();
+                            }
+                        } else {
+                            throw new Error(imagesResponse.error || '获取图片数据失败');
+                        }
+
+                        console.log('数据加载完成');
+
+                    } catch (error) {
+                        console.error('加载数据失败:', error);
+                        this.error = error.message || '网络连接失败，请检查网络连接';
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                processBrandData() {
+                    const brands = {};
+                    
+                    this.allImages.forEach(image => {
+                        const brandName = image.brand_name;
+                        
+                        // 过滤掉不需要的项目
+                        if (brandName === 'hero-banner' || brandName.includes('placeholder')) {
+                            return;
+                        }
+                        
+                        if (!brands[brandName]) {
+                            brands[brandName] = {
+                                name: brandName,
+                                images: [],
+                                year: image.year || null,
+                                material: image.material || null,
+                                theme_series: image.theme_series || null,
+                                print_size: image.print_size || null,
+                                inspiration_origin: image.inspiration_origin || `${brandName}的设计灵感来源于传统文化与现代美学的融合。`
+                            };
+                        }
+                        brands[brandName].images.push(image);
+                    });
+
+                    this.brandData = brands;
+                    this.filteredBrands = Object.values(brands);
+                },
+
+                filterBrands() {
+                    let filtered = Object.values(this.brandData);
+
+                    // 过滤掉不应该显示的项目
+                    filtered = filtered.filter(brand => 
+                        brand.name !== 'hero-banner' && 
+                        !brand.name.includes('placeholder')
+                    );
+
+                    // 搜索过滤 - 支持多字段搜索
+                    if (this.searchQuery.trim()) {
+                        const query = this.searchQuery.toLowerCase();
+                        filtered = filtered.filter(brand => 
+                            brand.name.toLowerCase().includes(query) ||
+                            (brand.material && brand.material.toLowerCase().includes(query)) ||
+                            (brand.theme_series && brand.theme_series.toLowerCase().includes(query)) ||
+                            (brand.print_size && brand.print_size.toLowerCase().includes(query)) ||
+                            (brand.year && brand.year.toString().includes(query))
+                        );
+                    }
+
+                    // 筛选过滤
+                    Object.keys(this.activeFilters).forEach(key => {
+                        const value = this.activeFilters[key];
+                        if (value) {
+                            // 映射前端字段名到数据字段名
+                            const fieldMap = {
+                                'materials': 'material',
+                                'print_sizes': 'print_size'
+                            };
+                            const fieldName = fieldMap[key] || key;
+                            
+                            if (Array.isArray(value)) {
+                                // 多选模式：品牌必须匹配任一选中的值
+                                filtered = filtered.filter(brand => 
+                                    value.includes(brand[fieldName])
+                                );
+                            } else {
+                                // 单选模式：品牌必须匹配选中的值
+                                filtered = filtered.filter(brand => brand[fieldName] === value);
+                            }
+                        }
+                    });
+
+                    this.filteredBrands = filtered;
+                },
+
+                toggleFilter(type, value) {
+                    // 支持多选的筛选类型
+                    const multiSelectTypes = ['materials', 'theme_series', 'print_sizes'];
+                    
+                    if (multiSelectTypes.includes(type)) {
+                        // 多选模式：可以同时选择多个值
+                        if (!this.activeFilters[type]) {
+                            this.activeFilters[type] = [];
+                        }
+                        
+                        const index = this.activeFilters[type].indexOf(value);
+                        if (index > -1) {
+                            this.activeFilters[type].splice(index, 1);
+                            if (this.activeFilters[type].length === 0) {
+                                this.activeFilters[type] = null;
+                            }
+                        } else {
+                            this.activeFilters[type].push(value);
+                        }
+                    } else {
+                        // 单选模式：年份只能选择一个
+                        if (this.activeFilters[type] === value) {
+                            this.activeFilters[type] = null;
+                        } else {
+                            this.activeFilters[type] = value;
+                        }
+                    }
+                    
+                    this.filterBrands();
+                },
+
+                clearAllFilters() {
+                    this.activeFilters = {
+                        year: null,
+                        materials: null,
+                        theme_series: null,
+                        print_sizes: null
+                    };
+                    this.filterBrands();
+                },
+
+                getBrandCoverImage(brand) {
+                    // 只显示设计图
+                    const designImage = brand.images.find(img => img.image_type === '设计图');
+                    if (designImage) {
+                        // 使用前端静态文件路径，正确编码中文字符
+                        const encodedPath = designImage.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
+                        return `/static/images/${encodedPath}`;
+                    }
+                    return '/static/images/placeholder.svg';
+                },
+
+                async openBrandDetail(brand) {
+                    try {
+                        // 尝试从API获取详细信息
+                        const response = await api.getBrandDetail(brand.name);
+                        if (response.success) {
+                            this.selectedBrand = response.brand_info;
+                            this.brandImages = response.images;
+                        } else {
+                            // 使用本地数据
+                            this.selectedBrand = brand;
+                            this.brandImages = brand.images;
+                        }
+                    } catch (error) {
+                        console.warn('获取品牌详情失败，使用本地数据:', error);
+                        this.selectedBrand = brand;
+                        this.brandImages = brand.images;
+                    }
+                    
+                    this.showModal = true;
+                    document.body.style.overflow = 'hidden';
+                },
+
+                closeModal() {
+                    this.showModal = false;
+                    document.body.style.overflow = 'auto';
+                    setTimeout(() => {
+                        this.selectedBrand = null;
+                        this.brandImages = [];
+                    }, 300);
+                },
+
+                getDesignImages() {
+                    return this.brandImages.filter(img => img.image_type === '设计图');
+                },
+
+                getFabricImages() {
+                    return this.brandImages.filter(img => img.image_type === '布料图');
+                },
+
+                getImageURL(image) {
+                    // 使用前端静态文件路径，正确编码中文字符
+                    const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
+                    return `/static/images/${encodedPath}`;
+                },
+
+                shareCard() {
+                    try {
+                        const brandName = this.selectedBrand.name || this.selectedBrand.brand_name || '未知品牌';
+                        const shareData = {
+                            title: `南意秋棠 - ${brandName}`,
+                            text: `查看这个漂亮的汉文化布料设计：${brandName}`,
+                            url: window.location.href
+                        };
+
+                        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+                            navigator.share(shareData).catch(err => {
+                                console.log('分享失败:', err);
+                                this.fallbackShare();
+                            });
+                        } else {
+                            this.fallbackShare();
+                        }
+                    } catch (error) {
+                        console.error('分享错误:', error);
+                        this.fallbackShare();
+                    }
+                },
+
+                fallbackShare() {
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(window.location.href).then(() => {
+                            alert('链接已复制到剪贴板，您可以手动分享');
+                        }).catch(() => {
+                            this.showShareOptions();
+                        });
+                    } else {
+                        this.showShareOptions();
+                    }
+                },
+
+                showShareOptions() {
+                    const brandName = this.selectedBrand.name || this.selectedBrand.brand_name || '未知品牌';
+                    const message = `南意秋棠 - ${brandName}\n${window.location.href}`;
+                    
+                    // 尝试打开微信分享（仅在微信浏览器中有效）
+                    if (/MicroMessenger/i.test(navigator.userAgent)) {
+                        alert('请点击右上角分享按钮分享到微信');
+                    } else {
+                        // 创建一个临时文本区域来复制文本
+                        const textArea = document.createElement('textarea');
+                        textArea.value = message;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        try {
+                            document.execCommand('copy');
+                            alert('分享内容已复制，您可以粘贴到微信或其他平台分享');
+                        } catch (err) {
+                            alert(`请手动复制以下内容分享：\n${message}`);
+                        }
+                        document.body.removeChild(textArea);
+                    }
+                },
+
+                handleImageError(event) {
+                    event.target.src = '/static/images/placeholder.svg';
+                },
+
+                openImagePreview(image) {
+                    this.previewImage = image;
+                    document.body.style.overflow = 'hidden';
+                },
+
+                closeImagePreview() {
+                    this.previewImage = null;
+                    document.body.style.overflow = 'auto';
+                },
+
+                downloadImage(image) {
+                    const link = document.createElement('a');
+                    link.href = this.getImageURL(image);
+                    link.download = image.filename || 'image.jpg';
+                    link.target = '_blank';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html> 
