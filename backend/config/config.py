@@ -37,9 +37,7 @@ class Config:
             'write_timeout': 30,
             'autocommit': False,  # 改为False以支持事务
             'sql_mode': 'TRADITIONAL',
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            # MySQL连接池相关设置
-            'pool_recycle': 7200
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
         }
     }
     
