@@ -6,10 +6,10 @@
     <title>南意秋棠 - 汉文化布料设计</title>
     
     <!-- Vue.js 3 -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="static/lib/vue.global.js"></script>
     
     <!-- 引入图标库 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="static/lib/all.min.css">
     
     <!-- 引入样式文件 -->
     <link rel="stylesheet" href="css/main.css">
@@ -87,14 +87,20 @@
                 <!-- 移动端年份横排筛选 -->
                 <div class="mobile-only mobile-year-filter">
                     <div class="year-tags-horizontal">
-                                                    <button 
-                                v-for="year in filterOptions.years" 
-                                :key="'mobile-year-' + year"
-                                @click="toggleFilter('year', year)"
-                                :class="['year-tag', { active: activeFilters.year === year }]"
-                            >
-                                {{ year }}({{ brandCounts.years[year] || 0 }})
-                            </button>
+                        <button 
+                            @click="clearAllFilters"
+                            :class="['year-tag', { active: !hasAnyActiveFilters() }]"
+                        >
+                            全部
+                        </button>
+                        <button 
+                            v-for="year in filterOptions.years" 
+                            :key="'mobile-year-' + year"
+                            @click="toggleFilter('year', year)"
+                            :class="['year-tag', { active: activeFilters.year === year }]"
+                        >
+                            {{ year }}
+                        </button>
                     </div>
                 </div>
                 
@@ -104,6 +110,12 @@
                     <div class="filter-group">
                         <div class="filter-title">按年份</div>
                         <div class="filter-tags-container">
+                            <button 
+                                @click="clearFilter('year')"
+                                :class="['filter-tag', { active: !activeFilters.year }]"
+                            >
+                                全部({{ Object.values(brandData).length }})
+                            </button>
                             <button 
                                 v-for="year in filterOptions.years" 
                                 :key="'year-' + year"
@@ -115,28 +127,16 @@
                         </div>
                     </div>
 
-                    <!-- 按材质 - 仅电脑端显示 -->
-                    <div class="filter-group desktop-only">
-                        <div class="filter-title">按材质</div>
-                        <div class="filter-tags-container">
-                            <button 
-                                v-for="material in filterOptions.materials" 
-                                :key="'material-' + material"
-                                @click="toggleFilter('materials', material)"
-                                :class="['filter-tag', { 
-                                    active: (Array.isArray(activeFilters.materials) && activeFilters.materials.includes(material)) || 
-                                           activeFilters.materials === material 
-                                }]"
-                            >
-                                {{ material }}({{ brandCounts.materials[material] || 0 }})
-                            </button>
-                        </div>
-                    </div>
-
                     <!-- 按主题系列 - 仅电脑端显示 -->
                     <div class="filter-group desktop-only">
                         <div class="filter-title">按主题系列</div>
                         <div class="filter-tags-container">
+                            <button 
+                                @click="clearFilter('theme_series')"
+                                :class="['filter-tag', { active: !activeFilters.theme_series }]"
+                            >
+                                全部({{ Object.values(brandData).length }})
+                            </button>
                             <button 
                                 v-for="series in filterOptions.theme_series" 
                                 :key="'series-' + series"
@@ -151,10 +151,40 @@
                         </div>
                     </div>
 
+                    <!-- 按材质 - 仅电脑端显示 -->
+                    <div class="filter-group desktop-only">
+                        <div class="filter-title">按材质</div>
+                        <div class="filter-tags-container">
+                            <button 
+                                @click="clearFilter('materials')"
+                                :class="['filter-tag', { active: !activeFilters.materials }]"
+                            >
+                                全部({{ Object.values(brandData).length }})
+                            </button>
+                            <button 
+                                v-for="material in filterOptions.materials" 
+                                :key="'material-' + material"
+                                @click="toggleFilter('materials', material)"
+                                :class="['filter-tag', { 
+                                    active: (Array.isArray(activeFilters.materials) && activeFilters.materials.includes(material)) || 
+                                           activeFilters.materials === material 
+                                }]"
+                            >
+                                {{ material }}({{ brandCounts.materials[material] || 0 }})
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- 按印制尺寸 - 仅电脑端显示 -->
                     <div class="filter-group desktop-only">
                         <div class="filter-title">按印制尺寸</div>
                         <div class="filter-tags-container">
+                            <button 
+                                @click="clearFilter('print_sizes')"
+                                :class="['filter-tag', { active: !activeFilters.print_sizes }]"
+                            >
+                                全部({{ Object.values(brandData).length }})
+                            </button>
                             <button 
                                 v-for="size in filterOptions.print_sizes" 
                                 :key="'size-' + size"
@@ -211,10 +241,18 @@
                         <div class="brand-info">
                             <h3 class="brand-name">{{ brand.name }}</h3>
                             <div class="brand-meta">
-                                <span v-if="brand.year && brand.year !== 'N/A' && brand.year !== ''" class="meta-tag">{{ brand.year }}年</span>
-                                <span v-if="brand.material && brand.material !== 'N/A' && brand.material !== ''" class="meta-tag">{{ brand.material }}</span>
-                                <span v-if="brand.theme_series && brand.theme_series !== 'N/A' && brand.theme_series !== ''" class="meta-tag">{{ brand.theme_series }}</span>
-                                <span v-if="brand.print_size && brand.print_size !== 'N/A' && brand.print_size !== ''" class="meta-tag">{{ brand.print_size }}</span>
+                                <span v-if="brand.year && brand.year !== 'N/A' && brand.year !== ''" 
+                                      class="meta-tag" 
+                                      @click.stop="filterByTag('year', brand.year)">{{ brand.year }}年</span>
+                                <span v-if="brand.theme_series && brand.theme_series !== 'N/A' && brand.theme_series !== ''" 
+                                      class="meta-tag" 
+                                      @click.stop="filterByTag('theme_series', brand.theme_series)">{{ brand.theme_series }}</span>
+                                <span v-if="brand.material && brand.material !== 'N/A' && brand.material !== ''" 
+                                      class="meta-tag" 
+                                      @click.stop="filterByTag('materials', brand.material)">{{ brand.material }}</span>
+                                <span v-if="brand.print_size && brand.print_size !== 'N/A' && brand.print_size !== ''" 
+                                      class="meta-tag" 
+                                      @click.stop="filterByTag('print_sizes', brand.print_size)">{{ brand.print_size }}</span>
                             </div>
                         </div>
                     </div>
@@ -232,7 +270,7 @@
         </main>
 
         <!-- 品牌详情模态框 -->
-        <div v-if="selectedBrand" :class="['modal-overlay', { active: showModal }]" @click="closeModal">
+        <div v-if="selectedBrand && showModal" :class="['modal-overlay', { active: showModal }]" @click="closeModal">
             <div class="modal-content" @click.stop>
                 <div class="modal-header">
                     <h2 class="modal-title">{{ selectedBrand.name || selectedBrand.brand_name }}</h2>
@@ -245,10 +283,18 @@
                     <div class="detail-section">
                         <h3 class="section-title">基本信息</h3>
                         <div class="detail-tags">
-                            <span v-if="selectedBrand.year && selectedBrand.year !== 'N/A' && selectedBrand.year !== ''" class="detail-tag">{{ selectedBrand.year }}年</span>
-                            <span v-if="selectedBrand.material && selectedBrand.material !== 'N/A' && selectedBrand.material !== ''" class="detail-tag">{{ selectedBrand.material }}</span>
-                            <span v-if="selectedBrand.theme_series && selectedBrand.theme_series !== 'N/A' && selectedBrand.theme_series !== ''" class="detail-tag">{{ selectedBrand.theme_series }}</span>
-                            <span v-if="selectedBrand.print_size && selectedBrand.print_size !== 'N/A' && selectedBrand.print_size !== ''" class="detail-tag">{{ selectedBrand.print_size }}</span>
+                            <span v-if="selectedBrand.year && selectedBrand.year !== 'N/A' && selectedBrand.year !== ''" 
+                                  class="detail-tag" 
+                                  @click="filterByTag('year', selectedBrand.year)">{{ selectedBrand.year }}年</span>
+                            <span v-if="selectedBrand.theme_series && selectedBrand.theme_series !== 'N/A' && selectedBrand.theme_series !== ''" 
+                                  class="detail-tag" 
+                                  @click="filterByTag('theme_series', selectedBrand.theme_series)">{{ selectedBrand.theme_series }}</span>
+                            <span v-if="selectedBrand.material && selectedBrand.material !== 'N/A' && selectedBrand.material !== ''" 
+                                  class="detail-tag" 
+                                  @click="filterByTag('materials', selectedBrand.material)">{{ selectedBrand.material }}</span>
+                            <span v-if="selectedBrand.print_size && selectedBrand.print_size !== 'N/A' && selectedBrand.print_size !== ''" 
+                                  class="detail-tag" 
+                                  @click="filterByTag('print_sizes', selectedBrand.print_size)">{{ selectedBrand.print_size }}</span>
                         </div>
                     </div>
 
@@ -315,7 +361,7 @@
     <script>
         const { createApp } = Vue;
 
-        createApp({
+        const app = createApp({
             data() {
                 return {
                     loading: true,
@@ -342,13 +388,33 @@
                     selectedBrand: null,
                     brandImages: [],
                     showModal: false,
-                    previewImage: null
+                    previewImage: null,
+                    
+                    // 确保初始状态正确
+                    dataLoaded: false
                 };
             },
             
             async mounted() {
-                console.log('Vue应用已挂载，开始加载数据...');
-                await this.loadData();
+                try {
+                    console.log('Vue应用已挂载，开始加载数据...');
+                    console.log('当前URL:', window.location.href);
+                    console.log('API Base URL:', window.api ? window.api.baseURL : 'API未初始化');
+                    
+                    // 检查API是否可用
+                    if (!window.api) {
+                        console.error('API实例未找到！');
+                        this.error = 'API服务未启动，请稍后重试';
+                        this.loading = false;
+                        return;
+                    }
+                    
+                    await this.loadData();
+                } catch (error) {
+                    console.error('Vue应用挂载失败:', error);
+                    this.error = '应用初始化失败，请刷新页面重试';
+                    this.loading = false;
+                }
             },
 
             computed: {
@@ -368,6 +434,7 @@
                     
                     try {
                         console.log('开始加载数据...');
+                        console.log('API实例状态:', window.api);
                         
                         // 检查本地缓存
                         const cacheKey = 'nanyi_brands_data';
@@ -379,27 +446,60 @@
                         
                         if (cachedData && cacheTime && (Date.now() - parseInt(cacheTime)) < cacheExpiry) {
                             console.log('使用缓存数据');
-                            const parsedData = JSON.parse(cachedData);
-                            this.allImages = parsedData.images;
-                            this.brandData = {};
-                            parsedData.brands.forEach(brand => {
-                                this.brandData[brand.name] = brand;
-                            });
-                            this.filteredBrands = parsedData.brands;
-                            this.generateFilterOptions();
-                            return;
+                            try {
+                                const parsedData = JSON.parse(cachedData);
+                                this.allImages = parsedData.images || [];
+                                this.brandData = {};
+                                if (parsedData.brands) {
+                                    parsedData.brands.forEach(brand => {
+                                        this.brandData[brand.name] = brand;
+                                    });
+                                    this.filteredBrands = parsedData.brands;
+                                }
+                                this.generateFilterOptions();
+                                this.loading = false;
+                                return;
+                            } catch (e) {
+                                console.error('缓存数据解析失败:', e);
+                                localStorage.removeItem(cacheKey);
+                                localStorage.removeItem(cacheTimeKey);
+                            }
                         }
                         
                         // 加载图片数据
-                        const imagesResponse = await api.getImages();
+                        console.log('准备请求API数据...');
+                        let imagesResponse;
+                        
+                        // 添加重试机制
+                        for (let retry = 0; retry < 3; retry++) {
+                            try {
+                                console.log(`API请求尝试 ${retry + 1}/3`);
+                                imagesResponse = await api.getImages();
+                                console.log('API响应状态:', imagesResponse);
+                                break; // 成功则跳出循环
+                            } catch (apiError) {
+                                console.warn(`API请求失败 (尝试 ${retry + 1}/3):`, apiError);
+                                if (retry === 2) {
+                                    throw apiError; // 最后一次尝试失败则抛出错误
+                                }
+                                // 等待1秒后重试
+                                await new Promise(resolve => setTimeout(resolve, 1000));
+                            }
+                        }
 
-                        console.log('图片数据响应:', imagesResponse);
-
-                        if (imagesResponse.success) {
-                            this.allImages = imagesResponse.images;
+                        if (imagesResponse && (imagesResponse.success || imagesResponse.brands)) {
+                            console.log('API响应结构:', {
+                                success: imagesResponse.success,
+                                hasBrands: !!imagesResponse.brands,
+                                brandsCount: imagesResponse.brands ? imagesResponse.brands.length : 0,
+                                hasImages: !!imagesResponse.images,
+                                imagesCount: imagesResponse.images ? imagesResponse.images.length : 0
+                            });
+                            
+                            this.allImages = imagesResponse.images || [];
                             
                             // 如果后端返回了brands数据，直接使用
-                            if (imagesResponse.brands) {
+                            if (imagesResponse.brands && imagesResponse.brands.length > 0) {
                                 this.brandData = {};
                                 imagesResponse.brands.forEach(brand => {
                                     this.brandData[brand.name] = brand;
@@ -419,18 +519,39 @@
                                 
                                 // 从品牌数据中动态生成筛选选项
                                 this.generateFilterOptions();
-                            } else {
+                            } else if (this.allImages.length > 0) {
+                                console.log('使用图片数据处理品牌信息');
                                 this.processBrandData();
+                            } else {
+                                throw new Error('没有获取到有效的数据');
                             }
                         } else {
-                            throw new Error(imagesResponse.error || '获取图片数据失败');
+                            const errorMsg = imagesResponse ? (imagesResponse.error || '获取图片数据失败') : 'API请求失败';
+                            console.error('API响应错误:', errorMsg);
+                            throw new Error(errorMsg);
                         }
 
+                        this.dataLoaded = true;
                         console.log('数据加载完成');
 
                     } catch (error) {
                         console.error('加载数据失败:', error);
-                        this.error = error.message || '网络连接失败，请检查网络连接';
+                        console.error('错误详情:', error.stack);
+                        
+                        // 设置友好的错误信息
+                        if (error.message.includes('网络') || error.message.includes('连接')) {
+                            this.error = '网络连接失败，请检查网络连接';
+                        } else if (error.message.includes('API')) {
+                            this.error = 'API服务暂时不可用，请稍后重试';
+                        } else {
+                            this.error = error.message || '加载数据失败，请刷新页面重试';
+                        }
+                        
+                        // 确保有一些默认数据显示，避免完全空白
+                        if (!this.filteredBrands || this.filteredBrands.length === 0) {
+                            this.filteredBrands = [];
+                            this.brandData = {};
+                        }
                     } finally {
                         this.loading = false;
                     }
@@ -1127,6 +1248,78 @@
                     // 桌面端：使用默认的a标签行为
                 },
 
+                // 通过标签筛选品牌
+                filterByTag(filterType, filterValue) {
+                    console.log(`点击筛选: ${filterType} = ${filterValue}`);
+                    
+                    // 关闭模态框（如果是从详情页点击的）
+                    if (this.showModal) {
+                        this.closeModal();
+                    }
+                    
+                    // 清除搜索框内容
+                    this.searchQuery = '';
+                    
+                    // 支持标签的toggle功能
+                    if (filterType === 'year') {
+                        // 年份是单选，点击相同值则取消
+                        if (this.activeFilters[filterType] === filterValue) {
+                            this.activeFilters[filterType] = null;
+                        } else {
+                            this.activeFilters[filterType] = filterValue;
+                        }
+                    } else {
+                        // 多选类型支持组合筛选
+                        if (!this.activeFilters[filterType]) {
+                            this.activeFilters[filterType] = [];
+                        }
+                        
+                        const index = this.activeFilters[filterType].indexOf(filterValue);
+                        if (index > -1) {
+                            // 已存在，移除
+                            this.activeFilters[filterType].splice(index, 1);
+                            if (this.activeFilters[filterType].length === 0) {
+                                this.activeFilters[filterType] = null;
+                            }
+                        } else {
+                            // 不存在，添加
+                            this.activeFilters[filterType].push(filterValue);
+                        }
+                    }
+                    
+                    // 应用筛选
+                    this.filterBrands();
+                    
+                    // 滚动到筛选区域
+                    const filterSection = document.querySelector('.filter-section');
+                    if (filterSection) {
+                        filterSection.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'start' 
+                        });
+                    }
+                },
+
+                // 清除单个筛选条件
+                clearFilter(filterType) {
+                    console.log(`清除筛选: ${filterType}`);
+                    
+                    // 清除指定的筛选条件
+                    this.activeFilters[filterType] = null;
+                    
+                    // 应用筛选
+                    this.filterBrands();
+                },
+
+                // 检查是否有任何活跃的筛选条件
+                hasAnyActiveFilters() {
+                    return Object.values(this.activeFilters).some(filter => 
+                        filter !== null && 
+                        filter !== undefined && 
+                        (Array.isArray(filter) ? filter.length > 0 : true)
+                    );
+                },
+
                 // 简单的Markdown格式化
                 formatMarkdown(text) {
                     if (!text) return '';
@@ -1146,7 +1339,31 @@
                         .replace(/^(.+)$/, '<p>$1</p>');
                 }
             }
-        }).mount('#app');
+        });
+
+        // 全局错误处理
+        app.config.errorHandler = (err, instance, info) => {
+            console.error('Vue全局错误:', err);
+            console.error('错误信息:', info);
+            console.error('组件实例:', instance);
+        };
+
+        // 挂载应用
+        try {
+            app.mount('#app');
+            console.log('Vue应用挂载成功');
+        } catch (error) {
+            console.error('Vue应用挂载失败:', error);
+            document.getElementById('app').innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #666;">
+                    <h3>应用加载失败</h3>
+                    <p>请刷新页面重试</p>
+                    <button onclick="location.reload()" style="padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        刷新页面
+                    </button>
+                </div>
+            `;
+        }
     </script>
 </body>
 </html> 

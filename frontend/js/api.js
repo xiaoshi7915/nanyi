@@ -19,7 +19,7 @@ class NanyiAPI {
         }
         
         console.log('API Base URL:', this.baseURL);
-        this.timeout = 15000; // 增加到15秒超时
+        this.timeout = 30000; // 增加到30秒超时
     }
 
     /**

@@ -103,7 +103,7 @@
     
     /* 移动端年份横排样式 */
     .mobile-year-filter {
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.2rem;
     }
     
     .year-tags-horizontal {
@@ -154,6 +154,25 @@
     .year-tag.active {
         background: #667eea;
         border-color: #667eea;
+        color: white;
+    }
+    
+    /* 移动端全部按钮的特殊样式 */
+    .year-tag:first-child {
+        background: #f1f5f9;
+        border-color: #94a3b8;
+        font-weight: 600;
+    }
+    
+    .year-tag:first-child.active {
+        background: #64748b;
+        border-color: #64748b;
+        color: white;
+    }
+    
+    .year-tag:first-child:hover {
+        background: #64748b;
+        border-color: #64748b;
         color: white;
     }
     

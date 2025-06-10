@@ -285,10 +285,8 @@ body {
 .filter-group {
     width: 100%;
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
-    margin-bottom: 0.8rem;
-    min-height: 2.5rem; /* 确保所有分组有一致的最小高度 */
+    flex-direction: column;
+    margin-bottom: 1rem;
 }
 
 .filter-title {
@@ -296,20 +294,16 @@ body {
     font-weight: 600;
     color: #374151;
     text-align: left;
-    min-width: 90px; /* 增加最小宽度 */
-    flex-shrink: 0;
-    line-height: 2rem; /* 与标签高度对齐 */
-    padding-top: 0.25rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
 }
 
 .filter-tags-container {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
-    align-items: flex-start; /* 改为顶部对齐 */
-    justify-content: flex-start; /* 强制左对齐 */
-    flex: 1;
-    line-height: 1;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 
 .filter-tag {
@@ -333,6 +327,24 @@ body {
     background: #667eea;
     color: white;
     border-color: #667eea;
+}
+
+/* 全部按钮的特殊样式 */
+.filter-tag:first-child {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    font-weight: 600;
+}
+
+.filter-tag:first-child.active {
+    background: #64748b;
+    color: white;
+    border-color: #64748b;
+}
+
+.filter-tag:first-child:hover {
+    background: #64748b;
+    color: white;
 }
 
 .filter-tag .count {
@@ -477,11 +489,20 @@ body {
 }
 
 .meta-tag {
-    background: #f1f3f4;
-    color: #666;
+    background: #e3f2fd;
+    color: #1976d2;
     padding: 4px 8px;
     border-radius: 12px;
     font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #bbdefb;
+}
+
+.meta-tag:hover {
+    background: #1976d2;
+    color: white;
+    transform: translateY(-1px);
 }
 
 .brand-description {
@@ -663,11 +684,20 @@ body {
 }
 
 .detail-tag {
-    background: #667eea;
-    color: white;
+    background: #e3f2fd;
+    color: #1976d2;
     padding: 0.5rem 1rem;
     border-radius: 20px;
     font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid #bbdefb;
+}
+
+.detail-tag:hover {
+    background: #1976d2;
+    color: white;
+    transform: translateY(-1px);
 }
 
 .inspiration-text {
