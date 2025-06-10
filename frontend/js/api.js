@@ -4,8 +4,22 @@
 
 class NanyiAPI {
     constructor() {
-        this.baseURL = 'http://121.36.205.70:5001/api';
-        this.timeout = 10000; // 10秒超时
+        // 自动检测当前域名
+        const currentHost = window.location.hostname;
+        const protocol = window.location.protocol;
+        
+        // 如果是域名访问，使用域名；否则使用IP
+        if (currentHost === 'chenxiaoshivivid.com.cn') {
+            this.baseURL = `${protocol}//${currentHost}:5001/api`;
+        } else if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            this.baseURL = `${protocol}//${currentHost}:5001/api`;
+        } else {
+            // 默认使用IP地址
+            this.baseURL = 'http://121.36.205.70:5001/api';
+        }
+        
+        console.log('API Base URL:', this.baseURL);
+        this.timeout = 15000; // 增加到15秒超时
     }
 
     /**

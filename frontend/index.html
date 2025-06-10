@@ -17,8 +17,8 @@
     
     <!-- 引入API客户端 -->
     <script src="js/api.js"></script>
-    <script src="js/components.js"></script>
-    <script src="static/js/main.js"></script>
+    <!-- <script src="js/components.js"></script> -->
+    <!-- <script src="static/js/main.js"></script> -->
 </head>
 <body>
     <div id="app">
@@ -26,25 +26,38 @@
         <header class="header">
             <div class="container">
                 <div class="header-content">
-                    <div class="logo">
-                        <i class="fas fa-leaf"></i>
-                        <span>南意秋棠</span>
+                    <!-- 可点击的logo，跳转到淘宝店铺 -->
+                    <a href="https://shop357296168.taobao.com/?spm=a21n57.shop_search.0.0.1ad93904ohsQt4" 
+                       target="_blank" 
+                       class="logo-link"
+                       @click="handleLogoClick">
+                        <div class="logo">
+                            <i class="fas fa-leaf"></i>
+                            <span>南意秋棠</span>
+                        </div>
+                    </a>
+                    <!-- 右侧图标 -->
+                    <div class="header-actions">
+                        <a href="https://weidian.com/?userid=1330457134&distributorid=142259736&share_relation=eae4bd30b7458ac1_142259736_1&wfr=h5direct_wxh5" 
+                           target="_blank" 
+                           class="header-icon" 
+                           title="微店">
+                            <i class="fas fa-store"></i>
+                        </a>
+                        <button @click="openCustomerService" class="header-icon" title="智能客服">
+                            <i class="fas fa-comments"></i>
+                        </button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- 英雄区 -->
-        <section class="hero-section">
+        <!-- 英雄横幅区 -->
+        <section class="hero-banner">
             <div class="container">
                 <div class="hero-content">
-                    <div class="hero-image" v-if="heroImageExists">
-                        <img src="static/images/hero-banner.jpg" alt="南意秋棠" @error="heroImageExists = false">
-                    </div>
-                    <div v-else class="hero-placeholder">
-                        <h2>传承经典 创新未来</h2>
-                        <p>汉文化布料设计的艺术之美</p>
-                    </div>
+                    <h1 class="hero-title">传承经典 创新未来</h1>
+                    <p class="hero-subtitle">汉文化布料设计的艺术之美</p>
                 </div>
             </div>
         </section>
@@ -54,26 +67,39 @@
             <div class="container">
                 <!-- 搜索栏 -->
                 <div class="search-box">
-                    <i class="fas fa-search search-icon"></i>
-                    <input 
-                        v-model="searchQuery" 
-                        type="text" 
-                        placeholder="搜索品牌名称..."
-                        class="search-input"
-                        @input="filterBrands"
-                    >
-                </div>
-
-                <!-- 清除筛选按钮 -->
-                <div class="filter-header" v-if="hasActiveFilters">
-                    <button @click="clearAllFilters" class="clear-filters-btn">
-                        <i class="fas fa-times-circle"></i>
-                        清除所有筛选
+                    <div class="search-input-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input 
+                            v-model="searchQuery" 
+                            type="text" 
+                            placeholder="搜索品牌名称、布料材质、主题系列、年份..."
+                            class="search-input"
+                            @input="filterBrands"
+                        >
+                    </div>
+                    <button @click="performSearch" class="search-btn">
+                        搜索
                     </button>
                 </div>
 
-                <!-- 筛选标签 -->
-                <div class="filter-sections">
+
+
+                <!-- 移动端年份横排筛选 -->
+                <div class="mobile-only mobile-year-filter">
+                    <div class="year-tags-horizontal">
+                                                    <button 
+                                v-for="year in filterOptions.years" 
+                                :key="'mobile-year-' + year"
+                                @click="toggleFilter('year', year)"
+                                :class="['year-tag', { active: activeFilters.year === year }]"
+                            >
+                                {{ year }}({{ brandCounts.years[year] || 0 }})
+                            </button>
+                    </div>
+                </div>
+                
+                <!-- 桌面端筛选标签 -->
+                <div class="filter-sections desktop-only">
                     <!-- 按年份 -->
                     <div class="filter-group">
                         <div class="filter-title">按年份</div>
@@ -84,16 +110,13 @@
                                 @click="toggleFilter('year', year)"
                                 :class="['filter-tag', { active: activeFilters.year === year }]"
                             >
-                                {{ year }}
-                                <span v-if="brandCounts.years && brandCounts.years[year]" class="count">
-                                    ({{ brandCounts.years[year] }})
-                                </span>
+                                {{ year }}({{ brandCounts.years[year] || 0 }})
                             </button>
                         </div>
                     </div>
 
-                    <!-- 按材质 -->
-                    <div class="filter-group">
+                    <!-- 按材质 - 仅电脑端显示 -->
+                    <div class="filter-group desktop-only">
                         <div class="filter-title">按材质</div>
                         <div class="filter-tags-container">
                             <button 
@@ -105,16 +128,13 @@
                                            activeFilters.materials === material 
                                 }]"
                             >
-                                {{ material }}
-                                <span v-if="brandCounts.materials && brandCounts.materials[material]" class="count">
-                                    ({{ brandCounts.materials[material] }})
-                                </span>
+                                {{ material }}({{ brandCounts.materials[material] || 0 }})
                             </button>
                         </div>
                     </div>
 
-                    <!-- 按主题系列 -->
-                    <div class="filter-group">
+                    <!-- 按主题系列 - 仅电脑端显示 -->
+                    <div class="filter-group desktop-only">
                         <div class="filter-title">按主题系列</div>
                         <div class="filter-tags-container">
                             <button 
@@ -126,16 +146,13 @@
                                            activeFilters.theme_series === series 
                                 }]"
                             >
-                                {{ series }}
-                                <span v-if="brandCounts.theme_series && brandCounts.theme_series[series]" class="count">
-                                    ({{ brandCounts.theme_series[series] }})
-                                </span>
+                                {{ series }}({{ brandCounts.theme_series[series] || 0 }})
                             </button>
                         </div>
                     </div>
 
-                    <!-- 按印制尺寸 -->
-                    <div class="filter-group">
+                    <!-- 按印制尺寸 - 仅电脑端显示 -->
+                    <div class="filter-group desktop-only">
                         <div class="filter-title">按印制尺寸</div>
                         <div class="filter-tags-container">
                             <button 
@@ -147,10 +164,7 @@
                                            activeFilters.print_sizes === size 
                                 }]"
                             >
-                                {{ size }}
-                                <span v-if="brandCounts.print_sizes && brandCounts.print_sizes[size]" class="count">
-                                    ({{ brandCounts.print_sizes[size] }})
-                                </span>
+                                {{ size }}({{ brandCounts.print_sizes[size] || 0 }})
                             </button>
                         </div>
                     </div>
@@ -231,7 +245,7 @@
                     <div class="detail-section">
                         <h3 class="section-title">基本信息</h3>
                         <div class="detail-tags">
-                            <span v-if="selectedBrand.year && selectedBrand.year !== 'N/A' && selectedBrand.year !== ''" class="detail-tag">{{ selectedBrand.year }}年发布</span>
+                            <span v-if="selectedBrand.year && selectedBrand.year !== 'N/A' && selectedBrand.year !== ''" class="detail-tag">{{ selectedBrand.year }}年</span>
                             <span v-if="selectedBrand.material && selectedBrand.material !== 'N/A' && selectedBrand.material !== ''" class="detail-tag">{{ selectedBrand.material }}</span>
                             <span v-if="selectedBrand.theme_series && selectedBrand.theme_series !== 'N/A' && selectedBrand.theme_series !== ''" class="detail-tag">{{ selectedBrand.theme_series }}</span>
                             <span v-if="selectedBrand.print_size && selectedBrand.print_size !== 'N/A' && selectedBrand.print_size !== ''" class="detail-tag">{{ selectedBrand.print_size }}</span>
@@ -241,74 +255,42 @@
                     <!-- 设计灵感 -->
                     <div v-if="selectedBrand.inspiration_origin" class="detail-section">
                         <h3 class="section-title">设计灵感</h3>
-                        <div class="inspiration-text">{{ selectedBrand.inspiration_origin }}</div>
+                        <div class="inspiration-text" v-html="formatMarkdown(selectedBrand.inspiration_origin)"></div>
                     </div>
 
-                    <!-- 设计图片 -->
-                    <div class="detail-section">
-                        <h3 class="section-title">设计图片</h3>
-                        <div class="image-gallery">
-                            <div 
-                                v-for="image in getDesignImages()" 
-                                :key="image.filename"
-                                class="gallery-item"
-                                @click="openImagePreview(image)"
-                            >
-                                <img 
-                                    :src="getImageURL(image)" 
-                                    :alt="image.filename"
-                                    class="gallery-image"
-                                    @error="handleImageError"
+                    <!-- 按类型分类的图片展示 -->
+                    <div v-for="(images, type) in getCategorizedImages()" :key="type" class="detail-section">
+                        <h3 class="section-title">{{ type }}</h3>
+                        
+                        <!-- 按颜色分组显示 -->
+                        <div v-for="(colorImages, color) in groupImagesByColor(images)" :key="color" class="color-group">
+                            <h4 v-if="Object.keys(groupImagesByColor(images)).length > 1" class="color-title">{{ color }}</h4>
+                            <div class="image-gallery">
+                                <div 
+                                    v-for="image in colorImages" 
+                                    :key="image.filename"
+                                    class="gallery-item"
+                                    @click="openImagePreview(image)"
                                 >
-                                <div class="image-type-badge">{{ image.image_type }}</div>
-                                <div class="image-actions">
-                                    <button @click.stop="downloadImage(image)" class="action-btn download-btn">
-                                        <i class="fas fa-download"></i>
-                                    </button>
-                                    <button @click.stop="openImagePreview(image)" class="action-btn zoom-btn">
-                                        <i class="fas fa-search-plus"></i>
-                                    </button>
+                                    <img 
+                                        :src="getImageURL(image)" 
+                                        :alt="image.filename"
+                                        class="gallery-image"
+                                        @error="handleImageError"
+                                    >
+                                    <div class="image-actions">
+                                        <button @click.stop="openImagePreview(image)" class="action-btn zoom-btn">
+                                            <i class="fas fa-search-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 布料图片 -->
-                    <div class="detail-section">
-                        <h3 class="section-title">布料图片</h3>
-                        <div class="image-gallery">
-                            <div 
-                                v-for="image in getFabricImages()" 
-                                :key="image.filename"
-                                class="gallery-item"
-                                @click="openImagePreview(image)"
-                            >
-                                <img 
-                                    :src="getImageURL(image)" 
-                                    :alt="image.filename"
-                                    class="gallery-image"
-                                    @error="handleImageError"
-                                >
-                                <div class="image-type-badge">{{ image.image_type }}</div>
-                                <div class="image-actions">
-                                    <button @click.stop="downloadImage(image)" class="action-btn download-btn">
-                                        <i class="fas fa-download"></i>
-                                    </button>
-                                    <button @click.stop="openImagePreview(image)" class="action-btn zoom-btn">
-                                        <i class="fas fa-search-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- 分享按钮 -->
-                    <div class="share-actions">
-                        <button @click="shareCard" class="share-btn">
-                            <i class="fas fa-share-alt"></i>
-                            分享卡片
-                        </button>
-                    </div>
+
+
                 </div>
             </div>
         </div>
@@ -325,12 +307,7 @@
                     class="preview-image"
                     @error="handleImageError"
                 >
-                <div class="preview-actions">
-                    <button @click="downloadImage(previewImage)" class="preview-action-btn">
-                        <i class="fas fa-download"></i>
-                        下载图片
-                    </button>
-                </div>
+
             </div>
         </div>
     </div>
@@ -344,7 +321,7 @@
                     loading: true,
                     error: null,
                     searchQuery: '',
-                    heroImageExists: true,
+    
                     activeFilters: {
                         year: null,
                         material: null,
@@ -358,6 +335,7 @@
                         print_sizes: []
                     },
                     brandCounts: {},
+                    currentFilterCounts: {}, // 当前筛选状态下的数量统计
                     allImages: [],
                     brandData: {},
                     filteredBrands: [],
@@ -374,12 +352,7 @@
             },
 
             computed: {
-                hasActiveFilters() {
-                    return Object.values(this.activeFilters).some(value => 
-                        value !== null && value !== undefined && 
-                        (Array.isArray(value) ? value.length > 0 : true)
-                    );
-                }
+                // 已移除hasActiveFilters计算属性，因为不再需要清除筛选功能
             },
 
             watch: {
@@ -396,19 +369,31 @@
                     try {
                         console.log('开始加载数据...');
                         
-                        // 并行加载数据
-                        const [filtersResponse, imagesResponse] = await Promise.all([
-                            api.getFilters(),
-                            api.getImages()
-                        ]);
-
-                        console.log('筛选选项响应:', filtersResponse);
-                        console.log('图片数据响应:', imagesResponse);
-
-                        if (filtersResponse.success) {
-                            this.filterOptions = filtersResponse.filters;
-                            this.brandCounts = filtersResponse.brand_counts || {};
+                        // 检查本地缓存
+                        const cacheKey = 'nanyi_brands_data';
+                        const cacheTimeKey = 'nanyi_brands_cache_time';
+                        const cacheExpiry = 24 * 60 * 60 * 1000; // 24小时缓存
+                        
+                        const cachedData = localStorage.getItem(cacheKey);
+                        const cacheTime = localStorage.getItem(cacheTimeKey);
+                        
+                        if (cachedData && cacheTime && (Date.now() - parseInt(cacheTime)) < cacheExpiry) {
+                            console.log('使用缓存数据');
+                            const parsedData = JSON.parse(cachedData);
+                            this.allImages = parsedData.images;
+                            this.brandData = {};
+                            parsedData.brands.forEach(brand => {
+                                this.brandData[brand.name] = brand;
+                            });
+                            this.filteredBrands = parsedData.brands;
+                            this.generateFilterOptions();
+                            return;
                         }
+                        
+                        // 加载图片数据
+                        const imagesResponse = await api.getImages();
+
+                        console.log('图片数据响应:', imagesResponse);
 
                         if (imagesResponse.success) {
                             this.allImages = imagesResponse.images;
@@ -420,6 +405,20 @@
                                     this.brandData[brand.name] = brand;
                                 });
                                 this.filteredBrands = imagesResponse.brands;
+                                
+                                // 缓存数据
+                                try {
+                                    localStorage.setItem(cacheKey, JSON.stringify({
+                                        images: this.allImages,
+                                        brands: this.filteredBrands
+                                    }));
+                                    localStorage.setItem(cacheTimeKey, Date.now().toString());
+                                } catch (e) {
+                                    console.warn('缓存数据失败:', e);
+                                }
+                                
+                                // 从品牌数据中动态生成筛选选项
+                                this.generateFilterOptions();
                             } else {
                                 this.processBrandData();
                             }
@@ -437,16 +436,56 @@
                     }
                 },
 
+                generateFilterOptions() {
+                    // 从品牌数据中提取唯一的筛选选项并统计数量
+                    const yearCounts = {};
+                    const materialCounts = {};
+                    const themeSeriesCounts = {};
+                    const printSizeCounts = {};
+                    
+                    Object.values(this.brandData).forEach(brand => {
+                        if (brand.year) {
+                            const year = brand.year.toString();
+                            yearCounts[year] = (yearCounts[year] || 0) + 1;
+                        }
+                        if (brand.material) {
+                            materialCounts[brand.material] = (materialCounts[brand.material] || 0) + 1;
+                        }
+                        if (brand.theme_series) {
+                            themeSeriesCounts[brand.theme_series] = (themeSeriesCounts[brand.theme_series] || 0) + 1;
+                        }
+                        if (brand.print_size) {
+                            printSizeCounts[brand.print_size] = (printSizeCounts[brand.print_size] || 0) + 1;
+                        }
+                    });
+                    
+                    // 生成带统计数量的选项（不包含"全部"）
+                    this.filterOptions = {
+                        years: Object.keys(yearCounts).sort((a, b) => b.localeCompare(a)),
+                        materials: Object.keys(materialCounts).sort(),
+                        theme_series: Object.keys(themeSeriesCounts).sort(),
+                        print_sizes: Object.keys(printSizeCounts).sort()
+                    };
+                    
+                    // 保存统计数量
+                    this.brandCounts = {
+                        years: yearCounts,
+                        materials: materialCounts,
+                        theme_series: themeSeriesCounts,
+                        print_sizes: printSizeCounts
+                    };
+                    
+                    console.log('动态生成的筛选选项:', this.filterOptions);
+                    console.log('统计数量:', this.brandCounts);
+                },
+
                 processBrandData() {
                     const brands = {};
                     
                     this.allImages.forEach(image => {
                         const brandName = image.brand_name;
                         
-                        // 过滤掉不需要的项目
-                        if (brandName === 'hero-banner' || brandName.includes('placeholder')) {
-                            return;
-                        }
+
                         
                         if (!brands[brandName]) {
                             brands[brandName] = {
@@ -464,16 +503,13 @@
 
                     this.brandData = brands;
                     this.filteredBrands = Object.values(brands);
+                    
+                    // 生成筛选选项
+                    this.generateFilterOptions();
                 },
 
                 filterBrands() {
                     let filtered = Object.values(this.brandData);
-
-                    // 过滤掉不应该显示的项目
-                    filtered = filtered.filter(brand => 
-                        brand.name !== 'hero-banner' && 
-                        !brand.name.includes('placeholder')
-                    );
 
                     // 搜索过滤 - 支持多字段搜索
                     if (this.searchQuery.trim()) {
@@ -490,7 +526,7 @@
                     // 筛选过滤
                     Object.keys(this.activeFilters).forEach(key => {
                         const value = this.activeFilters[key];
-                        if (value) {
+                        if (value && value !== null && value !== undefined) {
                             // 映射前端字段名到数据字段名
                             const fieldMap = {
                                 'materials': 'material',
@@ -498,19 +534,64 @@
                             };
                             const fieldName = fieldMap[key] || key;
                             
-                            if (Array.isArray(value)) {
+                            if (Array.isArray(value) && value.length > 0) {
                                 // 多选模式：品牌必须匹配任一选中的值
                                 filtered = filtered.filter(brand => 
-                                    value.includes(brand[fieldName])
+                                    brand[fieldName] && value.includes(brand[fieldName])
                                 );
-                            } else {
+                            } else if (!Array.isArray(value)) {
                                 // 单选模式：品牌必须匹配选中的值
-                                filtered = filtered.filter(brand => brand[fieldName] === value);
+                                if (fieldName === 'year') {
+                                    // 年份筛选特殊处理
+                                    filtered = filtered.filter(brand => 
+                                        brand[fieldName] && brand[fieldName].toString() === value.toString()
+                                    );
+                                } else {
+                                    filtered = filtered.filter(brand => 
+                                        brand[fieldName] && brand[fieldName] === value
+                                    );
+                                }
                             }
                         }
                     });
 
                     this.filteredBrands = filtered;
+                    
+                    // 更新筛选后的统计数量
+                    this.updateFilterCounts(filtered);
+                },
+                
+                // 更新筛选后的统计数量
+                updateFilterCounts(filteredBrands) {
+                    const yearCounts = {};
+                    const materialCounts = {};
+                    const themeSeriesCounts = {};
+                    const printSizeCounts = {};
+                    
+                    // 重新计算当前筛选结果中的数量
+                    filteredBrands.forEach(brand => {
+                        if (brand.year) {
+                            const year = brand.year.toString();
+                            yearCounts[year] = (yearCounts[year] || 0) + 1;
+                        }
+                        if (brand.material) {
+                            materialCounts[brand.material] = (materialCounts[brand.material] || 0) + 1;
+                        }
+                        if (brand.theme_series) {
+                            themeSeriesCounts[brand.theme_series] = (themeSeriesCounts[brand.theme_series] || 0) + 1;
+                        }
+                        if (brand.print_size) {
+                            printSizeCounts[brand.print_size] = (printSizeCounts[brand.print_size] || 0) + 1;
+                        }
+                    });
+                    
+                    // 更新当前筛选状态下的数量统计
+                    this.currentFilterCounts = {
+                        years: yearCounts,
+                        materials: materialCounts,
+                        theme_series: themeSeriesCounts,
+                        print_sizes: printSizeCounts
+                    };
                 },
 
                 toggleFilter(type, value) {
@@ -562,25 +643,76 @@
                         const encodedPath = designImage.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
                         return `/static/images/${encodedPath}`;
                     }
-                    return '/static/images/placeholder.svg';
+                    // 如果没有设计图，尝试使用其他图片
+                    if (brand.images.length > 0) {
+                        const encodedPath = brand.images[0].relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
+                        return `/static/images/${encodedPath}`;
+                    }
+                    return null;
                 },
 
                 async openBrandDetail(brand) {
+                    console.log('打开品牌详情:', brand);
+                    
+                    // 检查品牌详情缓存
+                    const cacheKey = `brand_detail_${brand.name}`;
+                    const cachedDetail = localStorage.getItem(cacheKey);
+                    const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+                    const now = Date.now();
+                    const cacheExpiry = 2 * 60 * 60 * 1000; // 2小时缓存
+                    
+                    if (cachedDetail && cacheTime && (now - parseInt(cacheTime)) < cacheExpiry) {
+                        try {
+                            const cached = JSON.parse(cachedDetail);
+                            this.selectedBrand = cached.brand_info;
+                            this.brandImages = cached.images;
+                            this.showModal = true;
+                            document.body.style.overflow = 'hidden';
+                            return;
+                        } catch (e) {
+                            console.error('解析缓存数据失败:', e);
+                        }
+                    }
+                    
+                    // 直接使用本地数据，确保有图片可以显示
+                    this.selectedBrand = brand;
+                    this.brandImages = brand.images || [];
+                    
+                    // 如果本地数据有图片，直接显示；否则尝试API
+                    if (brand.images && brand.images.length > 0) {
+                        console.log('使用本地图片数据:', brand.images.length);
+                        this.showModal = true;
+                        document.body.style.overflow = 'hidden';
+                        
+                        // 缓存本地数据
+                        localStorage.setItem(cacheKey, JSON.stringify({
+                            brand_info: brand,
+                            images: brand.images
+                        }));
+                        localStorage.setItem(`${cacheKey}_time`, now.toString());
+                        return;
+                    }
+                    
+                    // 如果没有本地图片数据，尝试从API获取
                     try {
-                        // 尝试从API获取详细信息
+                        console.log('尝试从API获取品牌详情...');
                         const response = await api.getBrandDetail(brand.name);
-                        if (response.success) {
+                        if (response.success && response.images && response.images.length > 0) {
+                            console.log('API返回图片数据:', response.images.length);
                             this.selectedBrand = response.brand_info;
                             this.brandImages = response.images;
+                            
+                            // 缓存品牌详情数据
+                            localStorage.setItem(cacheKey, JSON.stringify({
+                                brand_info: response.brand_info,
+                                images: response.images
+                            }));
+                            localStorage.setItem(`${cacheKey}_time`, now.toString());
                         } else {
-                            // 使用本地数据
-                            this.selectedBrand = brand;
-                            this.brandImages = brand.images;
+                            console.log('API未返回有效数据，使用本地数据');
                         }
                     } catch (error) {
                         console.warn('获取品牌详情失败，使用本地数据:', error);
-                        this.selectedBrand = brand;
-                        this.brandImages = brand.images;
                     }
                     
                     this.showModal = true;
@@ -594,6 +726,83 @@
                         this.selectedBrand = null;
                         this.brandImages = [];
                     }, 300);
+                },
+
+                getCategorizedImages() {
+                    if (!this.selectedBrand || !this.selectedBrand.images) {
+                        return {};
+                    }
+                    
+                    const categories = {};
+                    
+                    this.selectedBrand.images.forEach(img => {
+                        // 从文件名中提取图片类型
+                        let type = '其他';
+                        if (img.filename.includes('-设计图-') || img.filename.includes('设计图')) {
+                            type = '设计图';
+                        } else if (img.filename.includes('-布料图-') || img.filename.includes('布料图')) {
+                            type = '布料图';
+                        } else if (img.filename.includes('-成衣图-') || img.filename.includes('成衣图')) {
+                            type = '成衣图';
+                        } else if (img.filename.includes('-模特图-') || img.filename.includes('模特图')) {
+                            type = '模特图';
+                        } else if (img.filename.includes('-买家秀-') || img.filename.includes('买家秀')) {
+                            type = '买家秀';
+                        }
+                        
+                        if (!categories[type]) {
+                            categories[type] = [];
+                        }
+                        categories[type].push(img);
+                    });
+                    
+                    // 按预定义顺序排序
+                    const orderedCategories = {};
+                    const order = ['设计图', '布料图', '成衣图', '模特图', '买家秀', '其他'];
+                    
+                    order.forEach(type => {
+                        if (categories[type] && categories[type].length > 0) {
+                            orderedCategories[type] = categories[type];
+                        }
+                    });
+                    
+                    return orderedCategories;
+                },
+
+                groupImagesByColor(images) {
+                    if (!images || images.length === 0) {
+                        return {};
+                    }
+                    
+                    const colorGroups = {};
+                    
+                    images.forEach(img => {
+                        // 从文件名中提取颜色信息
+                        let color = '默认色';
+                        const filename = img.filename;
+                        
+                        // 匹配括号中的颜色信息
+                        const colorMatch = filename.match(/\(([^)]+)\)/);
+                        if (colorMatch) {
+                            color = colorMatch[1];
+                        }
+                        
+                        if (!colorGroups[color]) {
+                            colorGroups[color] = [];
+                        }
+                        colorGroups[color].push(img);
+                    });
+                    
+                    // 按文件名编号排序
+                    Object.keys(colorGroups).forEach(color => {
+                        colorGroups[color].sort((a, b) => {
+                            const aNum = parseInt(a.filename.match(/-(\d+)\./)?.[1] || '0');
+                            const bNum = parseInt(b.filename.match(/-(\d+)\./)?.[1] || '0');
+                            return aNum - bNum;
+                        });
+                    });
+                    
+                    return colorGroups;
                 },
 
                 getDesignImages() {
@@ -669,7 +878,8 @@
                 },
 
                 handleImageError(event) {
-                    event.target.src = '/static/images/placeholder.svg';
+                    // 图片加载失败时隐藏图片
+                    event.target.style.display = 'none';
                 },
 
                 openImagePreview(image) {
@@ -690,6 +900,250 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
+                },
+
+                openCustomerService() {
+                    // 智能客服功能
+                    const wechatId = 'LPumpkin0217';
+                    const qqNumber = '502517787';
+
+                    // 创建客服选择弹窗
+                    const modal = document.createElement('div');
+                    modal.className = 'customer-service-modal';
+                    modal.innerHTML = `
+                        <div class="customer-service-overlay" onclick="this.parentElement.remove()">
+                            <div class="customer-service-content" onclick="event.stopPropagation()">
+                                <div class="customer-service-header">
+                                    <h3>联系客服</h3>
+                                    <button onclick="this.closest('.customer-service-modal').remove()" class="close-btn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div class="customer-service-options">
+                                    <div class="service-option" onclick="window.copyToClipboard('${wechatId}', '微信号')">
+                                        <div class="service-icon">
+                                            <i class="fab fa-weixin"></i>
+                                        </div>
+                                        <div class="service-info">
+                                            <div class="service-name">微信客服</div>
+                                            <div class="service-id">${wechatId}</div>
+                                        </div>
+                                        <div class="copy-hint">点击复制</div>
+                                    </div>
+                                    <div class="service-option" onclick="window.copyToClipboard('${qqNumber}', 'QQ号')">
+                                        <div class="service-icon">
+                                            <i class="fab fa-qq"></i>
+                                        </div>
+                                        <div class="service-info">
+                                            <div class="service-name">QQ客服</div>
+                                            <div class="service-id">${qqNumber}</div>
+                                        </div>
+                                        <div class="copy-hint">点击复制</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    // 添加样式
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        .customer-service-modal {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            z-index: 10000;
+                        }
+                        .customer-service-overlay {
+                            position: absolute;
+                            top: 0;
+                            left: 0;
+                            width: 100%;
+                            height: 100%;
+                            background: rgba(0,0,0,0.5);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                        }
+                        .customer-service-content {
+                            background: white;
+                            border-radius: 12px;
+                            padding: 0;
+                            max-width: 400px;
+                            width: 90%;
+                            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                        }
+                        .customer-service-header {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            padding: 1rem;
+                            border-bottom: 1px solid #eee;
+                        }
+                        .customer-service-header h3 {
+                            margin: 0;
+                            color: #333;
+                            font-size: 1.1rem;
+                        }
+                        .customer-service-options {
+                            padding: 1rem;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0.8rem;
+                        }
+                        .service-option {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.8rem;
+                            padding: 0.8rem;
+                            border: 2px solid #e5e7eb;
+                            border-radius: 8px;
+                            background: white;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            font-size: 0.9rem;
+                        }
+                        @media (max-width: 768px) {
+                            .customer-service-content {
+                                max-width: 320px;
+                                width: 85%;
+                            }
+                            .customer-service-header {
+                                padding: 0.8rem;
+                            }
+                            .customer-service-header h3 {
+                                font-size: 1rem;
+                            }
+                            .customer-service-options {
+                                padding: 0.8rem;
+                                gap: 0.6rem;
+                            }
+                            .service-option {
+                                gap: 0.6rem;
+                                padding: 0.6rem;
+                                font-size: 0.85rem;
+                            }
+                            .service-icon i {
+                                font-size: 1.2rem !important;
+                            }
+                            .service-name {
+                                font-size: 0.85rem;
+                            }
+                            .service-id {
+                                font-size: 0.8rem;
+                            }
+                            .copy-hint {
+                                font-size: 0.7rem;
+                                padding: 0.2rem 0.4rem;
+                            }
+                        }
+                        .service-option:hover {
+                            border-color: #667eea;
+                            background: #f8f9ff;
+                            transform: translateY(-2px);
+                        }
+                        .service-icon i {
+                            font-size: 1.5rem;
+                            color: #667eea;
+                        }
+                        .service-info {
+                            flex: 1;
+                            text-align: left;
+                        }
+                        .service-name {
+                            font-weight: 600;
+                            color: #333;
+                            margin-bottom: 0.25rem;
+                        }
+                        .service-id {
+                            color: #667eea;
+                            font-family: monospace;
+                            font-size: 0.9rem;
+                        }
+                        .copy-hint {
+                            color: #999;
+                            font-size: 0.8rem;
+                            background: #f3f4f6;
+                            padding: 0.25rem 0.5rem;
+                            border-radius: 4px;
+                        }
+                    `;
+
+                    document.head.appendChild(style);
+                    document.body.appendChild(modal);
+                    
+                    // 设置全局复制函数
+                    window.copyToClipboard = this.copyToClipboard;
+                },
+
+                // 复制到剪贴板功能
+                copyToClipboard(text, type) {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        navigator.clipboard.writeText(text).then(() => {
+                            alert(`${type}已复制到剪贴板：${text}`);
+                        }).catch(() => {
+                            this.fallbackCopyTextToClipboard(text, type);
+                        });
+                    } else {
+                        this.fallbackCopyTextToClipboard(text, type);
+                    }
+                },
+
+                // 降级复制方案
+                fallbackCopyTextToClipboard(text, type) {
+                    const textArea = document.createElement('textarea');
+                    textArea.value = text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    
+                    try {
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            alert(`${type}已复制到剪贴板：${text}`);
+                        } else {
+                            alert(`复制失败，请手动复制：${text}`);
+                        }
+                    } catch (err) {
+                        alert(`复制失败，请手动复制：${text}`);
+                    }
+                    
+                    document.body.removeChild(textArea);
+                },
+
+                // 处理logo点击
+                handleLogoClick(event) {
+                    // 移动端直接跳转，不阻止默认行为
+                    if (window.innerWidth <= 768) {
+                        // 移动端：直接跳转
+                        window.open('https://shop357296168.taobao.com/?spm=a21n57.shop_search.0.0.1ad93904ohsQt4', '_blank');
+                        event.preventDefault(); // 阻止默认的a标签行为，使用我们的跳转
+                    }
+                    // 桌面端：使用默认的a标签行为
+                },
+
+                // 简单的Markdown格式化
+                formatMarkdown(text) {
+                    if (!text) return '';
+                    
+                    return text
+                        // 粗体 **text** 或 __text__
+                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/__(.*?)__/g, '<strong>$1</strong>')
+                        // 斜体 *text* 或 _text_
+                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                        .replace(/_(.*?)_/g, '<em>$1</em>')
+                        // 换行
+                        .replace(/\n/g, '<br>')
+                        // 段落分隔
+                        .replace(/\n\n/g, '</p><p>')
+                        // 包装在段落中
+                        .replace(/^(.+)$/, '<p>$1</p>');
                 }
             }
         }).mount('#app');

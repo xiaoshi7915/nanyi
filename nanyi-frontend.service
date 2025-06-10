@@ -1,0 +1,25 @@
+[Unit]
+Description=南意秋棠前端Web服务
+After=network.target nanyi-backend.service
+Wants=nanyi-backend.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/hanfu/products/frontend
+Environment=PYTHONPATH=/opt/hanfu/products/frontend
+ExecStartPre=/bin/bash -c 'pkill -f "python.*server.py" || true'
+ExecStartPre=/bin/bash -c 'lsof -ti:8500 | xargs kill -9 || true'
+ExecStart=/usr/bin/python3 server.py
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=nanyi-frontend
+
+# 安全设置
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target 

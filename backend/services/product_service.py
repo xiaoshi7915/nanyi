@@ -4,8 +4,11 @@
 产品处理服务
 """
 
-from backend.models import db, Product
+from backend.models import db, init_models
 from datetime import datetime
+
+# 初始化模型
+Product, Admin = init_models()
 
 class ProductService:
     """产品处理服务类"""
@@ -14,11 +17,26 @@ class ProductService:
     def get_all_products(page=1, per_page=20, search=None, filters=None):
         """获取所有产品（支持分页和筛选）"""
         try:
+            if not Product:
+                print("Product模型未初始化")
+                return None
+                
             query = Product.query
             
-            # 搜索过滤
+            # 多字段搜索过滤
             if search:
-                query = query.filter(Product.brand_name.contains(search))
+                search_term = f'%{search}%'
+                query = query.filter(
+                    db.or_(
+                        Product.brand_name.like(search_term),
+                        Product.title.like(search_term),
+                        Product.material.like(search_term),
+                        Product.theme_series.like(search_term),
+                        Product.inspiration_origin.like(search_term),
+                        Product.year.like(search_term),
+                        Product.publish_month.like(search_term)
+                    )
+                )
             
             # 其他筛选条件
             if filters:
@@ -156,6 +174,15 @@ class ProductService:
     def get_filter_options():
         """获取筛选选项"""
         try:
+            if not Product:
+                print("Product模型未初始化")
+                return {
+                    'themes': [],
+                    'years': [],
+                    'materials': [],
+                    'print_sizes': []
+                }
+            
             # 获取各种筛选选项
             themes = db.session.query(Product.theme_series).filter(
                 Product.theme_series.isnot(None)

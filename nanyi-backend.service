@@ -1,0 +1,25 @@
+[Unit]
+Description=南意秋棠后端API服务
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/hanfu/products/backend
+Environment=PYTHONPATH=/opt/hanfu/products/backend
+ExecStartPre=/bin/bash -c 'pkill -f "python.*app.py" || true'
+ExecStartPre=/bin/bash -c 'lsof -ti:5001 | xargs kill -9 || true'
+ExecStart=/usr/bin/python3 app.py
+Restart=always
+RestartSec=10
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=nanyi-backend
+
+# 安全设置
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target 

@@ -1,7 +1,9 @@
 Flask==2.3.3
-Flask-SQLAlchemy==3.0.5
+Flask-SQLAlchemy==2.5.1
+SQLAlchemy==1.4.53
 Flask-CORS==4.0.0
 PyMySQL==1.1.0
 Werkzeug==2.3.7
 python-dotenv==1.0.0
-Pillow==10.0.1 
+Pillow==10.0.1
+requests==2.31.0 

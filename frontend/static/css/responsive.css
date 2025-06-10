@@ -42,62 +42,228 @@
 /* 手机设备 (最大 768px) */
 @media (max-width: 768px) {
     .container {
-        padding: 0 10px;
+        padding: 0 10px; /* 减少边距 */
     }
     
-    /* 头部调整 */
+    /* 头部调整 - 更紧凑 */
+    .header {
+        padding: 0.5rem 0; /* 大幅减少头部内边距 */
+    }
+    
     .header-content {
-        flex-direction: column;
-        gap: 1rem;
-        text-align: center;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0; /* 去掉内边距 */
     }
     
     .logo {
-        font-size: 1.5rem;
+        font-size: 1rem; /* 大幅减小字体 */
     }
     
-    /* 搜索栏调整 */
-    .search-content {
-        flex-direction: column;
-        gap: 1rem;
+    .header-icon {
+        width: 32px; /* 减小图标大小 */
+        height: 32px;
     }
     
+    .header-icon i {
+        font-size: 0.9rem; /* 减小图标字体 */
+    }
+    
+    /* 英雄横幅调整 */
+    .hero-banner {
+        padding: 1rem 0; /* 减少内边距 */
+        margin-bottom: 0.5rem; /* 减少下边距 */
+    }
+    
+    .hero-title {
+        font-size: 1.8rem; /* 减小标题字体 */
+        margin-bottom: 0.5rem; /* 减少下边距 */
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem; /* 减小副标题字体 */
+    }
+    
+    /* 筛选区域调整 */
+    .filter-section {
+        padding: 0.5rem 0; /* 大幅减少内边距 */
+        margin-bottom: 0.5rem; /* 减少下边距 */
+    }
+    
+    /* 移动端隐藏桌面端筛选 */
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .mobile-only {
+        display: block !important;
+    }
+    
+    /* 移动端年份横排样式 */
+    .mobile-year-filter {
+        margin-bottom: 0.5rem;
+    }
+    
+    .year-tags-horizontal {
+        display: flex;
+        gap: 0.5rem;
+        overflow-x: auto;
+        padding: 0.5rem 0;
+        scrollbar-width: thin;
+        scrollbar-color: #ccc transparent;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .year-tags-horizontal::-webkit-scrollbar {
+        height: 3px;
+    }
+    
+    .year-tags-horizontal::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    .year-tags-horizontal::-webkit-scrollbar-thumb {
+        background: #ccc;
+        border-radius: 3px;
+    }
+    
+    .year-tag {
+        display: inline-block;
+        white-space: nowrap;
+        padding: 0.4rem 0.8rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 20px;
+        background: white;
+        color: #374151;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        min-width: fit-content;
+        flex-shrink: 0;
+    }
+    
+    .year-tag:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+    
+    .year-tag.active {
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+    }
+    
+    /* 搜索栏调整 - 模仿电脑端样式 */
     .search-box {
-        min-width: auto;
-        width: 100%;
+        display: flex !important;
+        align-items: center;
+        background: transparent;
+        border-radius: 25px;
+        margin-bottom: 0.8rem;
+        height: 44px;
+        overflow: hidden;
+        flex-wrap: nowrap;
+        gap: 2px; /* 输入框和按钮之间的间隔 */
+    }
+    
+    .search-input-container {
+        display: flex;
+        align-items: center;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        flex: 1;
+        height: 100%;
+        min-width: 0;
+    }
+    
+    .search-box .search-icon {
+        color: #9ca3af;
+        font-size: 16px;
+        padding: 0 12px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+    }
+    
+    .search-input {
+        flex: 1;
+        border: none !important;
+        outline: none !important;
+        background: transparent !important;
+        padding: 0 12px 0 0 !important;
+        font-size: 14px;
+        color: #374151;
+        border-radius: 0 !important;
+        min-width: 0;
+        height: 100%;
+        line-height: normal;
+    }
+    
+    .search-input::placeholder {
+        color: #9ca3af;
+        font-size: 14px;
+    }
+    
+    .search-btn {
+        background: #10b981;
+        color: white;
+        border: none;
+        border-radius: 22px;
+        padding: 0 20px;
+        font-size: 14px;
+        font-weight: 500;
+        flex-shrink: 0;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        min-width: 70px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+    }
+    
+    .search-btn:hover {
+        background: #059669;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
     
     /* 筛选标签滚动 */
     .filter-sections {
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-bottom: 0.5rem;
+        padding-bottom: 0; /* 去掉底部内边距 */
+        margin: 0; /* 去掉上下边距 */
     }
     
     .filter-section {
-        display: inline-block;
-        vertical-align: top;
-        white-space: normal;
-        margin-right: 1rem;
-        min-width: 150px;
+        margin-right: 0.8rem;
+        min-width: 140px;
     }
     
     .filter-title {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         font-weight: 600;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.3rem;
         color: #555;
     }
     
     .filter-tags-container {
         display: flex;
         flex-direction: column;
-        gap: 0.25rem;
+        gap: 0.2rem;
     }
     
     .filter-tag {
-        font-size: 0.75rem;
-        padding: 0.4rem 0.8rem;
+        font-size: 0.7rem;
+        padding: 0.3rem 0.6rem;
         text-align: center;
         white-space: nowrap;
         overflow: hidden;
@@ -105,131 +271,209 @@
     }
     
     .filter-tag .count {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
     }
     
-    /* 品牌网格调整 */
+    /* 品牌网格调整 - 去掉空隙 */
     .brands-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* 稍微减小最小宽度以适应两列 */
+        gap: 0.5rem; /* 减少间距 */
+        margin-top: 0; /* 去掉顶部边距 */
     }
     
     .brand-image-container {
-        height: 180px;
+        height: 140px; /* 进一步减小高度 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+    
+    .brand-image {
+        max-width: 95%; /* 限制最大宽度，留出边距 */
+        max-height: 95%; /* 限制最大高度，留出边距 */
+        width: auto;
+        height: auto;
+        object-fit: contain; /* 改为contain确保图片完整显示 */
+        object-position: center;
+    }
+    
+    .brand-info {
+        padding: 6px; /* 减少内边距 */
     }
     
     .brand-name {
-        font-size: 1rem;
+        font-size: 0.8rem; /* 减小字体 */
+        margin-bottom: 2px; /* 减少下边距 */
     }
-    
+
+    .meta-tags {
+        gap: 0.2rem;
+        margin-top: 0.25rem;
+    }
+
     .meta-tag {
-        font-size: 0.7rem;
-        padding: 2px 6px;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.3rem;
     }
-    
+
+    .brand-year {
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #6b7280;
+    }
+
     /* 模态框调整 */
     .modal-content {
-        margin: 10px;
-        max-width: calc(100vw - 20px);
-        max-height: calc(100vh - 20px);
+        margin: 1rem;
+        max-height: 90vh;
+        width: calc(100% - 2rem);
     }
-    
+
     .modal-header {
-        padding: 1rem;
+        padding: 0.8rem;
     }
-    
+
     .modal-title {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
-    
+
     .modal-body {
-        padding: 1rem;
+        padding: 0.8rem;
     }
-    
+
     .image-gallery {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         gap: 0.5rem;
     }
-    
-    /* 英雄区调整 */
+
     .hero-section {
-        padding: 2rem 0;
+        padding: 1.5rem 0;
+        margin-bottom: 0.5rem;
+        min-height: 200px; /* 减少最小高度 */
     }
-    
+
     .hero-image {
-        height: 200px;
+        object-fit: cover;
     }
 }
 
-/* 小手机设备 (最大 480px) */
+/* 超小屏幕优化 (最大 480px) */
 @media (max-width: 480px) {
+    .container {
+        padding: 0 8px;
+    }
+
     .brands-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.4rem;
     }
-    
+
     .brand-card {
-        max-width: 100%;
+        min-height: auto;
     }
-    
+
     .brand-image-container {
-        height: 160px;
+        height: 160px; /* 进一步减小 */
     }
-    
+
+    .brand-image {
+        object-fit: cover;
+    }
+
+    .brand-info {
+        padding: 4px;
+    }
+
+    .brand-name {
+        font-size: 0.75rem;
+        line-height: 1.2;
+    }
+
     .search-input {
-        font-size: 0.9rem;
-        padding: 0.6rem 1rem 0.6rem 2.2rem;
+        font-size: 0.85rem;
+        padding: 0.4rem 0.6rem;
     }
-    
+
+    .search-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+    }
+
     .filter-tag {
-        font-size: 0.7rem;
-        padding: 0.3rem 0.6rem;
+        font-size: 0.65rem;
+        padding: 0.25rem 0.5rem;
     }
-    
+
+    .meta-tag {
+        font-size: 0.6rem;
+        padding: 0.1rem 0.25rem;
+    }
+
     .image-gallery {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.4rem;
     }
-    
+
     .section-title {
-        font-size: 1rem;
+        font-size: 0.9rem;
     }
-    
-    .detail-tag {
-        font-size: 0.8rem;
-        padding: 0.3rem 0.8rem;
+
+    .hero-section {
+        padding: 1rem 0;
+        min-height: 150px;
+    }
+
+    .hero-image {
+        object-fit: cover;
     }
 }
 
-/* 横屏手机 */
+/* 客服弹窗样式调整 */
+.detail-tag {
+    display: inline-block;
+    background: #3b82f6 !important; /* 蓝色背景 */
+    color: white !important; /* 白色文字 */
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    margin: 0.125rem;
+}
+
+/* 横屏模式优化 */
 @media (max-width: 768px) and (orientation: landscape) {
     .hero-section {
         padding: 1rem 0;
+        min-height: 120px;
     }
-    
+
     .hero-image {
-        height: 150px;
+        object-fit: cover;
     }
-    
+
     .brands-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.6rem;
     }
-    
+
     .brand-image-container {
-        height: 120px;
+        height: 140px;
     }
 }
 
-/* 超大屏设备 (大于 1200px) */
+/* 大屏幕优化 */
 @media (min-width: 1200px) {
     .container {
         max-width: 1400px;
+        padding: 0 30px;
     }
-    
+
     .brands-grid {
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 2rem;
     }
-    
+
     .brand-image-container {
-        height: 280px;
+        height: 220px;
     }
 } 

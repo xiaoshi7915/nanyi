@@ -11,8 +11,15 @@ from typing import List, Dict, Optional
 class ImageService:
     """图片处理服务类"""
     
-    def __init__(self, images_dir: str = 'frontend/static/images'):
+    def __init__(self, images_dir: str = None):
         """初始化图片服务"""
+        if images_dir is None:
+            # 获取项目根目录
+            import os
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(os.path.dirname(current_dir))
+            images_dir = os.path.join(project_root, 'frontend', 'static', 'images')
+        
         self.images_dir = images_dir
         self.allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'}
     
@@ -105,7 +112,24 @@ class ImageService:
     def get_brand_images(self, brand_name: str) -> List[Dict]:
         """获取指定品牌的所有图片"""
         all_images = self.get_all_images()
-        return [img for img in all_images if img['brand_name'] == brand_name]
+        
+        # 首先尝试精确匹配
+        exact_matches = [img for img in all_images if img['brand_name'] == brand_name]
+        if exact_matches:
+            return exact_matches
+        
+        # 如果没有精确匹配，尝试基础品牌名匹配
+        # 查找所有以该品牌名开头的图片（包括带颜色的）
+        base_matches = []
+        for img in all_images:
+            img_brand = img['brand_name']
+            # 检查是否是同一基础品牌名
+            if img_brand.startswith(brand_name):
+                # 确保是完整的品牌名匹配，而不是部分匹配
+                if img_brand == brand_name or (len(img_brand) > len(brand_name) and img_brand[len(brand_name)] == '('):
+                    base_matches.append(img)
+        
+        return base_matches
     
     def get_image_by_path(self, relative_path: str) -> Optional[str]:
         """根据相对路径获取图片的完整路径"""

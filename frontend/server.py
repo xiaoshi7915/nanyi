@@ -51,15 +51,16 @@ def main():
     # 获取环境变量
     port = int(os.environ.get('FRONTEND_PORT', 8500))
     host = os.environ.get('HOST', '0.0.0.0')
-    domain = os.environ.get('DOMAIN', 'localhost')
-    backend_url = os.environ.get('BACKEND_URL', 'http://localhost:5001')
+    domain = os.environ.get('DOMAIN', 'chenxiaoshivivid.com.cn')
+    backend_url = os.environ.get('BACKEND_URL', 'http://121.36.205.70:5001')
     
     # 创建应用
     app = create_frontend_app()
     
     print(f"🎨 南意秋棠前端服务启动")
     print(f"📱 本地访问: http://localhost:{port}")
-    print(f"🌐 生产地址: http://{domain}:{port}")
+    print(f"🌐 域名访问: http://{domain}:{port}")
+    print(f"🌐 IP访问: http://121.36.205.70:{port}")
     print(f"🔗 后端API: {backend_url}")
     
     # 启动应用

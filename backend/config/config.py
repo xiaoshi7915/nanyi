@@ -15,18 +15,27 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'nanyi_secret_key_2024'
     
     # 数据库配置 - 从环境变量读取
-    DB_HOST = os.environ.get('DB_HOST') or 'localhost'
+    DB_HOST = os.environ.get('DB_HOST') or '47.118.250.53'
     DB_PORT = int(os.environ.get('DB_PORT') or 3306)
-    DB_USER = os.environ.get('DB_USER') or 'root'
-    DB_PASSWORD = os.environ.get('DB_PASSWORD') or 'password'
+    DB_USER = os.environ.get('DB_USER') or 'nanyi'
+    DB_PASSWORD = os.environ.get('DB_PASSWORD') or 'admin123456!'
     DB_NAME = os.environ.get('DB_NAME') or 'nanyiqiutang'
     
-    SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 3600,
-        'connect_args': {'charset': 'utf8mb4'}
+        'pool_timeout': 10,
+        'max_overflow': 20,
+        'pool_size': 10,
+        'connect_args': {
+            'charset': 'utf8mb4',
+            'connect_timeout': 10,
+            'read_timeout': 10,
+            'write_timeout': 10,
+            'autocommit': True
+        }
     }
     
     # 文件上传配置
@@ -39,7 +48,7 @@ class Config:
     JSONIFY_PRETTYPRINT_REGULAR = True
     
     # CORS配置 - 从环境变量读取
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:8500').split(',')
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:8500,http://121.36.205.70:8500').split(',')
     
     # 服务配置 - 从环境变量读取
     BACKEND_PORT = int(os.environ.get('BACKEND_PORT') or 5001)
@@ -51,6 +60,12 @@ class Config:
 class DevelopmentConfig(Config):
     """开发环境配置"""
     DEBUG = os.environ.get('FLASK_DEBUG', 'True').lower() == 'true'
+    
+    def __init__(self):
+        super().__init__()
+        # 开发环境使用本地数据库或备用配置
+        if os.environ.get('USE_LOCAL_DB', 'false').lower() == 'true':
+            self.SQLALCHEMY_DATABASE_URI = 'sqlite:///nanyi_dev.db'
     
 class ProductionConfig(Config):
     """生产环境配置"""

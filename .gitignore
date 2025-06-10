@@ -108,4 +108,40 @@ instance/
 .webassets-cache
 
 # 图片处理临时文件
-*.pyc 
+*.pyc
+
+# PID文件
+*.pid
+backend.pid
+frontend.pid
+
+# 调试和测试文件
+debug.html
+test.html
+debug_*.html
+test_*.html
+
+# 临时脚本
+force-cleanup.sh
+temp_*.sh
+
+# 系统服务日志
+/var/log/nanyi-*
+
+# 缓存文件
+.cache/
+*.cache
+
+# 编辑器临时文件
+.*.swp
+.*.swo
+*~
+
+# 压缩文件
+*.zip
+*.tar.gz
+*.rar
+
+# 本地配置文件
+local_config.py
+local_settings.py 

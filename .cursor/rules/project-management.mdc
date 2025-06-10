@@ -1,0 +1,173 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 南意秋棠项目管理规则
+
+## 🏗️ 项目架构概览
+
+这是一个前后端分离的汉服品牌数据管理系统，技术栈：
+- **后端**: Flask + SQLAlchemy + MySQL
+- **前端**: HTML5/CSS3/JavaScript + Vue.js
+- **部署**: Linux服务器 + SystemD服务管理
+
+主要文件结构参考 [README.md](mdc:README.md)
+
+## 📋 开发规范
+
+### 代码注释要求
+- **所有Python代码必须添加中文注释**，解释每个函数、类和重要逻辑的作用
+- **JavaScript代码也需要中文注释**，特别是复杂的业务逻辑
+- **SQL查询和数据库操作必须注释**，说明查询目的和数据处理逻辑
+
+### 文件命名和组织
+- 后端代码放在 `backend/` 目录下
+- 前端代码放在 `frontend/` 目录下  
+- 静态资源（图片）按产品系列分类存放在 `frontend/static/images/`
+- 日志文件统一存放在 `logs/` 目录
+
+### API开发规范
+- 所有API接口以 `/api/` 开头
+- 使用RESTful风格设计API
+- 后端API文件：[backend/routes/api.py](mdc:backend/routes/api.py)
+- 前端API调用：[frontend/static/js/api.js](mdc:frontend/static/js/api.js)
+
+## 🔧 技术选型原则
+
+### 优先技术栈
+1. **后端开发**: 优先使用Python + Flask
+2. **前端开发**: 优先使用Vue.js + 原生JavaScript  
+3. **数据库**: 使用MySQL作为主数据库
+4. **样式**: 使用原生CSS3，支持响应式设计
+
+### 依赖管理
+- Python依赖记录在 [requirements.txt](mdc:requirements.txt)
+- 关键版本锁定：
+  - Flask-SQLAlchemy==2.5.1 
+  - SQLAlchemy==1.4.53
+  - Flask==2.3.3
+
+## 🚀 服务管理
+
+### 启动和停止
+- 使用 [start_services.sh](mdc:start_services.sh) 启动所有服务
+- 使用 [stop_services.sh](mdc:stop_services.sh) 停止所有服务
+- 生产环境使用SystemD服务：[service-manager.sh](mdc:service-manager.sh)
+
+### 健康检查
+- 后端健康检查：http://121.36.205.70:5001/health
+- 前端服务检查：http://121.36.205.70:8500
+
+### 日志管理
+- 后端日志：`logs/backend.log`
+- 前端日志：`logs/frontend.log`
+- 使用 `tail -f logs/backend.log` 实时查看日志
+
+## 📊 数据库管理
+
+### 连接配置
+- 数据库主机：47.118.250.53:3306
+- 应用服务器：121.36.205.70
+- 数据库名：nanyiqiutang
+- 配置文件：[backend/config/config.py](mdc:backend/config/config.py)
+
+### 模型设计
+- 产品模型：[backend/models/product.py](mdc:backend/models/product.py)
+- 管理员模型：[backend/models/admin.py](mdc:backend/models/admin.py)
+
+## 🎨 前端开发规范
+
+### 页面结构
+- 主页面：[frontend/index.html](mdc:frontend/index.html)
+- 主样式：[frontend/static/css/main.css](mdc:frontend/static/css/main.css)
+- 主逻辑：[frontend/static/js/main.js](mdc:frontend/static/js/main.js)
+
+### 响应式设计
+- 移动端优先设计
+- 支持桌面端和移动端完美适配
+- 断点设置遵循现代响应式设计原则
+
+### 图片资源管理
+- 产品图片按系列分类存放
+- 支持图片预览和放大功能
+- 优化图片加载性能
+
+## 🔒 安全和最佳实践
+
+### 环境配置
+- 使用 `.env` 文件管理环境变量
+- 敏感信息不提交到Git
+- 生产环境和开发环境分离配置
+
+### 错误处理
+- 完善的异常捕获和日志记录
+- 用户友好的错误提示
+- API错误状态码规范化
+
+### 性能优化
+- 数据库查询优化
+- 静态资源压缩和缓存
+- API响应时间监控
+
+## 🛠️ 开发工作流
+
+### 问题解决步骤
+1. **理解需求**: 充分理解用户需求，站在用户角度思考
+2. **分析现状**: 阅读相关文件，理解现有项目结构和代码
+3. **制定方案**: 选择最简单有效的解决方案
+4. **编写代码**: 添加详细的中文注释
+5. **测试验证**: 确保功能正常且不影响现有功能
+6. **文档更新**: 更新README.md和相关文档
+
+### 代码提交规范
+- 提交前检查代码格式和注释
+- 确保所有服务能正常启动
+- 更新相关文档说明
+
+## 📞 紧急情况处理
+
+### 服务异常
+```bash
+# 检查服务状态
+./service-manager.sh status
+
+# 重启服务
+sudo ./service-manager.sh restart
+
+# 查看错误日志
+tail -f logs/backend.log
+```
+
+### 数据库问题
+```bash
+# 测试数据库连接
+python3 -c "import pymysql; pymysql.connect(host='47.118.250.53', user='nanyi', password='admin123456!', database='nanyiqiutang')"
+```
+
+### 端口占用
+```bash
+# 检查端口占用
+netstat -tlnp | grep :5001
+netstat -tlnp | grep :8500
+
+# 强制清理（如需要）
+./force-cleanup.sh
+```
+
+## 📈 项目优化方向
+
+### 短期优化
+- 完善错误处理和用户提示
+- 优化页面加载速度
+- 增强移动端体验
+
+### 长期规划
+- 添加用户权限管理
+- 实现数据导入导出功能
+- 集成图片上传管理系统
+- 添加数据分析和统计功能
+
+---
+
+*本规则文件基于项目当前状态制定，随项目发展持续更新*

@@ -18,9 +18,8 @@ sys.path.insert(0, project_root)
 from flask import Flask, render_template
 from flask_cors import CORS
 from backend.config.config import config_map
-from backend.models import db
-from backend.routes import api_bp
-from backend.utils.db_utils import init_database, create_default_admin
+from backend.models import db, init_models
+from backend.utils.logger import setup_logging
 
 def create_app(config_name='development'):
     """应用工厂函数"""
@@ -36,10 +35,47 @@ def create_app(config_name='development'):
     db.init_app(app)
     CORS(app, origins=app.config['CORS_ORIGINS'])
     
-    # 注册蓝图
-    app.register_blueprint(api_bp)
+    # 初始化日志
+    setup_logging(app)
     
-    # 注册路由
+    # 在应用上下文中初始化模型
+    with app.app_context():
+        # 初始化模型
+        Product, Admin = init_models()
+        
+        # 测试数据库连接
+        try:
+            # 尝试连接数据库
+            db.engine.connect()
+            print("✅ 数据库连接成功")
+            
+            # 创建表
+            db.create_all()
+            print("✅ 数据表创建成功")
+            
+            # 创建默认管理员（如果不存在）
+            if Admin:
+                admin = Admin.query.filter_by(username='admin').first()
+                if not admin:
+                    admin = Admin(username='admin', email='admin@nanyi.com')
+                    admin.set_password('admin123')
+                    db.session.add(admin)
+                    db.session.commit()
+                    print("✅ 默认管理员创建成功")
+                    
+        except Exception as e:
+            print(f"❌ 数据库初始化失败: {e}")
+            # 不中断服务，继续启动
+    
+    # 延迟导入路由，避免循环导入
+    try:
+        from backend.routes import api_bp
+        app.register_blueprint(api_bp)
+        print("✅ API路由注册成功")
+    except ImportError as e:
+        print(f"警告: 路由导入失败 - {e}")
+    
+    # 注册基本路由
     @app.route('/')
     def index():
         """主页重定向到前端"""
@@ -51,7 +87,19 @@ def create_app(config_name='development'):
     def health():
         """健康检查"""
         backend_port = os.environ.get('BACKEND_PORT', '5001')
-        return {'status': 'healthy', 'service': 'nanyi-backend', 'port': int(backend_port)}
+        try:
+            # 测试数据库连接
+            db.engine.connect()
+            db_status = 'connected'
+        except:
+            db_status = 'disconnected'
+            
+        return {
+            'status': 'healthy', 
+            'service': 'nanyi-backend', 
+            'port': int(backend_port),
+            'database': db_status
+        }
     
     # 错误处理
     @app.errorhandler(404)
@@ -62,12 +110,6 @@ def create_app(config_name='development'):
     def internal_error(error):
         return {'error': 'Internal server error'}, 500
     
-    # 初始化数据库（仅在开发环境）
-    if config_name == 'development':
-        with app.app_context():
-            if init_database(app):
-                create_default_admin()
-    
     return app
 
 def main():
@@ -76,14 +118,15 @@ def main():
     config_name = os.environ.get('FLASK_ENV', 'development')
     port = int(os.environ.get('BACKEND_PORT', 5001))
     host = os.environ.get('HOST', '0.0.0.0')
-    domain = os.environ.get('DOMAIN', 'localhost')
+    domain = os.environ.get('DOMAIN', 'chenxiaoshivivid.com.cn')
     
     # 创建应用
     app = create_app(config_name)
     
     print(f"🚀 南意秋棠后端服务启动")
     print(f"📱 本地访问: http://localhost:{port}")
-    print(f"🌐 生产地址: http://{domain}:{port}")
+    print(f"🌐 域名访问: http://{domain}:{port}")
+    print(f"🌐 IP访问: http://121.36.205.70:{port}")
     print(f"🔧 环境: {config_name}")
     print(f"💾 数据库: {app.config['SQLALCHEMY_DATABASE_URI'].split('@')[1] if '@' in app.config['SQLALCHEMY_DATABASE_URI'] else 'N/A'}")
     
