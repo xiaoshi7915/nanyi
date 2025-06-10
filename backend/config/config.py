@@ -25,16 +25,21 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
-        'pool_recycle': 3600,
-        'pool_timeout': 10,
-        'max_overflow': 20,
-        'pool_size': 10,
+        'pool_recycle': 7200,  # 2小时回收连接
+        'pool_timeout': 20,    # 增加连接池超时
+        'max_overflow': 30,    # 增加溢出连接数
+        'pool_size': 15,       # 增加连接池大小
+        'echo': False,         # 关闭SQL日志（生产环境）
         'connect_args': {
             'charset': 'utf8mb4',
-            'connect_timeout': 10,
-            'read_timeout': 10,
-            'write_timeout': 10,
-            'autocommit': True
+            'connect_timeout': 15,
+            'read_timeout': 30,
+            'write_timeout': 30,
+            'autocommit': False,  # 改为False以支持事务
+            'sql_mode': 'TRADITIONAL',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            # MySQL连接池相关设置
+            'pool_recycle': 7200
         }
     }
     
@@ -48,7 +53,7 @@ class Config:
     JSONIFY_PRETTYPRINT_REGULAR = True
     
     # CORS配置 - 从环境变量读取
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:8500,http://121.36.205.70:8500').split(',')
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:8500,http://121.36.205.70:8500,http://chenxiaoshivivid.com.cn:8500').split(',')
     
     # 服务配置 - 从环境变量读取
     BACKEND_PORT = int(os.environ.get('BACKEND_PORT') or 5001)

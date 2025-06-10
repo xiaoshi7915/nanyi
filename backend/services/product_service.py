@@ -8,7 +8,7 @@ from backend.models import db, init_models
 from datetime import datetime
 
 # 初始化模型
-Product, Admin = init_models()
+Product, Admin, AccessLog = init_models()
 
 class ProductService:
     """产品处理服务类"""

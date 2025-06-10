@@ -10,43 +10,8 @@ from functools import wraps
 from flask import Blueprint, jsonify, request, send_file, abort, current_app
 from services.image_service import ImageService
 from services.product_service import ProductService
+from services.cache_service import cached, cache_service, DatabaseQueryCache
 from backend.utils.logger import log_access
-
-# 简单的内存缓存
-_cache = {}
-_cache_timestamps = {}
-CACHE_DURATION = 300  # 5分钟缓存
-
-def cache_response(duration=CACHE_DURATION):
-    """缓存装饰器"""
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            # 生成缓存键
-            cache_key = f"{f.__name__}_{request.path}_{request.query_string.decode()}"
-            current_time = time.time()
-            
-            # 检查缓存是否存在且未过期
-            if (cache_key in _cache and 
-                cache_key in _cache_timestamps and 
-                current_time - _cache_timestamps[cache_key] < duration):
-                return _cache[cache_key]
-            
-            # 执行函数并缓存结果
-            result = f(*args, **kwargs)
-            _cache[cache_key] = result
-            _cache_timestamps[cache_key] = current_time
-            
-            # 清理过期缓存
-            expired_keys = [k for k, t in _cache_timestamps.items() 
-                          if current_time - t > duration]
-            for key in expired_keys:
-                _cache.pop(key, None)
-                _cache_timestamps.pop(key, None)
-            
-            return result
-        return decorated_function
-    return decorator
 
 def handle_errors(f):
     """错误处理装饰器"""
@@ -67,7 +32,7 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 @api_bp.route('/images')
 @log_access
-@cache_response(duration=180)  # 3分钟缓存
+@cached(ttl=300, key_prefix='api_images')  # 5分钟缓存
 @handle_errors
 def get_images():
     """获取所有图片信息"""
@@ -194,7 +159,7 @@ def get_images():
 
 @api_bp.route('/filters')
 @log_access
-@cache_response(duration=300)  # 5分钟缓存
+@cached(ttl=600, key_prefix='api_filters')  # 10分钟缓存
 @handle_errors
 def get_filters():
     """获取筛选选项"""
@@ -275,7 +240,7 @@ def get_filters():
 
 @api_bp.route('/brand/<brand_name>')
 @log_access
-@cache_response(duration=600)  # 10分钟缓存
+@cached(ttl=900, key_prefix='api_brand')  # 15分钟缓存
 @handle_errors
 def get_brand_detail(brand_name):
     """获取品牌详细信息"""
@@ -417,6 +382,60 @@ def health_check():
         'status': 'healthy',
         'message': 'API service is running'
     })
+
+@api_bp.route('/cache/stats')
+@handle_errors
+def get_cache_stats():
+    """获取缓存统计信息"""
+    stats = cache_service.stats()
+    return jsonify({
+        'success': True,
+        'cache_stats': stats
+    })
+
+@api_bp.route('/cache/clear', methods=['POST'])
+@handle_errors
+def clear_cache():
+    """清理缓存"""
+    data = request.get_json() or {}
+    pattern = data.get('pattern', '.*')
+    
+    cache_service.clear_pattern(pattern)
+    
+    return jsonify({
+        'success': True,
+        'message': f'缓存已清理: {pattern}'
+    })
+
+@api_bp.route('/logs/access/stats')
+@handle_errors
+def get_access_log_stats():
+    """获取访问日志统计"""
+    try:
+        from models.access_log import AccessLog
+        
+        days = request.args.get('days', 7, type=int)
+        
+        # 获取访问统计
+        stats = AccessLog.get_access_stats(days)
+        top_ips = AccessLog.get_top_ips(10, days)
+        popular_paths = AccessLog.get_popular_paths(10, days)
+        
+        return jsonify({
+            'success': True,
+            'stats': {
+                'daily_stats': stats,
+                'top_ips': top_ips,
+                'popular_paths': popular_paths,
+                'period_days': days
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'获取访问统计失败: {str(e)}'
+        }), 500
 
 # 错误处理
 @api_bp.errorhandler(404)

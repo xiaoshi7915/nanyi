@@ -144,4 +144,22 @@ temp_*.sh
 
 # 本地配置文件
 local_config.py
-local_settings.py 
+local_settings.py
+
+# 图片文件 - 不上传到GitHub
+frontend/static/images/**
+!frontend/static/images/hero-banner.jpg
+!frontend/static/images/.gitkeep
+
+# 大文件
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.webp
+*.svg
+
+# 但保留特定的小图标文件
+!frontend/static/css/images/
+!frontend/static/js/images/ 

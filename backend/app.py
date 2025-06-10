@@ -41,7 +41,7 @@ def create_app(config_name='development'):
     # 在应用上下文中初始化模型
     with app.app_context():
         # 初始化模型
-        Product, Admin = init_models()
+        Product, Admin, AccessLog = init_models()
         
         # 测试数据库连接
         try:

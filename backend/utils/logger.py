@@ -121,9 +121,12 @@ def log_access(f):
                 'ip_info': ip_info
             }
             
-            # 写入访问日志
+            # 写入文件日志
             access_logger = logging.getLogger('access')
             access_logger.info(json.dumps(log_data, ensure_ascii=False))
+            
+            # 异步写入数据库
+            save_access_log_to_db(log_data)
             
             return response
             
@@ -146,13 +149,33 @@ def log_access(f):
                 'error': str(e)
             }
             
-            # 写入错误日志
+            # 写入文件日志
             error_logger = logging.getLogger('error')
             error_logger.error(json.dumps(log_data, ensure_ascii=False))
+            
+            # 异步写入数据库
+            save_access_log_to_db(log_data)
             
             raise e
     
     return decorated_function
+
+def save_access_log_to_db(log_data):
+    """异步保存访问日志到数据库"""
+    try:
+        from flask import current_app
+        from models.access_log import AccessLog
+        from models import db
+        
+        # 在应用上下文中执行数据库操作
+        with current_app.app_context():
+            access_log = AccessLog.create_from_request_data(log_data)
+            db.session.add(access_log)
+            db.session.commit()
+            
+    except Exception as e:
+        print(f"保存访问日志到数据库失败: {e}")
+        # 不影响主请求处理
 
 def setup_logging(app):
     """设置应用日志"""

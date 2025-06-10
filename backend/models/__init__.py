@@ -15,13 +15,15 @@ def init_models():
     try:
         from .product import Product
         from .admin import Admin
-        return Product, Admin
+        from .access_log import AccessLog
+        return Product, Admin, AccessLog
     except ImportError as e:
         print(f"警告: 模型导入失败 - {e}")
-        return None, None
+        return None, None, None
 
 # 延迟导入，避免循环依赖
 Product = None
 Admin = None
+AccessLog = None
 
-__all__ = ['db', 'Product', 'Admin', 'init_models'] 
+__all__ = ['db', 'Product', 'Admin', 'AccessLog', 'init_models'] 
