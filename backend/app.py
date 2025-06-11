@@ -20,6 +20,7 @@ from flask_cors import CORS
 from backend.config.config import config_map
 from backend.models import db, init_models
 from backend.utils.logger import setup_logging
+from backend.utils.cache_control import init_cache_control_helpers
 
 def create_app(config_name='development'):
     """应用工厂函数"""
@@ -37,6 +38,9 @@ def create_app(config_name='development'):
     
     # 初始化日志
     setup_logging(app)
+    
+    # 初始化缓存控制
+    init_cache_control_helpers(app)
     
     # 在应用上下文中初始化模型
     with app.app_context():

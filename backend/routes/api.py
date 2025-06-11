@@ -12,6 +12,7 @@ from services.image_service import ImageService
 from services.product_service import ProductService
 from services.cache_service import cached, cache_service, DatabaseQueryCache
 from backend.utils.logger import log_access
+from backend.utils.cache_control import smart_cache, cache_control
 
 def handle_errors(f):
     """错误处理装饰器"""
@@ -32,7 +33,7 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 
 @api_bp.route('/images')
 @log_access
-@cached(ttl=300, key_prefix='api_images')  # 5分钟缓存
+@smart_cache
 @handle_errors
 def get_images():
     """获取所有图片信息"""
@@ -57,8 +58,12 @@ def get_images():
     if Product:
         try:
             products = Product.query.all()
+            print(f"🔍 数据库查询到 {len(products)} 个产品")
             for product in products:
                 brand_products[product.brand_name] = product
+                # 调试输出新品牌
+                if product.brand_name in ['江南春', '有才华']:
+                    print(f"🎯 找到目标品牌: {product.brand_name} - {product.year} - {product.theme_series}")
         except Exception as e:
             print(f"数据库查询错误: {e}")
             products = []
