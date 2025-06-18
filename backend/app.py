@@ -34,7 +34,21 @@ def create_app(config_name='development'):
     
     # 初始化扩展
     db.init_app(app)
-    CORS(app, origins=app.config['CORS_ORIGINS'])
+    
+    # 正式CORS配置，支持所有必要的域名
+    cors_origins = [
+        'http://localhost:8500',
+        'http://127.0.0.1:8500', 
+        'http://121.36.205.70:8500',
+        'http://chenxiaoshivivid.com.cn:8500',
+        'http://www.chenxiaoshivivid.com.cn:8500'
+    ]
+    
+    CORS(app, 
+         origins=cors_origins,
+         methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+         allow_headers=['Content-Type', 'Authorization', 'Access-Control-Allow-Credentials'],
+         supports_credentials=True)
     
     # 初始化日志
     setup_logging(app)

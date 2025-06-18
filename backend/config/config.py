@@ -46,12 +46,27 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
     
+    # OSS配置
+    OSS_ACCESS_KEY_ID = os.environ.get('OSS_ACCESS_KEY_ID') or ''
+    OSS_ACCESS_KEY_SECRET = os.environ.get('OSS_ACCESS_KEY_SECRET') or ''
+    OSS_ENDPOINT = os.environ.get('OSS_ENDPOINT') or 'oss-cn-hangzhou.aliyuncs.com'
+    OSS_BUCKET = os.environ.get('OSS_BUCKET') or 'nanyiqiutang'
+    OSS_BASE_URL = f'https://{OSS_BUCKET}.{OSS_ENDPOINT}'
+    
+    # 图片源配置 - 支持命令行切换
+    # 可选值: 'oss', 'local'
+    IMAGE_SOURCE = os.environ.get('IMAGE_SOURCE', 'oss').lower()
+    
+    # 图片处理参数
+    OSS_THUMBNAIL_PARAMS = '?x-oss-process=image/resize,w_300,h_300,m_lfit/quality,q_80/format,webp'
+    OSS_MEDIUM_PARAMS = '?x-oss-process=image/resize,w_800,h_800,m_lfit/quality,q_90/format,webp'
+    
     # API配置
     JSON_AS_ASCII = False
     JSONIFY_PRETTYPRINT_REGULAR = True
     
     # CORS配置 - 从环境变量读取
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:8500,http://121.36.205.70:8500,http://chenxiaoshivivid.com.cn:8500').split(',')
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:8500,http://121.36.205.70:8500,http://chenxiaoshivivid.com.cn:8500,http://www.chenxiaoshivivid.com.cn:8500').split(',')
     
     # 服务配置 - 从环境变量读取
     BACKEND_PORT = int(os.environ.get('BACKEND_PORT') or 5001)
@@ -75,7 +90,7 @@ class ProductionConfig(Config):
     DEBUG = False
     
     # 生产环境可以添加更严格的CORS配置
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', f'http://{Config.DOMAIN}:8500').split(',')
+    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', f'http://{Config.DOMAIN}:8500,http://www.{Config.DOMAIN}:8500').split(',')
     
 class TestingConfig(Config):
     """测试环境配置"""

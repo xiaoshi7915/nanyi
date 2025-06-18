@@ -7,9 +7,10 @@
 import os
 import re
 from typing import List, Dict, Optional
+from flask import current_app
 
 class ImageService:
-    """图片处理服务类"""
+    """图片处理服务类 - 支持本地和OSS图片源切换"""
     
     def __init__(self, images_dir: str = None):
         """初始化图片服务"""
@@ -22,6 +23,27 @@ class ImageService:
         
         self.images_dir = images_dir
         self.allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'}
+        
+        # 获取图片源配置
+        self.image_source = current_app.config.get('IMAGE_SOURCE', 'oss').lower()
+        print(f"🔧 图片服务初始化: 当前图片源 = {self.image_source}")
+        
+        # 根据配置初始化相应的服务
+        if self.image_source == 'oss':
+            self._init_oss_service()
+        else:
+            print(f"📁 使用本地图片源: {self.images_dir}")
+    
+    def _init_oss_service(self):
+        """初始化OSS服务"""
+        try:
+            from .oss_image_service import OSSImageService
+            self.oss_service = OSSImageService()
+            print(f"🌐 OSS服务初始化成功: {current_app.config['OSS_BASE_URL']}")
+        except Exception as e:
+            print(f"❌ OSS服务初始化失败: {e}")
+            print("🔄 自动切换到本地图片源")
+            self.image_source = 'local'
     
     def parse_filename(self, filename: str) -> Dict[str, str]:
         """解析文件名获取品牌信息"""
@@ -66,10 +88,34 @@ class ImageService:
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in self.allowed_extensions
     
     def get_all_images(self) -> List[Dict]:
-        """获取所有图片信息"""
+        """获取所有图片信息 - 根据配置使用OSS或本地"""
+        if self.image_source == 'oss' and hasattr(self, 'oss_service'):
+            print("🌐 从OSS获取图片数据")
+            return self._get_oss_images_with_urls()
+        else:
+            print("📁 从本地获取图片数据")
+            return self._get_local_images()
+    
+    def _get_oss_images_with_urls(self) -> List[Dict]:
+        """从OSS获取图片信息并添加URL字段"""
+        images = self.oss_service.get_all_images_from_oss()
+        
+        # 为每个图片添加URL信息，保持与本地图片相同的数据结构
+        for img in images:
+            # 添加本地兼容的URL字段
+            img['url'] = img['medium_url']  # 默认使用中等尺寸
+            img['thumbnail'] = img['thumbnail_url']
+            img['original'] = img['original_url']
+            
+        print(f"🌐 OSS图片加载完成: 共{len(images)}张图片")
+        return images
+    
+    def _get_local_images(self) -> List[Dict]:
+        """从本地获取图片信息"""
         images = []
         
         if not os.path.exists(self.images_dir):
+            print(f"⚠️ 本地图片目录不存在: {self.images_dir}")
             return images
         
         # 扫描根目录下的图片文件
@@ -85,7 +131,11 @@ class ImageService:
                         'image_type': parsed_info['image_type'],
                         'color': parsed_info['color'],
                         'has_color': parsed_info['has_color'],
-                        'size': os.path.getsize(filepath)
+                        'size': os.path.getsize(filepath),
+                        # 本地图片URL
+                        'url': f"/api/view/{filename}",
+                        'thumbnail': f"/api/view/{filename}",
+                        'original': f"/api/view/{filename}"
                     })
         
         # 扫描子文件夹中的图片
@@ -97,21 +147,42 @@ class ImageService:
                         filepath = os.path.join(item_path, filename)
                         if os.path.isfile(filepath):
                             parsed_info = self.parse_filename(filename)
+                            relative_path = f"{item}/{filename}"
                             images.append({
                                 'filename': filename,
-                                'relative_path': f"{item}/{filename}",
+                                'relative_path': relative_path,
                                 'brand_name': parsed_info['brand_name'] or item,
                                 'image_type': parsed_info['image_type'],
                                 'color': parsed_info['color'],
                                 'has_color': parsed_info['has_color'],
-                                'size': os.path.getsize(filepath)
+                                'size': os.path.getsize(filepath),
+                                # 本地图片URL
+                                'url': f"/api/view/{relative_path}",
+                                'thumbnail': f"/api/view/{relative_path}",
+                                'original': f"/api/view/{relative_path}"
                             })
         
+        print(f"📁 本地图片加载完成: 共{len(images)}张图片")
         return sorted(images, key=lambda x: x['brand_name'] or '')
     
     def get_brand_images(self, brand_name: str) -> List[Dict]:
-        """获取指定品牌的所有图片"""
-        all_images = self.get_all_images()
+        """获取指定品牌的所有图片 - 支持OSS和本地"""
+        if self.image_source == 'oss' and hasattr(self, 'oss_service'):
+            print(f"🌐 从OSS获取品牌图片: {brand_name}")
+            images = self.oss_service.get_brand_images(brand_name)
+            # 添加URL字段
+            for img in images:
+                img['url'] = img['medium_url']
+                img['thumbnail'] = img['thumbnail_url']
+                img['original'] = img['original_url']
+            return images
+        else:
+            print(f"📁 从本地获取品牌图片: {brand_name}")
+            return self._get_local_brand_images(brand_name)
+    
+    def _get_local_brand_images(self, brand_name: str) -> List[Dict]:
+        """从本地获取指定品牌的所有图片"""
+        all_images = self._get_local_images()
         
         # 首先尝试精确匹配
         exact_matches = [img for img in all_images if img['brand_name'] == brand_name]
@@ -170,16 +241,21 @@ class ImageService:
         return full_path
     
     def get_statistics(self) -> Dict[str, int]:
-        """获取图片统计信息"""
-        images = self.get_all_images()
-        brands = set(img['brand_name'] for img in images)
-        
-        return {
-            'total_images': len(images),
-            'total_brands': len(brands),
-            'design_images': len([img for img in images if img['image_type'] == '设计图']),
-            'fabric_images': len([img for img in images if img['image_type'] == '布料图'])
-        }
+        """获取图片统计信息 - 支持OSS和本地"""
+        if self.image_source == 'oss' and hasattr(self, 'oss_service'):
+            print("🌐 从OSS获取统计信息")
+            return self.oss_service.get_statistics()
+        else:
+            print("📁 从本地获取统计信息")
+            images = self._get_local_images()
+            brands = set(img['brand_name'] for img in images)
+            
+            return {
+                'total_images': len(images),
+                'total_brands': len(brands),
+                'design_images': len([img for img in images if img['image_type'] == '设计图']),
+                'fabric_images': len([img for img in images if img['image_type'] == '布料图'])
+            }
     
     def get_filter_options(self) -> Dict:
         """获取筛选选项和品牌统计"""

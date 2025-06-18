@@ -8,9 +8,11 @@ class NanyiAPI {
         const currentHost = window.location.hostname;
         const protocol = window.location.protocol;
         
-        // 如果是域名访问，使用域名；否则使用IP
+        // 如果是域名访问，使用对应的域名；否则使用IP
         if (currentHost === 'chenxiaoshivivid.com.cn') {
-            this.baseURL = `${protocol}//${currentHost}:5001/api`;
+            this.baseURL = `${protocol}://chenxiaoshivivid.com.cn:5001/api`;
+        } else if (currentHost === 'www.chenxiaoshivivid.com.cn') {
+            this.baseURL = `${protocol}://www.chenxiaoshivivid.com.cn:5001/api`;
         } else if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
             this.baseURL = `${protocol}//${currentHost}:5001/api`;
         } else {

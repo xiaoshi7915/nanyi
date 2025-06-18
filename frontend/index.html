@@ -34,6 +34,7 @@
     </script>
     
     <!-- 引入API客户端 -->
+    <!-- 恢复使用正式API文件 -->
     <script src="js/api.js"></script>
     <!-- <script src="js/components.js"></script> -->
     <!-- <script src="static/js/main.js"></script> -->
@@ -294,7 +295,7 @@
                 </div>
 
                 <!-- 全部加载完成 -->
-                <div v-if="filteredBrands.length > 0 && !pagination.hasNext && !isLoadingMore" class="all-loaded">
+                <div v-if="filteredBrands.length > 0 && !pagination.hasNext && !isLoadingMore && pagination.totalBrands > 0" class="all-loaded">
                     <i class="fas fa-check-circle"></i>
                     <span>已显示全部 {{ pagination.totalBrands }} 个品牌</span>
                 </div>
@@ -860,16 +861,13 @@
                     for (const imageType of priorityOrder) {
                         const foundImage = brand.images.find(img => img.image_type === imageType);
                         if (foundImage) {
-                            // 使用前端静态文件路径，正确编码中文字符
-                            const encodedPath = foundImage.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
-                            return `/static/images/${encodedPath}`;
+                            return this.getImageURL(foundImage);
                         }
                     }
                     
                     // 如果没有匹配的类型，使用第一张图片
                     if (brand.images.length > 0) {
-                        const encodedPath = brand.images[0].relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
-                        return `/static/images/${encodedPath}`;
+                        return this.getImageURL(brand.images[0]);
                     }
                     return null;
                 },
@@ -1021,13 +1019,29 @@
 
                 getImageURL(image) {
                     try {
-                        // 使用前端静态文件路径，正确编码中文字符
-                        const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
-                        return `/static/images/${encodedPath}`;
+                        // 优先使用OSS图片URL（如果存在）
+                        if (image.medium_url && image.medium_url.startsWith('http')) {
+                            return image.medium_url;
+                        }
+                        
+                        // 兼容现有的URL字段
+                        if (image.url && image.url.startsWith('http')) {
+                            return image.url;
+                        }
+                        
+                        // 本地图片路径处理
+                        if (image.relative_path) {
+                            // 使用前端静态文件路径，正确编码中文字符
+                            const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
+                            return `/static/images/${encodedPath}`;
+                        }
+                        
+                        // 最后的降级处理
+                        return `/static/images/${image.filename || 'placeholder.jpg'}`;
                     } catch (error) {
-                        console.warn('图片路径编码失败:', error, image);
+                        console.warn('图片URL处理失败:', error, image);
                         // 降级处理：直接使用原始路径
-                        return `/static/images/${image.relative_path}`;
+                        return `/static/images/${image.relative_path || image.filename || 'placeholder.jpg'}`;
                     }
                 },
 

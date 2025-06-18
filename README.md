@@ -1,527 +1,214 @@
-# 南意秋棠 - 汉服品牌数据管理系统
+# 南意秋棠汉服产品展示系统
 
-## 🚀 项目状态
+一个专业的汉服产品展示网站，支持品牌分类、图片展示和产品搜索功能。
 
-✅ **服务已成功启动并运行**
+## 🚀 快速启动
 
-- 后端服务：http://121.36.205.70:5001 
-- 前端服务：http://121.36.205.70:8500
-- 数据库连接：47.118.250.53:3306
+### 环境要求
+- Python 3.7+
+- MySQL 5.7+
+- 系统：Linux/macOS/Windows
 
-## 📋 问题解决记录
-
-### 原始问题
-项目启动时遇到以下问题：
-1. Flask-SQLAlchemy版本兼容性问题 (`app_ctx` 不存在)
-2. 数据库连接超时 (MySQL服务器连接失败)
-3. 模型循环导入问题
-4. 配置文件中property装饰器导致的错误
-
-### 解决方案
-
-#### 1. 依赖版本修复
+### 安装和运行
 ```bash
-# 降级Flask-SQLAlchemy到兼容版本
-Flask-SQLAlchemy==2.5.1
-SQLAlchemy==1.4.53
-```
-
-#### 2. 数据库配置修正
-```python
-# 数据库IP配置
-DB_HOST = '47.118.250.53'  # 数据库服务器
-DOMAIN = '121.36.205.70'   # 应用服务器
-```
-
-#### 3. 简化启动逻辑
-- 移除独立模式备用方案
-- 只保留正常数据库连接模式
-- 优化启动脚本错误处理
-
-#### 4. 模型导入优化
-```python
-# 使用延迟导入避免循环依赖
-def init_models():
-    from .product import Product
-    from .admin import Admin
-    return Product, Admin
-```
-
-## 🔧 技术栈
-
-- **后端**: Flask 2.3.3 + Flask-SQLAlchemy 2.5.1
-- **数据库**: MySQL 8.0 (PyMySQL驱动)
-- **前端**: 原生HTML/CSS/JavaScript
-- **服务器**: Python 3.8
-
-## 📱 服务管理
-
-### 启动服务
-```bash
-./start_services.sh
-```
-
-### 停止服务
-```bash
-./stop_services.sh
-```
-
-### 查看日志
-```bash
-# 后端日志
-tail -f logs/backend.log
-
-# 前端日志  
-tail -f logs/frontend.log
-```
-
-### 健康检查
-```bash
-# 后端健康检查
-curl http://121.36.205.70:5001/health
-
-# 前端服务检查
-curl -I http://121.36.205.70:8500
-```
-
-## 🗄️ 数据库配置
-
-```python
-# 当前配置
-DB_HOST = '47.118.250.53'
-DB_PORT = 3306
-DB_USER = 'nanyi'
-DB_PASSWORD = 'admin123456!'
-DB_NAME = 'nanyiqiutang'
-```
-
-## 📊 API接口
-
-### 产品管理
-- `GET /api/products` - 获取产品列表
-- `POST /api/products` - 添加产品
-- `PUT /api/products/{id}` - 更新产品
-- `DELETE /api/products/{id}` - 删除产品
-
-### 系统管理
-- `GET /api/statistics` - 获取统计信息
-- `GET /api/search` - 搜索产品
-- `POST /api/admin/login` - 管理员登录
-
-## 🚀 最新性能优化完成 (2024-12-18)
-
-### ✅ 已完成的性能优化
-1. **Vue.js生产版本升级**
-   - 文件大小减少72% (552KB → 156KB)
-   - 消除开发模式警告
-   - 修复performSearch方法缺失问题
-
-2. **智能缓存策略优化**
-   - 缓存时间延长到7天 (品牌数据、图片数据)
-   - 智能缓存清理和空间管理
-   - 预加载关键资源功能
-
-3. **图片加载优化**
-   - 中文路径编码问题修复
-   - 自动重试机制
-   - 懒加载功能实现
-   - 优雅错误处理
-
-4. **性能监控系统**
-   - Core Web Vitals监控 (LCP, FID, CLS)
-   - 实时性能指标跟踪
-   - 图片加载性能分析
-
-### 📊 性能提升效果
-- **页面加载速度提升**: 60-80%
-- **缓存命中率**: 从60%提升到90%
-- **图片加载成功率**: 提升到98%
-- **初始网络请求**: 减少50%
-
-## 🎯 下一步优化建议
-
-1. **生产环境部署**
-   - 使用Gunicorn/uWSGI替代开发服务器
-   - 配置Nginx反向代理
-   - 添加SSL证书
-
-2. **监控和日志**
-   - 集成日志轮转
-   - 添加性能监控
-   - 错误报警机制
-
-3. **安全增强**
-   - API认证和授权
-   - 输入验证和过滤
-   - SQL注入防护
-
-4. **功能扩展**
-   - 图片上传管理
-   - 数据导入导出
-   - 用户权限管理
-
-## 🔧 故障排除
-
-### 常见问题
-
-1. **端口占用**
-   ```bash
-   # 检查端口占用
-   netstat -tlnp | grep :5001
-   netstat -tlnp | grep :8500
-   
-   # 杀掉占用进程
-   kill -9 <PID>
-   ```
-
-2. **数据库连接失败**
-   ```bash
-   # 测试数据库连接
-   python3 -c "import pymysql; pymysql.connect(host='47.118.250.53', user='nanyi', password='admin123456!', database='nanyiqiutang')"
-   ```
-
-3. **依赖问题**
-   ```bash
-   # 重新安装依赖
-   pip install -r requirements.txt --force-reinstall
-   ```
-
-## 📞 联系信息
-
-项目维护：南意秋棠开发团队
-最后更新：2024年12月8日
-
-## 🌟 项目特色
-
-- **响应式设计**: 完美适配桌面端和移动端
-- **智能筛选**: 支持年份、材质、主题、尺寸多维度筛选
-- **图片预览**: 支持图片放大预览和下载功能
-- **数据驱动**: 连接MySQL数据库，实时展示面料信息
-- **分享功能**: 支持微信、QQ等多平台分享
-- **前后端分离**: Flask后端API + 静态前端，易于部署和维护
-
-## 🏗️ 技术架构
-
-### 后端技术栈
-- **Python 3.8+**
-- **Flask 2.3.3** - Web框架
-- **Flask-SQLAlchemy 3.0.5** - ORM数据库操作
-- **Flask-CORS 4.0.0** - 跨域支持
-- **PyMySQL 1.1.0** - MySQL数据库连接
-- **python-dotenv 1.0.0** - 环境变量管理
-
-### 前端技术栈
-- **HTML5 + CSS3** - 页面结构和样式
-- **JavaScript ES6+** - 交互逻辑
-- **Vue.js 3** - 响应式数据绑定
-- **响应式布局** - 移动端优先设计
-
-### 数据库
-- **MySQL 8.0** - 主数据库
-- 包含产品表、分类表等完整数据结构
-
-## 📁 项目结构
-
-```
-nanyi/
-├── backend/                 # 后端代码
-│   ├── app.py              # 主应用入口
-│   ├── config/             # 配置文件
-│   │   └── config.py       # 数据库和应用配置
-│   ├── models/             # 数据模型
-│   │   ├── __init__.py
-│   │   └── product.py      # 产品模型
-│   ├── routes/             # API路由
-│   │   ├── __init__.py
-│   │   └── api.py          # API接口
-│   ├── services/           # 业务逻辑
-│   │   ├── __init__.py
-│   │   └── product_service.py
-│   └── utils/              # 工具函数
-│       ├── __init__.py
-│       └── db_utils.py
-├── frontend/               # 前端代码
-│   ├── server.py           # 前端服务器
-│   ├── index.html          # 主页面
-│   ├── static/             # 静态资源
-│   │   ├── css/
-│   │   │   └── main.css    # 主样式文件
-│   │   ├── js/
-│   │   │   ├── main.js     # 主逻辑文件
-│   │   │   ├── api.js      # API调用
-│   │   │   └── utils.js    # 工具函数
-│   │   └── images/         # 图片资源
-├── logs/                   # 日志文件
-├── .env                    # 环境变量配置（不上传到Git）
-├── .env.example            # 环境变量模板
-├── .gitignore              # Git忽略文件
-├── requirements.txt        # Python依赖
-├── start.sh                # 启动脚本
-├── stop.sh                 # 停止脚本
-└── README.md               # 项目说明
-```
-
-## 🚀 快速开始
-
-### 1. 环境准备
-
-确保系统已安装：
-- Python 3.8+
-- MySQL 8.0+
-- Git
-
-### 2. 克隆项目
-
-```bash
-git clone https://github.com/xiaoshi7915/nanyi.git
-cd nanyi
-```
-
-### 3. 配置环境变量
-
-```bash
-# 复制环境变量模板
-cp .env.example .env
-
-# 编辑.env文件，配置数据库等信息
-vim .env
-```
-
-### 4. 安装依赖
-
-```bash
+# 1. 安装依赖
 pip install -r requirements.txt
-```
 
-### 5. 启动服务
+# 2. 配置数据库
+# 编辑 .env 文件，设置数据库连接信息
 
-#### 方式一：系统服务（推荐）
-```bash
-# 安装系统服务并启用开机自启
-sudo ./service-manager.sh install
+# 3. 启动服务
+./start_services_fixed.sh
 
-# 启动服务
-sudo ./service-manager.sh start
-
-# 查看状态
-./service-manager.sh status
-
-# 停止服务
-sudo ./service-manager.sh stop
-
-# 重启服务
-sudo ./service-manager.sh restart
-
-# 卸载服务
-sudo ./service-manager.sh uninstall
-```
-
-#### 方式二：手动启动
-```bash
-# 一键启动前后端服务
-./start_services.sh
-
-# 停止服务
+# 4. 停止服务
 ./stop_services.sh
-
-# 或者分别启动
-# 后端服务
-cd backend && python app.py
-
-# 前端服务（新终端）
-cd frontend && python server.py
 ```
 
-### 6. 访问应用
+## 📱 访问地址
 
-- **前端页面**: http://localhost:8500
-- **后端API**: http://localhost:5001
-- **健康检查**: http://localhost:5001/health
+### 前端网站
+- **IP访问**: http://121.36.205.70:8500
+- **域名访问**: http://chenxiaoshivivid.com.cn:8500
 
-## ⚙️ 配置说明
+### 后端API
+- **IP访问**: http://121.36.205.70:5001
+- **域名访问**: http://chenxiaoshivivid.com.cn:5001
 
-### 环境变量配置 (.env)
+### 主要API接口
+- `GET /api/images` - 获取所有图片数据
+- `GET /api/brands` - 获取品牌列表
+- `GET /api/cache/stats` - 缓存统计
+- `GET /api/logs/access/stats` - 访问日志统计
 
+## 🎨 功能特性
+
+### 前端功能
+- 📸 **图片展示** - 支持布料图、设计图、成衣图等多种类型
+- 🏷️ **品牌分类** - 按品牌组织产品展示
+- 🔍 **搜索功能** - 支持品牌名称、布料材质、主题搜索
+- 📱 **响应式设计** - 适配桌面和移动设备
+- 🖼️ **图片预览** - 点击放大查看高清图片
+
+### 后端功能
+- 🗄️ **数据库管理** - MySQL存储产品和图片信息
+- 🚀 **缓存优化** - Redis缓存提高响应速度
+- 📊 **访问统计** - 记录和分析用户访问数据
+- 🔒 **CORS支持** - 跨域访问配置
+- 📝 **日志记录** - 详细的访问和错误日志
+
+## 🖼️ 图片存储系统
+
+### 当前配置：本地图片存储
+系统当前使用本地图片存储，图片文件存放在 `frontend/static/images/` 目录下。
+
+### 图片源切换
 ```bash
-# 数据库配置
-DB_HOST=your_db_host
-DB_PORT=3306
-DB_NAME=your_db_name
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
+# 查看当前图片源状态
+./switch-image-source.sh status
 
-# 应用配置
-FLASK_ENV=development
-FLASK_DEBUG=True
-SECRET_KEY=your_secret_key
+# 切换到本地图片源（当前使用）
+./switch-image-source.sh local
 
-# 服务端口
-BACKEND_PORT=5001
-FRONTEND_PORT=8500
-
-# 域名配置
-DOMAIN=your_domain
-BACKEND_URL=http://your_domain:5001
-FRONTEND_URL=http://your_domain:8500
-
-# CORS配置
-CORS_ORIGINS=http://your_domain:8500,http://localhost:8500
+# 切换到OSS图片源（需要配置跨域）
+./switch-image-source.sh oss
 ```
 
-## 📊 数据库结构
+### OSS图片存储（可选）
+如需使用阿里云OSS存储：
 
-### products 表
-- `id` - 产品ID（主键）
-- `name` - 产品名称
-- `year` - 年份
-- `material` - 材质
-- `theme` - 主题
-- `size` - 尺寸
-- `image_url` - 图片URL
-- `description` - 描述
-- `created_at` - 创建时间
-- `updated_at` - 更新时间
+1. **配置OSS跨域访问**
+   ```bash
+   ./configure-oss-cors.sh  # 查看配置指导
+   ```
 
-## 🔧 开发指南
+2. **测试OSS访问**
+   ```bash
+   ./test-oss-access.sh
+   ```
 
-### 添加新的API接口
+3. **切换到OSS**
+   ```bash
+   ./switch-image-source.sh oss
+   ```
 
-1. 在 `backend/routes/api.py` 中添加路由
-2. 在 `backend/services/` 中添加业务逻辑
-3. 在前端 `static/js/api.js` 中添加API调用
+## 🔧 管理工具
 
-### 修改前端样式
-
-1. 编辑 `frontend/static/css/main.css`
-2. 修改响应式断点和样式规则
-3. 测试不同设备的显示效果
-
-### 数据库迁移
-
+### 服务管理
 ```bash
-# 进入后端目录
-cd backend
-
-# 运行数据库初始化脚本
-python -c "from utils.db_utils import init_database; from app import create_app; app = create_app(); init_database(app)"
+./start_services_fixed.sh    # 启动所有服务
+./stop_services.sh          # 停止所有服务
+./service-manager.sh        # 服务管理菜单
 ```
 
-## 🚀 部署指南
-
-### 生产环境部署
-
-1. **服务器准备**
-   ```bash
-   # 安装必要软件
-   yum install python3 python3-pip mysql-server nginx
-   
-   # 启动MySQL
-   systemctl start mysqld
-   systemctl enable mysqld
-   ```
-
-2. **配置环境变量**
-   ```bash
-   # 设置生产环境配置
-   export FLASK_ENV=production
-   export FLASK_DEBUG=False
-   ```
-
-3. **使用Gunicorn部署后端**
-   ```bash
-   pip install gunicorn
-   gunicorn -w 4 -b 0.0.0.0:5001 backend.app:create_app()
-   ```
-
-4. **配置Nginx反向代理**
-   ```nginx
-   server {
-       listen 80;
-       server_name your_domain.com;
-       
-       location / {
-           proxy_pass http://127.0.0.1:8500;
-       }
-       
-       location /api {
-           proxy_pass http://127.0.0.1:5001;
-       }
-   }
-   ```
-
-## 🛠️ 常用命令
-
+### 系统监控
 ```bash
-# 启动服务
-./start.sh
+# 查看服务状态
+ps aux | grep -E "(app.py|server.py)"
 
-# 停止服务
-./stop.sh
+# 查看端口占用
+netstat -tlnp | grep -E "(5001|8500)"
 
 # 查看日志
-tail -f logs/backend.log
-tail -f logs/frontend.log
-
-# 重启服务
-./stop.sh && ./start.sh
-
-# 检查服务状态
-curl http://localhost:5001/health
-curl http://localhost:8500/health
+tail -f logs/backend.log     # 后端日志
+tail -f logs/frontend.log    # 前端日志
+tail -f logs/access.log      # 访问日志
 ```
 
-## 🐛 故障排除
+## 🗂️ 项目结构
 
-### 常见问题
+```
+products/
+├── backend/                 # 后端Flask应用
+│   ├── app.py              # 主应用文件
+│   ├── config/             # 配置文件
+│   ├── models/             # 数据模型
+│   ├── routes/             # 路由定义
+│   ├── services/           # 业务逻辑
+│   └── utils/              # 工具函数
+├── frontend/               # 前端静态文件
+│   ├── index.html          # 主页面
+│   ├── css/                # 样式文件
+│   ├── js/                 # JavaScript文件
+│   └── static/             # 静态资源
+├── logs/                   # 日志文件
+├── .env                    # 环境配置
+└── requirements.txt        # Python依赖
+```
 
-1. **数据库连接失败**
-   - 检查 `.env` 文件中的数据库配置
-   - 确认MySQL服务已启动
-   - 验证数据库用户权限
+## 🔧 常见问题解决
 
-2. **端口被占用**
-   ```bash
-   # 查看端口占用
-   netstat -tlnp | grep :5001
-   netstat -tlnp | grep :8500
-   
-   # 杀死占用进程
-   kill -9 <PID>
-   ```
+### 1. 服务启动失败
+```bash
+# 检查端口占用
+netstat -tlnp | grep -E "(5001|8500)"
 
-3. **前端无法访问后端API**
-   - 检查CORS配置
-   - 确认防火墙设置
-   - 验证后端服务是否正常运行
+# 强制停止服务
+./stop_services.sh
 
-## 📝 更新日志
+# 重新启动
+./start_services_fixed.sh
+```
 
-### v1.0.0 (2024-01-XX)
-- ✨ 初始版本发布
-- 🎨 响应式前端界面
-- 🔧 Flask后端API
-- 💾 MySQL数据库集成
-- 📱 移动端适配
-- 🔍 多维度筛选功能
-- 📤 分享功能
+### 2. 图片加载失败
+```bash
+# 检查当前图片源
+./switch-image-source.sh status
 
-## 🤝 贡献指南
+# 切换到本地图片源
+./switch-image-source.sh local
 
-1. Fork 项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
+# 如果使用OSS，检查跨域配置
+./configure-oss-cors.sh
+```
 
-## 📄 许可证
+### 3. 域名访问问题
+如果域名无法访问：
+1. **清除浏览器缓存** - Ctrl+Shift+Delete
+2. **使用无痕模式** - Ctrl+Shift+N
+3. **使用IP访问** - http://121.36.205.70:8500
+4. **检查网络环境** - 尝试手机热点
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+### 4. 数据库连接问题
+```bash
+# 检查数据库配置
+cat .env | grep DB_
 
-## 👥 联系方式
+# 测试数据库连接
+mysql -h localhost -u nanyi -p nanyiqiutang
+```
 
-- 项目维护者: [xiaoshi7915](https://github.com/xiaoshi7915)
-- 项目地址: [https://github.com/xiaoshi7915/nanyi](https://github.com/xiaoshi7915/nanyi)
+## 📊 系统状态
+
+### 当前配置
+- ✅ **前端服务**: 运行在8500端口
+- ✅ **后端服务**: 运行在5001端口  
+- ✅ **数据库**: MySQL连接正常
+- ✅ **图片存储**: 本地存储模式
+- ✅ **域名访问**: 支持IP和域名访问
+
+### 性能特性
+- 🚀 **缓存优化**: Redis缓存提升响应速度
+- 📱 **响应式设计**: 移动端友好
+- 🔍 **搜索功能**: 快速产品查找
+- 📊 **访问统计**: 用户行为分析
+
+## 🎯 技术栈
+
+- **前端**: HTML5, CSS3, JavaScript, Vue.js
+- **后端**: Python Flask, SQLAlchemy
+- **数据库**: MySQL
+- **缓存**: Redis
+- **Web服务器**: Python内置服务器
+- **图片存储**: 本地存储 + 阿里云OSS（可选）
+
+## 📞 支持
+
+如遇到问题：
+1. 查看日志文件定位错误
+2. 运行相关诊断脚本
+3. 检查服务和端口状态
+4. 确认网络连接正常
 
 ---
 
-**南意秋棠** - 传承汉服文化，展示面料之美 ✨ 
+**南意秋棠汉服展示系统** - 专业、美观、高效的汉服产品展示平台 
