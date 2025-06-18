@@ -18,7 +18,10 @@ class NanyiAPI {
             this.baseURL = 'http://121.36.205.70:5001/api';
         }
         
-        console.log('API Base URL:', this.baseURL);
+        // 只在调试模式下输出API基础URL
+        if (window.PerformanceConfig && window.PerformanceConfig.performanceMonitoring.verboseLogging) {
+            console.log('API Base URL:', this.baseURL);
+        }
         this.timeout = 30000; // 增加到30秒超时
     }
 
@@ -39,7 +42,10 @@ class NanyiAPI {
         };
 
         try {
-            console.log(`请求API: ${url}`);
+            // 只在调试模式下输出请求日志
+            if (window.PerformanceConfig && window.PerformanceConfig.performanceMonitoring.verboseLogging) {
+                console.log(`请求API: ${url}`);
+            }
             
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -56,7 +62,11 @@ class NanyiAPI {
             }
             
             const data = await response.json();
-            console.log(`API响应:`, data);
+            
+            // 只在调试模式下输出响应日志
+            if (window.PerformanceConfig && window.PerformanceConfig.performanceMonitoring.verboseLogging) {
+                console.log(`API响应:`, data);
+            }
             
             return data;
             

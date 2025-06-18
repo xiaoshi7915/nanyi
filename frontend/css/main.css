@@ -1180,3 +1180,100 @@ body {
         padding: 0 1rem;
     }
 }
+
+/* 分页相关样式 */
+.load-more-section {
+    text-align: center;
+    padding: 2rem 0;
+    margin: 2rem 0;
+    border-top: 1px solid #e0e0e0;
+}
+
+.load-more-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.load-more-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.load-more-btn:active {
+    transform: translateY(0);
+}
+
+.pagination-info {
+    color: #666;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.loading-more {
+    text-align: center;
+    padding: 2rem 0;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #e0e0e0;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.all-loaded {
+    text-align: center;
+    padding: 2rem 0;
+    color: #28a745;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    border-top: 1px solid #e0e0e0;
+    margin-top: 2rem;
+}
+
+.all-loaded i {
+    font-size: 1.2rem;
+}
+
+/* 分页响应式设计 */
+@media (max-width: 768px) {
+    .load-more-btn {
+        padding: 0.6rem 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .pagination-info {
+        font-size: 0.8rem;
+    }
+    
+    .loading-more {
+        padding: 1.5rem 0;
+    }
+    
+    .all-loaded {
+        padding: 1.5rem 0;
+        font-size: 0.9rem;
+    }
+}

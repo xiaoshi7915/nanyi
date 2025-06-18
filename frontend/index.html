@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>南意秋棠 - 汉文化布料设计</title>
     
-    <!-- Vue.js 3 -->
-    <script src="static/lib/vue.global.js"></script>
+    <!-- Vue.js 3 生产版本 -->
+    <script src="static/lib/vue.global.prod.js"></script>
     
     <!-- 引入图标库 -->
     <link rel="stylesheet" href="static/lib/all.min.css">
@@ -15,286 +15,22 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="static/css/responsive.css">
     
+    <!-- 引入性能优化配置 -->
+    <script src="js/performance-config.js"></script>
+    
     <!-- 引入优化的缓存管理器 -->
     <script>
         /**
-         * 优化的前端缓存管理器
-         * 针对稳定的图片资源进行长期缓存，提升性能
+         * 缓存管理器已移动到 performance-config.js 文件中
+         * 这里保留注释以便理解
          */
-        class OptimizedCacheManager {
-            constructor() {
-                this.cachePrefix = 'nanyi_cache_';
-                this.versionKey = 'nanyi_version';
-                this.defaultTTL = 60 * 60 * 1000; // 1小时默认缓存时间
-                
-                // 优化的缓存策略 - 针对稳定资源延长缓存时间
-                this.cacheStrategies = {
-                    'brands': {
-                        ttl: 24 * 60 * 60 * 1000,     // 24小时 - 品牌数据稳定
-                        checkUpdate: false,           // 不主动检查更新，减少请求
-                        priority: 'high'              // 高优先级缓存
-                    },
-                    'images': {
-                        ttl: 24 * 60 * 60 * 1000,    // 24小时 - 图片列表很稳定
-                        checkUpdate: false,           // 不主动检查更新
-                        priority: 'high'
-                    },
-                    'filters': {
-                        ttl: 12 * 60 * 60 * 1000,    // 12小时 - 筛选选项很少变化
-                        checkUpdate: false,
-                        priority: 'medium'
-                    },
-                    'brand_detail': {
-                        ttl: 24 * 60 * 60 * 1000,     // 6小时 - 品牌详情稳定
-                        checkUpdate: false,           // 不主动检查更新
-                        priority: 'high'
-                    }
-                };
-                
-                this.init();
-            }
-            
-            init() {
-                // 检查应用版本，如果版本变化则清空所有缓存
-                this.checkAppVersion();
-                
-                // 定期清理过期缓存（降低频率）
-                setInterval(() => {
-                    this.cleanExpiredCache();
-                }, 5 * 60000); // 每5分钟清理一次
-            }
-            
-            /**
-             * 检查应用版本（降低检查频率）
-             */
-            checkAppVersion() {
-                const currentVersion = this.getAppVersion();
-                const cachedVersion = localStorage.getItem(this.versionKey);
-                
-                if (cachedVersion && cachedVersion !== currentVersion) {
-                    console.log('检测到应用版本更新，清空缓存');
-                    this.clearAllCache();
-                }
-                
-                localStorage.setItem(this.versionKey, currentVersion);
-            }
-            
-            /**
-             * 获取应用版本（基于当前时间戳的天数，每天检查一次更新）
-             */
-            getAppVersion() {
-                return Math.floor(Date.now() / (24 * 60 * 60 * 1000)).toString();
-            }
-            
-            /**
-             * 生成缓存键
-             */
-            generateKey(type, identifier = '') {
-                return `${this.cachePrefix}${type}_${identifier}`;
-            }
-            
-            /**
-             * 设置缓存
-             */
-            set(type, data, identifier = '') {
-                const strategy = this.cacheStrategies[type] || { ttl: this.defaultTTL };
-                const key = this.generateKey(type, identifier);
-                const now = Date.now();
-                
-                const cacheData = {
-                    data: data,
-                    timestamp: now,
-                    expires: now + strategy.ttl,
-                    etag: this.generateETag(data),
-                    type: type,
-                    priority: strategy.priority || 'medium'
-                };
-                
-                try {
-                    localStorage.setItem(key, JSON.stringify(cacheData));
-                    console.log(`✅ 缓存已设置: ${type} (${identifier}), TTL: ${Math.round(strategy.ttl / 60000)}分钟`);
-                } catch (e) {
-                    console.warn('缓存设置失败:', e);
-                    // 如果存储空间不足，清理低优先级缓存
-                    this.cleanLowPriorityCache();
-                    try {
-                        localStorage.setItem(key, JSON.stringify(cacheData));
-                    } catch (e2) {
-                        console.error('缓存设置最终失败:', e2);
-                    }
-                }
-            }
-            
-            /**
-             * 获取缓存
-             */
-            get(type, identifier = '') {
-                const key = this.generateKey(type, identifier);
-                
-                try {
-                    const cached = localStorage.getItem(key);
-                    if (!cached) {
-                        return null;
-                    }
-                    
-                    const cacheData = JSON.parse(cached);
-                    const now = Date.now();
-                    
-                    // 检查是否过期
-                    if (now > cacheData.expires) {
-                        console.log(`⏰ 缓存已过期: ${type} (${identifier})`);
-                        localStorage.removeItem(key);
-                        return null;
-                    }
-                    
-                    const remainingMinutes = Math.round((cacheData.expires - now) / 60000);
-                    console.log(`✅ 缓存命中: ${type} (${identifier}), 剩余: ${remainingMinutes}分钟`);
-                    return cacheData.data;
-                } catch (e) {
-                    console.warn('缓存读取失败:', e);
-                    localStorage.removeItem(key);
-                    return null;
-                }
-            }
-            
-            /**
-             * 智能获取数据（缓存优先，不主动更新）
-             */
-            async getOrFetch(type, fetchFunction, identifier = '') {
-                // 先尝试从缓存获取
-                const cached = this.get(type, identifier);
-                
-                if (cached) {
-                    // 对于稳定资源，直接返回缓存，不进行后台更新
-                    return cached;
-                }
-                
-                // 缓存未命中，直接获取数据
-                try {
-                    const data = await fetchFunction();
-                    if (data) {
-                        this.set(type, data, identifier);
-                    }
-                    return data;
-                } catch (e) {
-                    console.error('数据获取失败:', e);
-                    throw e;
-                }
-            }
-            
-            /**
-             * 生成数据的ETag
-             */
-            generateETag(data) {
-                const str = JSON.stringify(data);
-                let hash = 0;
-                for (let i = 0; i < str.length; i++) {
-                    const char = str.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash; // 转换为32位整数
-                }
-                return hash.toString(36);
-            }
-            
-            /**
-             * 清理过期缓存
-             */
-            cleanExpiredCache() {
-                const now = Date.now();
-                const keysToRemove = [];
-                
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith(this.cachePrefix)) {
-                        try {
-                            const cached = localStorage.getItem(key);
-                            const cacheData = JSON.parse(cached);
-                            
-                            if (now > cacheData.expires) {
-                                keysToRemove.push(key);
-                            }
-                        } catch (e) {
-                            keysToRemove.push(key); // 损坏的缓存也删除
-                        }
-                    }
-                }
-                
-                keysToRemove.forEach(key => {
-                    localStorage.removeItem(key);
-                });
-                
-                if (keysToRemove.length > 0) {
-                    console.log(`🧹 清理了 ${keysToRemove.length} 个过期缓存`);
-                }
-            }
-            
-            /**
-             * 清理低优先级缓存
-             */
-            cleanLowPriorityCache() {
-                const cacheItems = [];
-                
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith(this.cachePrefix)) {
-                        try {
-                            const cached = localStorage.getItem(key);
-                            const cacheData = JSON.parse(cached);
-                            cacheItems.push({
-                                key: key,
-                                timestamp: cacheData.timestamp,
-                                priority: cacheData.priority || 'medium'
-                            });
-                        } catch (e) {
-                            localStorage.removeItem(key);
-                        }
-                    }
-                }
-                
-                // 按优先级和时间排序，删除低优先级的旧缓存
-                cacheItems.sort((a, b) => {
-                    const priorityOrder = { 'low': 0, 'medium': 1, 'high': 2 };
-                    const aPriority = priorityOrder[a.priority] || 1;
-                    const bPriority = priorityOrder[b.priority] || 1;
-                    
-                    if (aPriority !== bPriority) {
-                        return aPriority - bPriority; // 低优先级在前
-                    }
-                    return a.timestamp - b.timestamp; // 旧的在前
-                });
-                
-                const toDelete = cacheItems.slice(0, Math.floor(cacheItems.length / 3));
-                
-                toDelete.forEach(item => {
-                    localStorage.removeItem(item.key);
-                });
-                
-                console.log(`🧹 清理了 ${toDelete.length} 个低优先级缓存`);
-            }
-            
-            /**
-             * 清空所有缓存
-             */
-            clearAllCache() {
-                const keysToRemove = [];
-                
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith(this.cachePrefix)) {
-                        keysToRemove.push(key);
-                    }
-                }
-                
-                keysToRemove.forEach(key => {
-                    localStorage.removeItem(key);
-                });
-                
-                console.log(`🧹 清空了所有缓存 (${keysToRemove.length} 项)`);
-            }
-        }
 
         // 创建全局优化缓存管理器实例
-        window.cacheManager = new OptimizedCacheManager();
+        // 创建增强的缓存管理器实例
+        window.cacheManager = new EnhancedCacheManager();
+        
+        // 启动性能监控
+        window.performanceMonitor = new PerformanceMonitor();
     </script>
     
     <!-- 引入API客户端 -->
@@ -540,8 +276,31 @@
                     </div>
                 </div>
 
+                <!-- 加载更多按钮 -->
+                <div v-if="filteredBrands.length > 0 && pagination.hasNext && !isLoadingMore" class="load-more-section">
+                    <button @click="loadMore" class="load-more-btn">
+                        <i class="fas fa-plus"></i>
+                        加载更多 (第{{ pagination.currentPage + 1 }}页)
+                    </button>
+                    <div class="pagination-info">
+                        已显示 {{ filteredBrands.length }} / {{ pagination.totalBrands }} 个品牌
+                    </div>
+                </div>
+
+                <!-- 加载中状态 -->
+                <div v-if="isLoadingMore" class="loading-more">
+                    <div class="loading-spinner"></div>
+                    <span>正在加载更多...</span>
+                </div>
+
+                <!-- 全部加载完成 -->
+                <div v-if="filteredBrands.length > 0 && !pagination.hasNext && !isLoadingMore" class="all-loaded">
+                    <i class="fas fa-check-circle"></i>
+                    <span>已显示全部 {{ pagination.totalBrands }} 个品牌</span>
+                </div>
+
                 <!-- 空状态 -->
-                <div v-else class="empty-state">
+                <div v-else-if="!loading && filteredBrands.length === 0" class="empty-state">
                     <div class="empty-icon">
                         <i class="fas fa-search"></i>
                     </div>
@@ -667,6 +426,17 @@
                     showModal: false,
                     previewImage: null,
                     
+                    // 分页相关数据
+                    pagination: {
+                        currentPage: 1,
+                        perPage: 12,
+                        totalBrands: 0,
+                        totalPages: 0,
+                        hasNext: false,
+                        hasPrev: false
+                    },
+                    isLoadingMore: false,
+                    
                     // 确保初始状态正确
                     dataLoaded: false
                 };
@@ -674,9 +444,12 @@
             
             async mounted() {
                 try {
-                    console.log('Vue应用已挂载，开始加载数据...');
-                    console.log('当前URL:', window.location.href);
-                    console.log('API Base URL:', window.api ? window.api.baseURL : 'API未初始化');
+                    // 只在调试模式下输出日志
+                    if (PerformanceConfig.performanceMonitoring.verboseLogging) {
+                        console.log('Vue应用已挂载，开始加载数据...');
+                        console.log('当前URL:', window.location.href);
+                        console.log('API Base URL:', window.api ? window.api.baseURL : 'API未初始化');
+                    }
                     
                     // 检查API是否可用
                     if (!window.api) {
@@ -687,6 +460,9 @@
                     }
                     
                     await this.loadData();
+                    
+                    // 添加滚动监听用于自动加载更多
+                    window.addEventListener('scroll', this.checkAutoLoad);
                     
                     // 监听缓存更新事件
                     window.addEventListener('cacheDataUpdate', (event) => {
@@ -723,26 +499,41 @@
             },
 
             methods: {
-                async loadData() {
-                    this.loading = true;
-                    this.error = null;
+                async loadData(page = 1, append = false) {
+                    if (!append) {
+                        this.loading = true;
+                        this.error = null;
+                    } else {
+                        this.isLoadingMore = true;
+                    }
                     
                     try {
-                        console.log('开始加载数据...');
+                        if (PerformanceConfig.performanceMonitoring.verboseLogging) {
+                            console.log(`开始加载数据... 页码: ${page}`);
+                        }
                         
                         // 使用智能缓存管理器
+                        const cacheKey = page === 1 ? 'brands' : `brands_page_${page}`;
                         const cachedData = await window.cacheManager.getOrFetch(
-                            'brands',
+                            cacheKey,
                             async () => {
-                                console.log('从API获取数据...');
+                                if (PerformanceConfig.performanceMonitoring.verboseLogging) {
+                                    console.log('从API获取数据...');
+                                }
                                 // 添加重试机制
                                 for (let retry = 0; retry < 3; retry++) {
                                     try {
-                                        const response = await window.api.getImages();
+                                        // 构建API请求URL
+                                        const url = page === 1 ? 
+                                            `/images?page=${page}&per_page=${this.pagination.perPage}&load_all=true` : 
+                                            `/images?page=${page}&per_page=${this.pagination.perPage}`;
+                                        
+                                        const response = await window.api.request(url);
                                         if (response && response.success) {
                                             return {
                                                 images: response.images || [],
-                                                brands: response.brands || []
+                                                brands: response.brands || [],
+                                                pagination: response.pagination || {}
                                             };
                                         }
                                         throw new Error('API响应无效');
@@ -758,24 +549,38 @@
                         );
                         
                         if (cachedData) {
-                            this.allImages = cachedData.images || [];
-                            this.brandData = {};
+                            // 更新分页信息
+                            if (cachedData.pagination) {
+                                this.pagination = { ...this.pagination, ...cachedData.pagination };
+                            }
                             
-                            if (cachedData.brands && cachedData.brands.length > 0) {
-                                cachedData.brands.forEach(brand => {
-                                    this.brandData[brand.name] = brand;
-                                });
-                                this.filteredBrands = cachedData.brands;
-                                this.generateFilterOptions();
-                            } else if (this.allImages.length > 0) {
-                                console.log('使用图片数据处理品牌信息');
-                                this.processBrandData();
+                            if (page === 1 || !append) {
+                                // 第一页或重新加载：替换数据
+                                this.allImages = cachedData.images || [];
+                                this.brandData = {};
+                                this.filteredBrands = [];
+                                
+                                if (cachedData.brands && cachedData.brands.length > 0) {
+                                    cachedData.brands.forEach(brand => {
+                                        this.brandData[brand.name] = brand;
+                                    });
+                                    this.filteredBrands = cachedData.brands;
+                                    this.generateFilterOptions();
+                                }
                             } else {
-                                throw new Error('没有获取到有效的数据');
+                                // 后续页面：追加数据
+                                if (cachedData.brands && cachedData.brands.length > 0) {
+                                    cachedData.brands.forEach(brand => {
+                                        this.brandData[brand.name] = brand;
+                                    });
+                                    this.filteredBrands = [...this.filteredBrands, ...cachedData.brands];
+                                }
                             }
                             
                             this.dataLoaded = true;
-                            console.log('数据加载完成');
+                            if (PerformanceConfig.performanceMonitoring.verboseLogging) {
+                                console.log('数据加载完成');
+                            }
                         } else {
                             throw new Error('数据加载失败');
                         }
@@ -799,6 +604,7 @@
                         }
                     } finally {
                         this.loading = false;
+                        this.isLoadingMore = false;
                     }
                 },
 
@@ -841,8 +647,10 @@
                         print_sizes: printSizeCounts
                     };
                     
-                    console.log('动态生成的筛选选项:', this.filterOptions);
-                    console.log('统计数量:', this.brandCounts);
+                    if (PerformanceConfig.performanceMonitoring.verboseLogging) {
+                        console.log('动态生成的筛选选项:', this.filterOptions);
+                        console.log('统计数量:', this.brandCounts);
+                    }
                 },
 
                 processBrandData() {
@@ -1001,6 +809,49 @@
                     this.filterBrands();
                 },
 
+                // 搜索功能 - 修复Vue警告
+                performSearch() {
+                    // 触发搜索过滤，searchQuery的变化已经通过watch监听自动触发了filterBrands
+                    this.filterBrands();
+                    
+                    // 如果有搜索结果，滚动到结果区域
+                    if (this.filteredBrands.length > 0) {
+                        const resultsSection = document.querySelector('.brands-grid');
+                        if (resultsSection) {
+                            resultsSection.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'start' 
+                            });
+                        }
+                    }
+                },
+
+                // 加载更多数据
+                async loadMore() {
+                    if (this.isLoadingMore || !this.pagination.hasNext) {
+                        return;
+                    }
+                    
+                    const nextPage = this.pagination.currentPage + 1;
+                    await this.loadData(nextPage, true);
+                },
+
+                // 检查是否需要自动加载更多（滚动到底部时）
+                checkAutoLoad() {
+                    if (this.isLoadingMore || !this.pagination.hasNext) {
+                        return;
+                    }
+                    
+                    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+                    const windowHeight = window.innerHeight;
+                    const documentHeight = document.documentElement.scrollHeight;
+                    
+                    // 当滚动到距离底部200px时自动加载
+                    if (scrollTop + windowHeight >= documentHeight - 200) {
+                        this.loadMore();
+                    }
+                },
+
                 getBrandCoverImage(brand) {
                     // 定义图片类型优先级顺序：宣传图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他
                     const priorityOrder = ['宣传图', '设计图', '成衣图', '布料图', '模特图', '买家秀图', '其他'];
@@ -1024,13 +875,17 @@
                 },
 
                 async openBrandDetail(brand) {
-                    console.log('打开品牌详情:', brand);
+                    if (PerformanceConfig.performanceMonitoring.verboseLogging) {
+                        console.log('打开品牌详情:', brand);
+                    }
                     
                     // 使用智能缓存管理器获取品牌详情
                     const brandDetail = await window.cacheManager.getOrFetch(
                         'brand_detail',
                         async () => {
-                            console.log('从API获取品牌详情...');
+                            if (PerformanceConfig.performanceMonitoring.verboseLogging) {
+                                console.log('从API获取品牌详情...');
+                            }
                             try {
                                 const response = await window.api.getBrandDetail(brand.name);
                                 if (response && response.success && response.images) {
@@ -1165,9 +1020,15 @@
                 },
 
                 getImageURL(image) {
-                    // 使用前端静态文件路径，正确编码中文字符
-                    const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
-                    return `/static/images/${encodedPath}`;
+                    try {
+                        // 使用前端静态文件路径，正确编码中文字符
+                        const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
+                        return `/static/images/${encodedPath}`;
+                    } catch (error) {
+                        console.warn('图片路径编码失败:', error, image);
+                        // 降级处理：直接使用原始路径
+                        return `/static/images/${image.relative_path}`;
+                    }
                 },
 
                 shareCard() {
@@ -1229,8 +1090,46 @@
                 },
 
                 handleImageError(event) {
-                    // 图片加载失败时隐藏图片
-                    event.target.style.display = 'none';
+                    // 图片加载失败时的处理
+                    const img = event.target;
+                    console.warn('图片加载失败:', img.src);
+                    
+                    // 尝试重新加载一次（去掉编码）
+                    if (!img.dataset.retried) {
+                        img.dataset.retried = 'true';
+                        const originalSrc = img.src;
+                        // 尝试解码URL再重新加载
+                        try {
+                            const decodedSrc = decodeURIComponent(originalSrc);
+                            if (decodedSrc !== originalSrc) {
+                                img.src = decodedSrc;
+                                return;
+                            }
+                        } catch (e) {
+                            // 解码失败，继续原逻辑
+                        }
+                    }
+                    
+                    // 最终失败时隐藏图片并显示占位符
+                    img.style.display = 'none';
+                    
+                    // 添加占位符
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'image-placeholder';
+                    placeholder.innerHTML = '<i class="fas fa-image"></i><br>图片加载失败';
+                    placeholder.style.cssText = `
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        width: 100%;
+                        height: 200px;
+                        background: #f5f5f5;
+                        color: #999;
+                        border-radius: 8px;
+                        font-size: 14px;
+                    `;
+                    img.parentNode.insertBefore(placeholder, img);
                 },
 
                 openImagePreview(image) {
@@ -1582,6 +1481,12 @@
         try {
             app.mount('#app');
             console.log('Vue应用挂载成功');
+            
+            // 初始化图片懒加载
+            setTimeout(() => {
+                initImageLazyLoading();
+            }, 1000);
+            
         } catch (error) {
             console.error('Vue应用挂载失败:', error);
             document.getElementById('app').innerHTML = `
@@ -1593,6 +1498,54 @@
                     </button>
                 </div>
             `;
+        }
+
+        // 图片懒加载功能
+        function initImageLazyLoading() {
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            const src = img.dataset.src;
+                            if (src) {
+                                img.src = src;
+                                img.removeAttribute('data-src');
+                                observer.unobserve(img);
+                            }
+                        }
+                    });
+                }, {
+                    rootMargin: '50px 0px', // 提前50px开始加载
+                    threshold: 0.1
+                });
+
+                // 观察所有带有data-src属性的图片
+                document.querySelectorAll('img[data-src]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+
+                // 监听DOM变化，自动处理新添加的图片
+                const mutationObserver = new MutationObserver(mutations => {
+                    mutations.forEach(mutation => {
+                        mutation.addedNodes.forEach(node => {
+                            if (node.nodeType === 1) { // Element node
+                                const lazyImages = node.querySelectorAll ? node.querySelectorAll('img[data-src]') : [];
+                                lazyImages.forEach(img => imageObserver.observe(img));
+                                
+                                if (node.tagName === 'IMG' && node.dataset.src) {
+                                    imageObserver.observe(node);
+                                }
+                            }
+                        });
+                    });
+                });
+
+                mutationObserver.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+            }
         }
     </script>
 

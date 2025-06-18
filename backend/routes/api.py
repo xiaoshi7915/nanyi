@@ -36,6 +36,18 @@ api_bp = Blueprint('api', __name__, url_prefix='/api')
 @smart_cache
 @handle_errors
 def get_images():
+    """获取图片信息，支持分页"""
+    # 获取分页参数
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 12, type=int)  # 默认每页12个品牌
+    load_all = request.args.get('load_all', 'false').lower() == 'true'
+    
+    # 限制每页数量，避免过大请求
+    per_page = min(per_page, 50)
+    
+    return _get_images_with_pagination(page, per_page, load_all)
+
+def _get_images_with_pagination(page, per_page, load_all):
     """获取所有图片信息"""
     image_service = ImageService()
     images = image_service.get_all_images()
@@ -155,11 +167,41 @@ def get_images():
         x.get('publish_month', '2024-01')
     ), reverse=True)
     
+    # 分页处理
+    total_brands = len(brand_list)
+    total_images = len(images)
+    
+    if load_all:
+        # 加载所有数据（用于筛选等功能）
+        paginated_brands = brand_list
+        current_page = 1
+        total_pages = 1
+        has_next = False
+        has_prev = False
+    else:
+        # 分页加载
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paginated_brands = brand_list[start_idx:end_idx]
+        
+        total_pages = (total_brands + per_page - 1) // per_page
+        has_next = page < total_pages
+        has_prev = page > 1
+        current_page = page
+    
     return jsonify({
         'success': True,
-        'images': images,
-        'brands': brand_list,
-        'total': len(images)
+        'images': images if load_all else [],  # 分页时不返回所有图片数据
+        'brands': paginated_brands,
+        'pagination': {
+            'current_page': current_page,
+            'per_page': per_page,
+            'total_brands': total_brands,
+            'total_pages': total_pages,
+            'has_next': has_next,
+            'has_prev': has_prev
+        },
+        'total': total_images
     })
 
 @api_bp.route('/filters')
