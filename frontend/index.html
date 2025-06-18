@@ -363,6 +363,8 @@
                         搜索
                     </button>
                 </div>
+                
+
 
                 <!-- 移动端年份横排筛选 -->
                 <div class="mobile-only mobile-year-filter">
@@ -1000,14 +1002,20 @@
                 },
 
                 getBrandCoverImage(brand) {
-                    // 只显示设计图
-                    const designImage = brand.images.find(img => img.image_type === '设计图');
-                    if (designImage) {
-                        // 使用前端静态文件路径，正确编码中文字符
-                        const encodedPath = designImage.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
-                        return `/static/images/${encodedPath}`;
+                    // 定义图片类型优先级顺序：宣传图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他
+                    const priorityOrder = ['宣传图', '设计图', '成衣图', '布料图', '模特图', '买家秀图', '其他'];
+                    
+                    // 按优先级查找图片
+                    for (const imageType of priorityOrder) {
+                        const foundImage = brand.images.find(img => img.image_type === imageType);
+                        if (foundImage) {
+                            // 使用前端静态文件路径，正确编码中文字符
+                            const encodedPath = foundImage.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
+                            return `/static/images/${encodedPath}`;
+                        }
                     }
-                    // 如果没有设计图，尝试使用其他图片
+                    
+                    // 如果没有匹配的类型，使用第一张图片
                     if (brand.images.length > 0) {
                         const encodedPath = brand.images[0].relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
                         return `/static/images/${encodedPath}`;
@@ -1070,18 +1078,27 @@
                     const categories = {};
                     
                     this.selectedBrand.images.forEach(img => {
-                        // 从文件名中提取图片类型
+                        // 优先检查image_type字段，如果没有则从文件名中提取图片类型
                         let type = '其他';
-                        if (img.filename.includes('-设计图-') || img.filename.includes('设计图')) {
-                            type = '设计图';
-                        } else if (img.filename.includes('-布料图-') || img.filename.includes('布料图')) {
-                            type = '布料图';
-                        } else if (img.filename.includes('-成衣图-') || img.filename.includes('成衣图')) {
-                            type = '成衣图';
-                        } else if (img.filename.includes('-模特图-') || img.filename.includes('模特图')) {
-                            type = '模特图';
-                        } else if (img.filename.includes('-买家秀-') || img.filename.includes('买家秀')) {
-                            type = '买家秀';
+                        
+                        // 先检查 image_type 字段
+                        if (img.image_type) {
+                            type = img.image_type;
+                        } else {
+                            // 从文件名中提取图片类型
+                            if (img.filename.includes('-宣传图-') || img.filename.includes('宣传图')) {
+                                type = '宣传图';
+                            } else if (img.filename.includes('-设计图-') || img.filename.includes('设计图')) {
+                                type = '设计图';
+                            } else if (img.filename.includes('-成衣图-') || img.filename.includes('成衣图')) {
+                                type = '成衣图';
+                            } else if (img.filename.includes('-布料图-') || img.filename.includes('布料图')) {
+                                type = '布料图';
+                            } else if (img.filename.includes('-模特图-') || img.filename.includes('模特图')) {
+                                type = '模特图';
+                            } else if (img.filename.includes('-买家秀图-') || img.filename.includes('买家秀')) {
+                                type = '买家秀图';
+                            }
                         }
                         
                         if (!categories[type]) {
@@ -1090,9 +1107,9 @@
                         categories[type].push(img);
                     });
                     
-                    // 按预定义顺序排序
+                    // 按用户要求的优先级顺序排序：宣传图 > 设计图 > 布料图 > 成衣图 > 模特图 > 买家秀图 > 其他类型
                     const orderedCategories = {};
-                    const order = ['设计图', '布料图', '成衣图', '模特图', '买家秀', '其他'];
+                    const order = ['宣传图', '设计图', '布料图', '成衣图', '模特图', '买家秀图', '其他'];
                     
                     order.forEach(type => {
                         if (categories[type] && categories[type].length > 0) {
@@ -1578,5 +1595,15 @@
             `;
         }
     </script>
+
+    <!-- 网页底部版权信息 -->
+    <footer class="simple-footer">
+        <div class="container">
+            <div class="footer-copyright">
+                <p>备案号：浙ICP备2024081979号 | 版权所有，nanyiqiutang.cn南意秋棠</p>
+            </div>
+        </div>
+    </footer>
+
 </body>
 </html> 

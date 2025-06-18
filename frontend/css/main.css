@@ -444,14 +444,18 @@ body {
 .brand-image-container {
     position: relative;
     width: 100%;
-    height: 220px;
+    height: 280px; /* 增加高度确保图片显示完整 */
     overflow: hidden;
+    background: #ffffff; /* 白色背景，让图片显示更自然 */
+    border-radius: 8px; /* 添加圆角 */
+    border: 1px solid #e5e7eb; /* 添加边框增强视觉效果 */
 }
 
 .brand-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain; /* 保持比例完整显示图片，不裁剪 */
+    object-position: center; /* 居中显示 */
     transition: transform 0.3s ease;
 }
 
@@ -1039,7 +1043,7 @@ body {
     }
 
     .brand-image-container {
-        height: 220px;
+        height: 240px; /* 移动端适中高度 */
         width: 100%;
         overflow: hidden;
         border-radius: 8px;
@@ -1048,7 +1052,7 @@ body {
     .brand-image {
         width: 100%;
         height: 100%;
-        object-fit: cover;
+        object-fit: contain; /* 移动端也完整显示图片 */
         object-position: center;
     }
 
@@ -1076,7 +1080,7 @@ body {
     }
 
     .brand-image-container {
-        height: 180px;
+        height: 200px; /* 小屏幕设备适合的高度 */
     }
 
     .hero-image {
@@ -1143,4 +1147,36 @@ body {
     color: #0c5460;
     background-color: #d1ecf1;
     border-color: #bee5eb;
+}
+
+/* 简单版权信息样式 */
+.simple-footer {
+    background: #f8f9fa;
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 0;
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.simple-footer .footer-copyright {
+    color: #6b7280;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.simple-footer .footer-copyright p {
+    margin: 0;
+}
+
+/* 移动端版权信息样式 */
+@media (max-width: 768px) {
+    .simple-footer {
+        padding: 0.75rem 0;
+        margin-top: 1.5rem;
+    }
+    
+    .simple-footer .footer-copyright {
+        font-size: 0.8rem;
+        padding: 0 1rem;
+    }
 }

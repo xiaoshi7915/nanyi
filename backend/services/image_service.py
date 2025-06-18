@@ -116,7 +116,7 @@ class ImageService:
         # 首先尝试精确匹配
         exact_matches = [img for img in all_images if img['brand_name'] == brand_name]
         if exact_matches:
-            return exact_matches
+            return self.sort_images_by_priority(exact_matches)
         
         # 如果没有精确匹配，尝试基础品牌名匹配
         # 查找所有以该品牌名开头的图片（包括带颜色的）
@@ -129,7 +129,32 @@ class ImageService:
                 if img_brand == brand_name or (len(img_brand) > len(brand_name) and img_brand[len(brand_name)] == '('):
                     base_matches.append(img)
         
-        return base_matches
+        return self.sort_images_by_priority(base_matches)
+    
+    def sort_images_by_priority(self, images: List[Dict]) -> List[Dict]:
+        """按图片类型优先级排序图片
+        优先级顺序：宣传图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他类型
+        """
+        # 定义图片类型的优先级，数字越小优先级越高
+        priority_map = {
+            '宣传图': 1,
+            '设计图': 2,
+            '成衣图': 3,
+            '布料图': 4,
+            '模特图': 5,
+            '买家秀图': 6,
+            '其他': 99
+        }
+        
+        # 给每个图片分配优先级
+        for img in images:
+            image_type = img.get('image_type', '其他')
+            img['priority'] = priority_map.get(image_type, 99)
+        
+        # 按优先级排序，同优先级按文件名排序保证稳定性
+        sorted_images = sorted(images, key=lambda x: (x['priority'], x['filename']))
+        
+        return sorted_images
     
     def get_image_by_path(self, relative_path: str) -> Optional[str]:
         """根据相对路径获取图片的完整路径"""

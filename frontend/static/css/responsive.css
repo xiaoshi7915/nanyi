@@ -397,7 +397,7 @@
     }
 
     .brand-image {
-        object-fit: cover;
+        object-fit: contain; /* 确保小屏幕也完整显示图片 */
     }
 
     .brand-info {
