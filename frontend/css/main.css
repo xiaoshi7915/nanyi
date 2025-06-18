@@ -189,7 +189,7 @@ body {
 .search-box {
     position: relative;
     margin-bottom: 1.5rem;
-    max-width: 500px;
+    max-width: 300px; /* 增加搜索框最大宽度，确保提示词完全显示 */
     margin-left: auto;
     margin-right: auto;
     display: flex;
@@ -444,7 +444,7 @@ body {
 .brand-image-container {
     position: relative;
     width: 100%;
-    height: 280px; /* 增加高度确保图片显示完整 */
+    height: 200px; /* 增加高度确保图片显示完整 */
     overflow: hidden;
     background: #ffffff; /* 白色背景，让图片显示更自然 */
     border-radius: 8px; /* 添加圆角 */
