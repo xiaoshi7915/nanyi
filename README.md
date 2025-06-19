@@ -16,6 +16,7 @@ pip install -r requirements.txt
 
 # 2. 配置数据库
 # 编辑 .env 文件，设置数据库连接信息
+cp .env.example .env
 
 # 3. 启动服务
 ./start_services_fixed.sh
