@@ -621,9 +621,15 @@
                             const year = brand.year.toString();
                             yearCounts[year] = (yearCounts[year] || 0) + 1;
                         }
+                        
+                        // 修改材质处理逻辑：按/分隔符拆分材质
                         if (brand.material) {
-                            materialCounts[brand.material] = (materialCounts[brand.material] || 0) + 1;
+                            const materials = brand.material.split('/').map(m => m.trim()).filter(m => m);
+                            materials.forEach(material => {
+                                materialCounts[material] = (materialCounts[material] || 0) + 1;
+                            });
                         }
+                        
                         if (brand.theme_series) {
                             themeSeriesCounts[brand.theme_series] = (themeSeriesCounts[brand.theme_series] || 0) + 1;
                         }
@@ -711,9 +717,20 @@
                             
                             if (Array.isArray(value) && value.length > 0) {
                                 // 多选模式：品牌必须匹配任一选中的值
-                                filtered = filtered.filter(brand => 
-                                    brand[fieldName] && value.includes(brand[fieldName])
-                                );
+                                if (fieldName === 'material') {
+                                    // 材质特殊处理：支持/分隔的材质匹配
+                                    filtered = filtered.filter(brand => {
+                                        if (!brand[fieldName]) return false;
+                                        const brandMaterials = brand[fieldName].split('/').map(m => m.trim()).filter(m => m);
+                                        return value.some(selectedMaterial => 
+                                            brandMaterials.includes(selectedMaterial)
+                                        );
+                                    });
+                                } else {
+                                    filtered = filtered.filter(brand => 
+                                        brand[fieldName] && value.includes(brand[fieldName])
+                                    );
+                                }
                             } else if (!Array.isArray(value)) {
                                 // 单选模式：品牌必须匹配选中的值
                                 if (fieldName === 'year') {
@@ -721,6 +738,13 @@
                                     filtered = filtered.filter(brand => 
                                         brand[fieldName] && brand[fieldName].toString() === value.toString()
                                     );
+                                } else if (fieldName === 'material') {
+                                    // 材质特殊处理：支持/分隔的材质匹配
+                                    filtered = filtered.filter(brand => {
+                                        if (!brand[fieldName]) return false;
+                                        const brandMaterials = brand[fieldName].split('/').map(m => m.trim()).filter(m => m);
+                                        return brandMaterials.includes(value);
+                                    });
                                 } else {
                                     filtered = filtered.filter(brand => 
                                         brand[fieldName] && brand[fieldName] === value
@@ -749,8 +773,12 @@
                             const year = brand.year.toString();
                             yearCounts[year] = (yearCounts[year] || 0) + 1;
                         }
+                        // 修改材质计数逻辑：按/分隔符拆分材质
                         if (brand.material) {
-                            materialCounts[brand.material] = (materialCounts[brand.material] || 0) + 1;
+                            const materials = brand.material.split('/').map(m => m.trim()).filter(m => m);
+                            materials.forEach(material => {
+                                materialCounts[material] = (materialCounts[material] || 0) + 1;
+                            });
                         }
                         if (brand.theme_series) {
                             themeSeriesCounts[brand.theme_series] = (themeSeriesCounts[brand.theme_series] || 0) + 1;

@@ -303,8 +303,11 @@ class ImageService:
                     filter_stats['years'][product.year] = filter_stats['years'].get(product.year, 0) + 1
                 
                 if product.material:
-                    materials.add(product.material)
-                    filter_stats['materials'][product.material] = filter_stats['materials'].get(product.material, 0) + 1
+                    # 按/分隔符拆分材质，每个拆分后的材质都算作一种分类
+                    material_list = [m.strip() for m in product.material.split('/') if m.strip()]
+                    for material in material_list:
+                        materials.add(material)
+                        filter_stats['materials'][material] = filter_stats['materials'].get(material, 0) + 1
                 
                 if product.theme_series:
                     theme_series.add(product.theme_series)

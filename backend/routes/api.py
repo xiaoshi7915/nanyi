@@ -231,9 +231,12 @@ def get_filters():
                 year_str = str(product.year)
                 years[year_str] = years.get(year_str, 0) + 1
             
-            # 材质统计
+            # 材质统计 - 支持/分隔的材质
             if product.material:
-                materials[product.material] = materials.get(product.material, 0) + 1
+                # 按/分隔符拆分材质，每个拆分后的材质都算作一种分类
+                material_list = [m.strip() for m in product.material.split('/') if m.strip()]
+                for material in material_list:
+                    materials[material] = materials.get(material, 0) + 1
             
             # 主题系列统计
             if product.theme_series:
