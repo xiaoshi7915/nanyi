@@ -12,7 +12,7 @@ class Product(db.Model):
     __tablename__ = 'products'
     
     # 主要字段
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True, comment="产品ID，格式：30000001开始")
     brand_name = db.Column(db.String(100), nullable=False, unique=True, comment='品牌名称')
     title = db.Column(db.String(200), comment='标题')
     year = db.Column(db.Integer, index=True, comment='年份')
