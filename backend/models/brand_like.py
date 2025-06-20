@@ -1,8 +1,29 @@
 from datetime import datetime
-from utils.db_utils import get_db_connection
 import logging
+import pymysql
+import os
 
 logger = logging.getLogger(__name__)
+
+def get_db_connection():
+    """获取数据库连接"""
+    # 使用和config.py相同的数据库配置
+    host = os.environ.get('DB_HOST', '47.118.250.53')
+    port = int(os.environ.get('DB_PORT', 3306))
+    user = os.environ.get('DB_USER', 'nanyi')
+    password = os.environ.get('DB_PASSWORD', 'admin123456!')
+    database = os.environ.get('DB_NAME', 'nanyiqiutang')
+    
+    return pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset='utf8mb4',
+        autocommit=True,
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
 class BrandLike:
     """布料点赞数据模型"""
@@ -89,7 +110,7 @@ class BrandLike:
             """, (brand_name,))
             
             result = cursor.fetchone()
-            like_count = result[0] if result else 1
+            like_count = result['like_count'] if result else 1
             
             return True, like_count
             
@@ -133,7 +154,7 @@ class BrandLike:
             """, (brand_name,))
             
             result = cursor.fetchone()
-            return result[0] if result else 0
+            return result['like_count'] if result else 0
             
         except Exception as e:
             logger.error(f"获取点赞数失败: {e}")

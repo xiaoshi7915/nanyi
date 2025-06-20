@@ -493,6 +493,10 @@
                         };
                         updatePageContent();
                         initializeImages();
+                        // 如果API返回了点赞数，先设置它
+                        if (typeof data.card_data.like_count !== 'undefined') {
+                            document.getElementById('likeCount').textContent = data.card_data.like_count;
+                        }
                         loadLikeStatus();
                     } else {
                         console.error('API返回失败:', data.error || '未知错误');

@@ -608,6 +608,15 @@ def generate_share_card(brand_name):
         frontend_url = f"http://{frontend_host}/card.html?brand={decoded_brand_name}"
         card_data['card_url'] = frontend_url
         
+        # 获取点赞数
+        try:
+            from models.brand_like import BrandLike
+            like_count = BrandLike.get_like_count(base_brand_name)
+            card_data['like_count'] = like_count
+        except Exception as e:
+            print(f"获取点赞数失败: {e}")
+            card_data['like_count'] = 0
+        
         return jsonify({
             'success': True,
             'card_data': card_data,
@@ -648,34 +657,58 @@ def like_brand_card(brand_name):
         import hashlib
         unique_id = hashlib.md5(f"{client_ip}_{user_agent}_{base_brand_name}".encode()).hexdigest()
         
-        # 暂时使用缓存来记录点赞（基础品牌名）
-        cache_key = f"like_{unique_id}"
-        cache_count_key = f"like_count_{base_brand_name}"
-        
-        # 检查是否已经点赞过
-        has_liked = cache_service.get(cache_key)
-        if has_liked:
+        # 使用数据库存储点赞记录
+        try:
+            from models.brand_like import BrandLike
+            success, result = BrandLike.add_like(base_brand_name, unique_id, client_ip, user_agent)
+            
+            if not success:
+                # 获取当前点赞数
+                like_count = BrandLike.get_like_count(base_brand_name)
+                return jsonify({
+                    'success': False,
+                    'message': result,
+                    'liked': True,
+                    'like_count': like_count
+                })
+            
             return jsonify({
-                'success': False,
-                'message': '您已经点赞过了',
+                'success': True,
+                'message': '点赞成功！',
                 'liked': True,
-                'like_count': cache_service.get(cache_count_key) or 0
+                'like_count': result
             })
-        
-        # 记录点赞
-        cache_service.set(cache_key, True, ttl=86400*30)  # 30天过期
-        
-        # 更新点赞数
-        current_count = cache_service.get(cache_count_key) or 0
-        new_count = current_count + 1
-        cache_service.set(cache_count_key, new_count, ttl=86400*365)  # 1年过期
-        
-        return jsonify({
-            'success': True,
-            'message': '点赞成功！',
-            'liked': True,
-            'like_count': new_count
-        })
+            
+        except Exception as db_error:
+            print(f"数据库点赞失败，回退到缓存: {db_error}")
+            # 数据库失败时回退到缓存
+            cache_key = f"like_{unique_id}"
+            cache_count_key = f"like_count_{base_brand_name}"
+            
+            # 检查是否已经点赞过
+            has_liked = cache_service.get(cache_key)
+            if has_liked:
+                return jsonify({
+                    'success': False,
+                    'message': '您已经点赞过了',
+                    'liked': True,
+                    'like_count': cache_service.get(cache_count_key) or 0
+                })
+            
+            # 记录点赞
+            cache_service.set(cache_key, True, ttl=86400*30)
+            
+            # 更新点赞数
+            current_count = cache_service.get(cache_count_key) or 0
+            new_count = current_count + 1
+            cache_service.set(cache_count_key, new_count, ttl=86400*365)
+            
+            return jsonify({
+                'success': True,
+                'message': '点赞成功！',
+                'liked': True,
+                'like_count': new_count
+            })
         
     except Exception as e:
         return jsonify({
@@ -702,18 +735,32 @@ def get_brand_like_count(brand_name):
         import hashlib
         unique_id = hashlib.md5(f"{client_ip}_{user_agent}_{base_brand_name}".encode()).hexdigest()
         
-        # 检查是否已经点赞过
-        cache_key = f"like_{unique_id}"
-        cache_count_key = f"like_count_{base_brand_name}"
-        
-        has_liked = bool(cache_service.get(cache_key))
-        like_count = cache_service.get(cache_count_key) or 0
-        
-        return jsonify({
-            'success': True,
-            'liked': has_liked,
-            'like_count': like_count
-        })
+        # 使用数据库查询点赞状态
+        try:
+            from models.brand_like import BrandLike
+            has_liked = BrandLike.check_user_liked(base_brand_name, unique_id)
+            like_count = BrandLike.get_like_count(base_brand_name)
+            
+            return jsonify({
+                'success': True,
+                'liked': has_liked,
+                'like_count': like_count
+            })
+            
+        except Exception as db_error:
+            print(f"数据库查询失败，回退到缓存: {db_error}")
+            # 数据库失败时回退到缓存
+            cache_key = f"like_{unique_id}"
+            cache_count_key = f"like_count_{base_brand_name}"
+            
+            has_liked = bool(cache_service.get(cache_key))
+            like_count = cache_service.get(cache_count_key) or 0
+            
+            return jsonify({
+                'success': True,
+                'liked': has_liked,
+                'like_count': like_count
+            })
         
     except Exception as e:
         return jsonify({
