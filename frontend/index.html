@@ -375,6 +375,17 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 生成布料卡片按钮区域 -->
+                    <div class="modal-actions">
+                        <button @click="generateShareCard" class="generate-card-btn">
+                            <i class="fas fa-id-card"></i>
+                            生成布料卡片
+                        </button>
+                        <div class="action-hint">
+                            生成精美卡片，轻松分享到朋友圈
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1508,6 +1519,99 @@
                         .replace(/\n\n/g, '</p><p>')
                         // 包装在段落中
                         .replace(/^(.+)$/, '<p>$1</p>');
+                },
+
+                generateShareCard() {
+                    console.log('生成布料卡片', this.selectedBrand);
+                    
+                    if (!this.selectedBrand) {
+                        this.showToast('请先选择一个品牌');
+                        return;
+                    }
+                    
+                    const brandName = this.selectedBrand.name || this.selectedBrand.brand_name;
+                    
+                    // 显示生成中提示
+                    this.showToast('正在生成卡片...');
+                    
+                    // 调用后端API生成卡片数据
+                    const apiUrl = window.api ? 
+                        `${window.api.baseURL}/share/card/${encodeURIComponent(brandName)}` : 
+                        `http://localhost:5001/api/share/card/${encodeURIComponent(brandName)}`;
+                    
+                    fetch(apiUrl)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                // 跳转到卡片页面
+                                const cardUrl = `card.html?brand=${encodeURIComponent(brandName)}`;
+                                window.open(cardUrl, '_blank');
+                                this.showToast('卡片生成成功！');
+                            } else {
+                                this.showToast('生成卡片失败: ' + (data.error || '未知错误'));
+                            }
+                        })
+                        .catch(error => {
+                            console.error('生成卡片失败:', error);
+                            // 提供更详细的错误信息
+                            if (error.message.includes('Failed to fetch')) {
+                                this.showToast('网络连接失败，请检查网络后重试');
+                            } else if (error.message.includes('HTTP')) {
+                                this.showToast('服务器错误: ' + error.message);
+                            } else {
+                                this.showToast('生成卡片失败，请稍后重试');
+                            }
+                        });
+                },
+
+                showToast(message, duration = 2000) {
+                    // 创建提示框
+                    const toast = document.createElement('div');
+                    toast.style.cssText = `
+                        position: fixed;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        background: rgba(0, 0, 0, 0.8);
+                        color: white;
+                        padding: 15px 25px;
+                        border-radius: 25px;
+                        font-size: 0.9rem;
+                        z-index: 10000;
+                        animation: fadeInOut ${duration}ms ease-in-out;
+                        max-width: 80%;
+                        text-align: center;
+                    `;
+                    
+                    // 添加动画样式
+                    const style = document.createElement('style');
+                    style.textContent = `
+                        @keyframes fadeInOut {
+                            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                            15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                            85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                    
+                    toast.textContent = message;
+                    document.body.appendChild(toast);
+                    
+                    // 自动移除
+                    setTimeout(() => {
+                        if (document.body.contains(toast)) {
+                            document.body.removeChild(toast);
+                        }
+                        if (document.head.contains(style)) {
+                            document.head.removeChild(style);
+                        }
+                    }, duration);
                 }
             }
         });

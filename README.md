@@ -38,6 +38,7 @@ cp .env.example .env
 ### 主要API接口
 - `GET /api/images` - 获取所有图片数据
 - `GET /api/brands` - 获取品牌列表
+- `GET /api/share/card/<brand_name>` - 生成布料分享卡片数据
 - `GET /api/cache/stats` - 缓存统计
 - `GET /api/logs/access/stats` - 访问日志统计
 
@@ -49,6 +50,10 @@ cp .env.example .env
 - 🔍 **搜索功能** - 支持品牌名称、布料材质、主题搜索
 - 📱 **响应式设计** - 适配桌面和移动设备
 - 🖼️ **图片预览** - 点击放大查看高清图片
+- 📋 **布料卡片分享** - 生成精美卡片，支持微信朋友圈分享
+  - 包含布料名、设计灵感、产品图片
+  - 长按保存图片或分享
+  - 支持复制链接分享
 
 ### 后端功能
 - 🗄️ **数据库管理** - MySQL存储产品和图片信息

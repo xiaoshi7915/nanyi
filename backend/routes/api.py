@@ -487,6 +487,140 @@ def get_access_log_stats():
             'error': f'获取访问统计失败: {str(e)}'
         }), 500
 
+@api_bp.route('/share/card/<path:brand_name>')
+@log_access
+@handle_errors
+def generate_share_card(brand_name):
+    """生成布料分享卡片"""
+    try:
+        # URL解码品牌名
+        import urllib.parse
+        # Flask路由参数需要进一步解码，处理特殊字符
+        try:
+            decoded_brand_name = urllib.parse.unquote(brand_name, encoding='utf-8')
+        except:
+            decoded_brand_name = brand_name
+        print(f"🎯 生成卡片请求: 原始={brand_name}, 解码={decoded_brand_name}")
+        
+        # 提取基础品牌名（去掉颜色部分）
+        base_brand_name = decoded_brand_name.split('(')[0] if '(' in decoded_brand_name else decoded_brand_name
+        print(f"🏷️ 基础品牌名: {base_brand_name}")
+        
+        # 获取品牌详情数据
+        image_service = ImageService()
+        
+        # 首先尝试完整品牌名
+        images = image_service.get_brand_images(decoded_brand_name)
+        matched_brand_name = decoded_brand_name
+        
+        # 如果没找到，尝试基础品牌名
+        if not images:
+            images = image_service.get_brand_images(base_brand_name)
+            if images:
+                matched_brand_name = base_brand_name
+        
+        # 如果仍然没有找到，尝试模糊匹配
+        if not images:
+            all_images = image_service.get_all_images()
+            available_brands = set()
+            for img in all_images:
+                available_brands.add(img.get('brand_name', ''))
+            print(f"🔍 可用品牌名: {list(available_brands)[:5]}...")
+            
+            # 尝试模糊匹配，处理多颜色品牌名
+            for brand in available_brands:
+                brand_base = brand.split('(')[0] if '(' in brand else brand
+                
+                if (base_brand_name == brand_base or base_brand_name in brand or 
+                    brand_base == base_brand_name or brand in decoded_brand_name):
+                    print(f"🎯 找到匹配品牌: {brand}")
+                    temp_images = image_service.get_brand_images(brand)
+                    if temp_images:  # 确保找到了图片
+                        images = temp_images
+                        matched_brand_name = brand
+                        break
+        
+        print(f"📸 最终匹配品牌: {matched_brand_name}, 找到图片数量: {len(images) if images else 0}")
+        
+        # 从数据库获取产品信息（优先使用基础品牌名）
+        Product = None
+        try:
+            from models.product import Product
+            # 首先尝试基础品牌名
+            product = Product.get_by_brand_name(base_brand_name)
+            # 如果没找到，尝试完整品牌名
+            if not product:
+                product = Product.get_by_brand_name(decoded_brand_name)
+            # 如果仍然没找到，尝试匹配的品牌名
+            if not product and matched_brand_name != decoded_brand_name:
+                product = Product.get_by_brand_name(matched_brand_name)
+            print(f"🏷️ 数据库产品信息: {product.brand_name if product else '未找到'}")
+        except ImportError:
+            product = None
+        
+        # 即使没有找到图片或产品信息，也生成基础卡片
+        if not images and not product:
+            print(f"⚠️ 未找到品牌 '{decoded_brand_name}' 的详细信息，生成基础卡片")
+        
+        # 准备卡片数据
+        card_data = {
+            'brand_name': decoded_brand_name,
+            'year': product.year if product else 2024,
+            'material': product.material if product else '棉麻',
+            'theme_series': product.theme_series if product else '经典系列',
+            'print_size': product.print_size if product else '循环印花料',
+            'inspiration_origin': product.inspiration_origin if product else f'{decoded_brand_name}的设计灵感来源于传统文化与现代美学的融合。',
+            'images': []
+        }
+        
+        # 处理图片数据，每种类型最多取一张
+        image_types = ['宣传图', '设计图', '布料图', '成衣图', '模特图', '买家秀图']
+        type_image_map = {}
+        
+        for img in images:
+            if img['image_type'] in image_types and img['image_type'] not in type_image_map:
+                # 构建图片URL
+                img_url = ''
+                if img.get('medium_url') and img['medium_url'].startswith('http'):
+                    img_url = img['medium_url']
+                elif img.get('url') and img['url'].startswith('http'):
+                    img_url = img['url']
+                elif img.get('relative_path'):
+                    img_url = f"/static/images/{img['relative_path']}"
+                else:
+                    img_url = f"/static/images/{img.get('filename', 'placeholder.jpg')}"
+                
+                type_image_map[img['image_type']] = {
+                    'image_type': img['image_type'],
+                    'url': img_url,
+                    'medium_url': img.get('medium_url'),
+                    'relative_path': img.get('relative_path'),
+                    'filename': img.get('filename')
+                }
+        
+        # 按指定顺序添加图片
+        for img_type in image_types:
+            if img_type in type_image_map:
+                card_data['images'].append(type_image_map[img_type])
+        
+        # 生成卡片URL - 指向前端服务器
+        frontend_host = request.host.replace(':5001', ':8500')  # 将后端端口替换为前端端口
+        frontend_url = f"http://{frontend_host}/card.html?brand={decoded_brand_name}"
+        card_data['card_url'] = frontend_url
+        
+        return jsonify({
+            'success': True,
+            'card_data': card_data,
+            'card_url': frontend_url
+        })
+        
+    except Exception as e:
+        print(f"生成分享卡片失败: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 # 错误处理
 @api_bp.errorhandler(404)
 def not_found(error):
@@ -494,6 +628,98 @@ def not_found(error):
         'success': False,
         'error': '资源不存在'
     }), 404
+
+@api_bp.route('/like/card/<path:brand_name>', methods=['POST'])
+@handle_errors
+def like_brand_card(brand_name):
+    """点赞布料卡片"""
+    try:
+        import urllib.parse
+        decoded_brand_name = urllib.parse.unquote(brand_name, encoding='utf-8')
+        
+        # 提取基础品牌名（去掉颜色部分）
+        base_brand_name = decoded_brand_name.split('(')[0] if '(' in decoded_brand_name else decoded_brand_name
+        
+        # 获取客户端IP作为唯一标识
+        client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+        user_agent = request.environ.get('HTTP_USER_AGENT', '')
+        
+        # 创建唯一标识（使用基础品牌名）
+        import hashlib
+        unique_id = hashlib.md5(f"{client_ip}_{user_agent}_{base_brand_name}".encode()).hexdigest()
+        
+        # 暂时使用缓存来记录点赞（基础品牌名）
+        cache_key = f"like_{unique_id}"
+        cache_count_key = f"like_count_{base_brand_name}"
+        
+        # 检查是否已经点赞过
+        has_liked = cache_service.get(cache_key)
+        if has_liked:
+            return jsonify({
+                'success': False,
+                'message': '您已经点赞过了',
+                'liked': True,
+                'like_count': cache_service.get(cache_count_key) or 0
+            })
+        
+        # 记录点赞
+        cache_service.set(cache_key, True, ttl=86400*30)  # 30天过期
+        
+        # 更新点赞数
+        current_count = cache_service.get(cache_count_key) or 0
+        new_count = current_count + 1
+        cache_service.set(cache_count_key, new_count, ttl=86400*365)  # 1年过期
+        
+        return jsonify({
+            'success': True,
+            'message': '点赞成功！',
+            'liked': True,
+            'like_count': new_count
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@api_bp.route('/like/card/<path:brand_name>', methods=['GET'])
+@handle_errors  
+def get_brand_like_count(brand_name):
+    """获取布料卡片点赞数"""
+    try:
+        import urllib.parse
+        decoded_brand_name = urllib.parse.unquote(brand_name, encoding='utf-8')
+        
+        # 提取基础品牌名（去掉颜色部分）
+        base_brand_name = decoded_brand_name.split('(')[0] if '(' in decoded_brand_name else decoded_brand_name
+        
+        # 获取客户端IP作为唯一标识
+        client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+        user_agent = request.environ.get('HTTP_USER_AGENT', '')
+        
+        # 创建唯一标识（使用基础品牌名）
+        import hashlib
+        unique_id = hashlib.md5(f"{client_ip}_{user_agent}_{base_brand_name}".encode()).hexdigest()
+        
+        # 检查是否已经点赞过
+        cache_key = f"like_{unique_id}"
+        cache_count_key = f"like_count_{base_brand_name}"
+        
+        has_liked = bool(cache_service.get(cache_key))
+        like_count = cache_service.get(cache_count_key) or 0
+        
+        return jsonify({
+            'success': True,
+            'liked': has_liked,
+            'like_count': like_count
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 @api_bp.errorhandler(500)
 def internal_error(error):

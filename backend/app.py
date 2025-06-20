@@ -69,6 +69,11 @@ def create_app(config_name='development'):
             
             # 创建表
             db.create_all()
+            
+            # 创建点赞数据表
+            from backend.models.brand_like import BrandLike
+            BrandLike.create_table()
+            
             print("✅ 数据表创建成功")
             
             # 创建默认管理员（如果不存在）

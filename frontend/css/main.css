@@ -1277,3 +1277,108 @@ body {
         font-size: 0.9rem;
     }
 }
+
+/* 模态框动作区域样式 */
+.modal-actions {
+    text-align: center;
+    padding: 2rem 0 1rem 0;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 2rem;
+}
+
+.generate-card-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.generate-card-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s;
+}
+
+.generate-card-btn:hover::before {
+    left: 100%;
+}
+
+.generate-card-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.generate-card-btn:active {
+    transform: translateY(0);
+}
+
+.generate-card-btn i {
+    font-size: 1.2rem;
+}
+
+.action-hint {
+    margin-top: 0.8rem;
+    color: #666;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+/* 移动端生成卡片按钮优化 */
+@media (max-width: 768px) {
+    .modal-actions {
+        padding: 1.5rem 0 1rem 0;
+        margin-top: 1.5rem;
+    }
+    
+    .generate-card-btn {
+        width: 100%;
+        max-width: 280px;
+        padding: 1.2rem 1.5rem;
+        font-size: 1rem;
+        margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .generate-card-btn i {
+        font-size: 1.3rem;
+        margin-right: 0.5rem;
+    }
+    
+    .action-hint {
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: #888;
+        padding: 0 1rem;
+    }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+    .generate-card-btn {
+        font-size: 0.95rem;
+        padding: 1rem 1.2rem;
+    }
+    
+    .action-hint {
+        font-size: 0.8rem;
+    }
+}
+

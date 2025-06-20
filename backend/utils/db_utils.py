@@ -4,7 +4,29 @@
 数据库工具函数
 """
 
+import pymysql
+import os
 from backend.models import db, Admin
+
+def get_db_connection():
+    """获取数据库连接"""
+    # 使用和config.py相同的数据库配置
+    host = os.environ.get('DB_HOST', '47.118.250.53')
+    port = int(os.environ.get('DB_PORT', 3306))
+    user = os.environ.get('DB_USER', 'nanyi')
+    password = os.environ.get('DB_PASSWORD', 'admin123456!')
+    database = os.environ.get('DB_NAME', 'nanyiqiutang')
+    
+    return pymysql.connect(
+        host=host,
+        port=port,
+        user=user,
+        password=password,
+        database=database,
+        charset='utf8mb4',
+        autocommit=True,
+        cursorclass=pymysql.cursors.DictCursor
+    )
 
 def init_database(app):
     """初始化数据库"""
