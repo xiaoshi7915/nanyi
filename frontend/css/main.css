@@ -48,12 +48,29 @@ body {
 }
 
 .logo {
-    font-size: 1.8rem;
-    font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;  /* 图片和文字之间的间距 */
+    height: 40px;  /* 设置logo容器高度 */
+}
+
+.logo-image {
+    height: 1.5rem;  /* 调整为适中大小 */
+    width: auto;     /* 自动宽度保持比例 */
+    max-width: 2.2rem; /* 适当增加最大宽度 */
+    max-height: 1.5rem; /* 调整最大高度 */
+    object-fit: contain;  /* 保持图片比例 */
+    /* filter: brightness(0) invert(1); */ /* 移除白色滤镜，显示原始颜色 */
+    transition: opacity 0.3s ease;
+}
+
+/* 文字logo样式 */
+.logo-text {
+    font-size: 1.5rem;  /* 调整为适中大小 */
+    font-weight: 700;
     color: white;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    letter-spacing: 1px;
 }
 
 /* 头部图标区域 */
@@ -665,20 +682,22 @@ body {
         top: auto;
         right: auto;
         margin: 0;
-        padding: 0.3rem 0.6rem;
-        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;  /* 减小内边距 */
+        font-size: 0.85rem;  /* 减小移动端点赞按钮文字大小 */
         min-width: auto;
+        border-radius: 15px;  /* 减小圆角 */
     }
     
     .detail-like-btn i {
-        font-size: 0.8rem;
-        margin-right: 0.2rem;
+        font-size: 0.7rem;  /* 减小移动端图标大小 */
+        margin-right: 0.15rem;  /* 减小图标和文字间距 */
     }
     
     /* 确保基本信息标题在左侧 */
     .section-title {
         margin: 0;
         flex: 1;
+        font-size: 1.1rem;  /* 移动端标题字体大小 */
     }
 }
 
@@ -867,6 +886,7 @@ body {
     line-height: 1.6;
     color: #374151;
     border-left: 4px solid #667eea;
+    font-size: 0.9rem;  /* 调小黄框中设计灵感内容的字体 */
 }
 
 /* 颜色分组样式 */
@@ -1043,7 +1063,7 @@ body {
 
     /* 移动端头部优化 */
     .header {
-        padding: 0.75rem 0;
+        padding: 0.4rem 0 !important;
     }
 
     .header-content {
@@ -1052,7 +1072,20 @@ body {
     }
 
     .logo {
-        font-size: 1.3rem;
+        height: 32px !important;  /* 调整移动端logo容器为适中大小 */
+        gap: 5px !important;  /* 适当间距 */
+    }
+    
+    .logo-image {
+        height: 1.1rem !important;  /* 调整移动端图片高度 */
+        width: auto !important;     /* 自动宽度保持比例 */
+        max-width: 1.6rem !important;  /* 适当增加最大宽度 */
+        max-height: 1.1rem !important; /* 调整最大高度 */
+    }
+    
+    .logo-text {
+        font-size: 1.1rem !important;  /* 移动端文字适中大小 */
+        font-weight: 600;   /* 稍微减轻字体粗细 */
     }
 
     .header-actions {
@@ -1137,7 +1170,7 @@ body {
     }
 
     .hero-banner {
-        padding: 2rem 0;
+        padding: 1rem 0 !important;
     }
 
     .hero-placeholder h2 {
@@ -1231,6 +1264,36 @@ body {
 }
 
 @media (max-width: 480px) {
+    /* 超小屏幕logo优化 */
+    .logo {
+        height: 28px !important;
+        gap: 4px !important;
+    }
+    
+    .logo-image {
+        height: 1rem !important;  /* 超小屏幕适中大小 */
+        width: auto !important;     /* 自动宽度保持比例 */
+        max-width: 1.4rem !important; /* 适当最大宽度 */
+        max-height: 1rem !important; /* 适当最大高度 */
+    }
+    
+    .logo-text {
+        font-size: 1rem !important;
+        font-weight: 600;
+    }
+    
+    /* 超小屏幕详情页点赞按钮进一步缩小 */
+    .detail-like-btn {
+        padding: 0.2rem 0.4rem !important;  /* 进一步减小内边距 */
+        font-size: 0.75rem !important;  /* 进一步减小文字大小 */
+        border-radius: 12px !important;  /* 进一步减小圆角 */
+    }
+    
+    .detail-like-btn i {
+        font-size: 0.6rem !important;  /* 进一步减小图标大小 */
+        margin-right: 0.1rem !important;  /* 进一步减小间距 */
+    }
+
     .brands-grid {
         grid-template-columns: 1fr;
     }
@@ -1542,21 +1605,21 @@ body {
 .section-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;  /* 改为center对齐，让标题和点赞按钮在同一行 */
     margin-bottom: 1rem;
     position: relative;
-    min-height: 60px;
+    min-height: auto;  /* 移除固定高度 */
 }
 
 .section-title {
     margin: 0;
     flex: 1;
+    font-size: 1.3rem;  /* 调大红框中标题的字体大小 */
+    font-weight: 600;   /* 增加字体粗细 */
 }
 
 .detail-like-section {
-    position: absolute;
-    bottom: 0;
-    right: 0;
+    position: static;  /* 改为静态定位，让它在正常文档流中 */
     display: flex;
     align-items: center;
 }
@@ -1572,7 +1635,7 @@ body {
     color: #999;  /* 未点赞时改为灰色 */
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 0.9rem;
+    font-size: 1.1rem;  /* 调整点赞按钮文字大小，但小于标题 */
     outline: none;
 }
 
@@ -1601,7 +1664,7 @@ body {
 }
 
 .detail-like-btn i {
-    font-size: 1rem;
+    font-size: 0.8rem;  /* 保持图标大小不变 */
     transition: transform 0.2s ease;
 }
 

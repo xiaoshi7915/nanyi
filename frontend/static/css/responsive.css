@@ -47,7 +47,7 @@
     
     /* 头部调整 - 更紧凑 */
     .header {
-        padding: 0.5rem 0; /* 大幅减少头部内边距 */
+        padding: 0.3rem 0 !important; /* 进一步减少头部内边距 */
     }
     
     .header-content {
@@ -73,8 +73,8 @@
     
     /* 英雄横幅调整 */
     .hero-banner {
-        padding: 1rem 0; /* 减少内边距 */
-        margin-bottom: 0.5rem; /* 减少下边距 */
+        padding: 0.8rem 0 !important; /* 进一步减少内边距 */
+        margin-bottom: 0.3rem !important; /* 进一步减少下边距 */
     }
     
     .hero-title {

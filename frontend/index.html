@@ -49,8 +49,8 @@
     <link rel="stylesheet" href="static/lib/all.min.css">
     
     <!-- 引入样式文件 -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="static/css/responsive.css">
+    <link rel="stylesheet" href="css/main.css?v=20250622-3">
+    <link rel="stylesheet" href="static/css/responsive.css?v=20250622-3">
     
     <!-- 引入性能优化配置 -->
     <script src="js/performance-config.js"></script>
@@ -88,8 +88,10 @@
                        class="logo-link"
                        @click="handleLogoClick">
                         <div class="logo">
-                            <i class="fas fa-leaf"></i>
-                            <span>南意秋棠</span>
+                            <!-- logo图片 -->
+                            <img src="static/images/logo.svg" alt="南意秋棠" class="logo-image">
+                            <!-- 文字 -->
+                            <span class="logo-text">南意秋棠</span>
                         </div>
                     </a>
                     <!-- 右侧图标 -->
