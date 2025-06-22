@@ -612,7 +612,7 @@ def generate_share_card(brand_name):
         
         # 获取点赞数（直接从数据库获取最新数据，不使用缓存）
         try:
-            from models.brand_like import BrandLike
+            from backend.models.brand_like import BrandLike
             # 直接从数据库获取最新点赞数，确保实时性
             like_count = BrandLike.get_like_count(base_brand_name)
             card_data['like_count'] = like_count
@@ -662,7 +662,7 @@ def like_brand_card(brand_name):
         
         # 使用数据库存储点赞记录
         try:
-            from models.brand_like import BrandLike
+            from backend.models.brand_like import BrandLike
             success, like_count, is_liked = BrandLike.toggle_like(base_brand_name, unique_id, client_ip, user_agent)
             
             if not success:
@@ -744,7 +744,7 @@ def get_brand_like_count(brand_name):
         
         # 使用数据库查询点赞状态
         try:
-            from models.brand_like import BrandLike
+            from backend.models.brand_like import BrandLike
             has_liked = BrandLike.check_user_liked(base_brand_name, unique_id)
             like_count = BrandLike.get_like_count(base_brand_name)
             

@@ -213,13 +213,17 @@ start_services() {
     
     cd $PROJECT_DIR
     
-    # 使用管理脚本启动
-    if [ -f "manage.sh" ]; then
+    # 使用新的启动脚本
+    if [ -f "start_services.sh" ]; then
+        chmod +x start_services.sh
+        ./start_services.sh
+        log_success "服务启动完成"
+    elif [ -f "manage.sh" ]; then
         chmod +x manage.sh
         ./manage.sh restart
         log_success "服务启动完成"
     else
-        log_error "管理脚本 manage.sh 不存在"
+        log_error "启动脚本不存在"
         exit 1
     fi
 }
