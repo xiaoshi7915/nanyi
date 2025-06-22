@@ -11,8 +11,8 @@ from flask import Blueprint, jsonify, request, send_file, abort, current_app
 from services.image_service import ImageService
 from services.product_service import ProductService
 from services.cache_service import cached, cache_service, DatabaseQueryCache
-from backend.utils.logger import log_access
-from backend.utils.cache_control import smart_cache, cache_control
+from utils.logger import log_access
+from utils.cache_control import smart_cache, cache_control
 
 def handle_errors(f):
     """错误处理装饰器"""
@@ -155,10 +155,24 @@ def _get_images_with_pagination(page, per_page, load_all):
     
     # 转换为列表格式并按发布时间排序
     brand_list = []
+    
+    # 批量获取所有品牌的点赞数
+    try:
+        from models.brand_like import BrandLike
+        all_like_counts = BrandLike.get_all_like_counts()
+    except Exception as e:
+        print(f"获取点赞数失败: {e}")
+        all_like_counts = {}
+    
     for brand_name, brand_data in brands.items():
+        # 获取基础品牌名用于查询点赞数
+        base_brand_name = brand_name.split('(')[0] if '(' in brand_name else brand_name
+        like_count = all_like_counts.get(base_brand_name, 0)
+        
         brand_list.append({
             **brand_data,
-            'imageCount': len(brand_data['images'])
+            'imageCount': len(brand_data['images']),
+            'like_count': like_count  # 添加点赞数
         })
     
     # 按发布年份和月份排序（最新的在前）
@@ -288,7 +302,7 @@ def get_filters():
             'print_sizes': ['全部', '循环印花料', '定位印花料']
         })
 
-@api_bp.route('/brand/<brand_name>')
+@api_bp.route('/brand/<path:brand_name>')
 @log_access
 @cached(ttl=900, key_prefix='api_brand')  # 15分钟缓存
 @handle_errors
@@ -297,42 +311,60 @@ def get_brand_detail(brand_name):
     from urllib.parse import unquote
     
     # URL解码品牌名
-    brand_name = unquote(brand_name)
+    decoded_brand_name = unquote(brand_name)
+    print(f"API请求品牌详情: {brand_name} -> 解码后: {decoded_brand_name}")
     
     # 从品牌名中提取基础品牌名（去掉花色信息）
-    base_brand_name = brand_name
-    if '(' in brand_name:
-        base_brand_name = brand_name.split('(')[0]
+    base_brand_name = decoded_brand_name
+    if '(' in decoded_brand_name:
+        base_brand_name = decoded_brand_name.split('(')[0]
     
-    # 使用基础品牌名获取品牌信息
-    product = ProductService.get_product_by_brand_name(base_brand_name)
+    print(f"基础品牌名: {base_brand_name}")
     
-    # 获取该品牌的所有图片（使用基础品牌名）
-    image_service = ImageService()
-    brand_images = image_service.get_brand_images(base_brand_name)
+    # 使用产品服务获取品牌信息
+    product_service = ProductService()
+    brand_info = product_service.get_brand_detail(decoded_brand_name)
     
-    if not brand_images:
+    # 如果使用完整品牌名没找到，尝试使用基础品牌名
+    if not brand_info and base_brand_name != decoded_brand_name:
+        print(f"使用完整品牌名未找到，尝试基础品牌名: {base_brand_name}")
+        brand_info = product_service.get_brand_detail(base_brand_name)
+    
+    if not brand_info:
+        print(f"品牌不存在: {decoded_brand_name}")
         return jsonify({
             'success': False,
-            'error': '品牌不存在'
+            'error': f'品牌不存在: {decoded_brand_name}',
+            'requested_brand': decoded_brand_name,
+            'base_brand': base_brand_name
         }), 404
     
-    # 构建返回数据
+    # 从brand_info中获取images
+    brand_images = brand_info.get('images', [])
+    
+    # 构建返回数据，确保字段名称正确
     result = {
         'success': True,
-        'brand': {
-            'name': brand_name,  # 返回原始品牌名（带花色）
+        'brand_info': {
+            'name': decoded_brand_name,  # 返回解码后的品牌名
             'base_name': base_brand_name,  # 返回基础品牌名
-            'images': brand_images,
-            'imageCount': len(brand_images)
-        }
+            **brand_info  # 包含所有品牌信息
+        },
+        'images': brand_images,
+        'imageCount': len(brand_images)
     }
     
-    # 如果有产品信息，添加到结果中
-    if product:
-        brand_info = product.to_dict()
-        result['brand'].update(brand_info)
+    # 添加点赞数
+    try:
+        from models.brand_like import BrandLike
+        like_count = BrandLike.get_like_count(base_brand_name)
+        result['brand_info']['like_count'] = like_count
+        print(f"获取点赞数成功: {like_count}")
+    except Exception as e:
+        print(f"获取点赞数失败: {e}")
+        result['brand_info']['like_count'] = 0
     
+    print(f"返回品牌详情成功: {brand_info.get('name', '未知')}, 图片数量: {len(brand_images)}")
     return jsonify(result)
 
 @api_bp.route('/products')
@@ -390,19 +422,32 @@ def get_statistics():
 @handle_errors
 def view_image(filepath):
     """查看图片"""
-    from config.config import Config
+    import os
+    from flask import send_file, abort
+    
+    # 获取前端静态图片目录
+    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = os.path.dirname(current_dir)
+    images_dir = os.path.join(project_root, 'frontend', 'static', 'images')
     
     # 构建完整路径
-    full_path = os.path.join(Config.UPLOAD_FOLDER, filepath)
+    full_path = os.path.join(images_dir, filepath)
+    
+    print(f"🖼️ 图片请求: {filepath}")
+    print(f"🖼️ 完整路径: {full_path}")
+    print(f"🖼️ 文件存在: {os.path.exists(full_path)}")
     
     # 检查文件是否存在
     if not os.path.exists(full_path):
+        print(f"❌ 文件不存在: {full_path}")
         abort(404)
     
     # 检查文件是否在允许的目录内（安全检查）
-    if not os.path.abspath(full_path).startswith(os.path.abspath(Config.UPLOAD_FOLDER)):
+    if not os.path.abspath(full_path).startswith(os.path.abspath(images_dir)):
+        print(f"❌ 安全检查失败: {full_path}")
         abort(403)
     
+    print(f"✅ 返回图片文件: {full_path}")
     return send_file(full_path)
 
 @api_bp.route('/download/<path:filepath>')
@@ -489,97 +534,50 @@ def get_access_log_stats():
 
 @api_bp.route('/share/card/<path:brand_name>')
 @log_access
+@cached(ttl=1800, key_prefix='share_card')  # 30分钟缓存
 @handle_errors
 def generate_share_card(brand_name):
-    """生成布料分享卡片"""
+    """生成分享卡片数据"""
     try:
-        # URL解码品牌名
         import urllib.parse
-        # Flask路由参数需要进一步解码，处理特殊字符
-        try:
-            decoded_brand_name = urllib.parse.unquote(brand_name, encoding='utf-8')
-        except:
-            decoded_brand_name = brand_name
-        print(f"🎯 生成卡片请求: 原始={brand_name}, 解码={decoded_brand_name}")
+        decoded_brand_name = urllib.parse.unquote(brand_name, encoding='utf-8')
         
         # 提取基础品牌名（去掉颜色部分）
         base_brand_name = decoded_brand_name.split('(')[0] if '(' in decoded_brand_name else decoded_brand_name
-        print(f"🏷️ 基础品牌名: {base_brand_name}")
         
-        # 获取品牌详情数据
-        image_service = ImageService()
+        # 使用缓存的产品服务
+        product_service = ProductService() 
         
-        # 首先尝试完整品牌名
-        images = image_service.get_brand_images(decoded_brand_name)
-        matched_brand_name = decoded_brand_name
-        
-        # 如果没找到，尝试基础品牌名
-        if not images:
-            images = image_service.get_brand_images(base_brand_name)
-            if images:
-                matched_brand_name = base_brand_name
-        
-        # 如果仍然没有找到，尝试模糊匹配
-        if not images:
-            all_images = image_service.get_all_images()
-            available_brands = set()
-            for img in all_images:
-                available_brands.add(img.get('brand_name', ''))
-            print(f"🔍 可用品牌名: {list(available_brands)[:5]}...")
-            
-            # 尝试模糊匹配，处理多颜色品牌名
-            for brand in available_brands:
-                brand_base = brand.split('(')[0] if '(' in brand else brand
-                
-                if (base_brand_name == brand_base or base_brand_name in brand or 
-                    brand_base == base_brand_name or brand in decoded_brand_name):
-                    print(f"🎯 找到匹配品牌: {brand}")
-                    temp_images = image_service.get_brand_images(brand)
-                    if temp_images:  # 确保找到了图片
-                        images = temp_images
-                        matched_brand_name = brand
-                        break
-        
-        print(f"📸 最终匹配品牌: {matched_brand_name}, 找到图片数量: {len(images) if images else 0}")
-        
-        # 从数据库获取产品信息（优先使用基础品牌名）
-        Product = None
-        try:
-            from models.product import Product
-            # 首先尝试基础品牌名
-            product = Product.get_by_brand_name(base_brand_name)
-            # 如果没找到，尝试完整品牌名
-            if not product:
-                product = Product.get_by_brand_name(decoded_brand_name)
-            # 如果仍然没找到，尝试匹配的品牌名
-            if not product and matched_brand_name != decoded_brand_name:
-                product = Product.get_by_brand_name(matched_brand_name)
-            print(f"🏷️ 数据库产品信息: {product.brand_name if product else '未找到'}")
-        except ImportError:
-            product = None
-        
-        # 即使没有找到图片或产品信息，也生成基础卡片
-        if not images and not product:
-            print(f"⚠️ 未找到品牌 '{decoded_brand_name}' 的详细信息，生成基础卡片")
-        
-        # 准备卡片数据
+        # 获取品牌详情（带缓存）
+        brand_detail = product_service.get_brand_detail(decoded_brand_name)
+        if not brand_detail:
+            return jsonify({
+                'success': False,
+                'error': '未找到该品牌信息'
+            }), 404
+
+        # 构建卡片数据
         card_data = {
             'brand_name': decoded_brand_name,
-            'year': product.year if product else 2024,
-            'material': product.material if product else '棉麻',
-            'theme_series': product.theme_series if product else '经典系列',
-            'print_size': product.print_size if product else '循环印花料',
-            'inspiration_origin': product.inspiration_origin if product else f'{decoded_brand_name}的设计灵感来源于传统文化与现代美学的融合。',
+            'base_brand_name': base_brand_name,
+            'year': brand_detail.get('year', 2024),
+            'material': brand_detail.get('material', '棉麻'),
+            'theme_series': brand_detail.get('theme_series', '经典系列'),
+            'print_size': brand_detail.get('print_size', '循环印花料'),
+            'inspiration_origin': brand_detail.get('inspiration_origin', f'{decoded_brand_name}的设计灵感来源于传统文化与现代美学的融合。'),
             'images': []
         }
+
+        # 优化图片处理：只选择必要的图片类型，减少处理时间
+        images = brand_detail.get('images', [])
         
-        # 处理图片数据，每种类型最多取一张
-        image_types = ['宣传图', '设计图', '布料图', '成衣图', '模特图', '买家秀图']
+        # 定义图片优先级（越重要的越靠前）
+        image_types = ['概念图', '设计图', '布料图']  # 只取前3种最重要的类型
         type_image_map = {}
         
         for img in images:
             if img['image_type'] in image_types and img['image_type'] not in type_image_map:
-                # 构建图片URL
+                # 优先使用medium_url，减少图片大小，提高加载速度
                 img_url = ''
                 if img.get('medium_url') and img['medium_url'].startswith('http'):
                     img_url = img['medium_url']
@@ -597,6 +595,10 @@ def generate_share_card(brand_name):
                     'relative_path': img.get('relative_path'),
                     'filename': img.get('filename')
                 }
+                
+                # 最多3张图片，减少加载时间
+                if len(type_image_map) >= 3:
+                    break
         
         # 按指定顺序添加图片
         for img_type in image_types:
@@ -604,11 +606,11 @@ def generate_share_card(brand_name):
                 card_data['images'].append(type_image_map[img_type])
         
         # 生成卡片URL - 指向前端服务器
-        frontend_host = request.host.replace(':5001', ':8500')  # 将后端端口替换为前端端口
+        frontend_host = request.host.replace(':5001', ':8500')  # 将后端端口替换为前端端口  
         frontend_url = f"http://{frontend_host}/card.html?brand={decoded_brand_name}"
         card_data['card_url'] = frontend_url
         
-        # 获取点赞数
+        # 获取点赞数（使用缓存）
         try:
             from models.brand_like import BrandLike
             like_count = BrandLike.get_like_count(base_brand_name)
@@ -641,7 +643,7 @@ def not_found(error):
 @api_bp.route('/like/card/<path:brand_name>', methods=['POST'])
 @handle_errors
 def like_brand_card(brand_name):
-    """点赞布料卡片"""
+    """切换布料卡片点赞状态（点赞/取消点赞）"""
     try:
         import urllib.parse
         decoded_brand_name = urllib.parse.unquote(brand_name, encoding='utf-8')
@@ -660,23 +662,22 @@ def like_brand_card(brand_name):
         # 使用数据库存储点赞记录
         try:
             from models.brand_like import BrandLike
-            success, result = BrandLike.add_like(base_brand_name, unique_id, client_ip, user_agent)
+            success, like_count, is_liked = BrandLike.toggle_like(base_brand_name, unique_id, client_ip, user_agent)
             
             if not success:
-                # 获取当前点赞数
-                like_count = BrandLike.get_like_count(base_brand_name)
                 return jsonify({
                     'success': False,
-                    'message': result,
-                    'liked': True,
-                    'like_count': like_count
+                    'message': like_count,
+                    'liked': not is_liked,  # 如果操作失败，状态保持原样
+                    'like_count': BrandLike.get_like_count(base_brand_name)
                 })
             
+            message = '点赞成功！' if is_liked else '取消点赞成功！'
             return jsonify({
                 'success': True,
-                'message': '点赞成功！',
-                'liked': True,
-                'like_count': result
+                'message': message,
+                'liked': is_liked,
+                'like_count': like_count
             })
             
         except Exception as db_error:
@@ -686,29 +687,34 @@ def like_brand_card(brand_name):
             cache_count_key = f"like_count_{base_brand_name}"
             
             # 检查是否已经点赞过
-            has_liked = cache_service.get(cache_key)
+            has_liked = bool(cache_service.get(cache_key))
+            
             if has_liked:
+                # 取消点赞
+                cache_service.delete(cache_key)
+                current_count = cache_service.get(cache_count_key) or 0
+                new_count = max(current_count - 1, 0)
+                cache_service.set(cache_count_key, new_count, ttl=86400*365)
+                
                 return jsonify({
-                    'success': False,
-                    'message': '您已经点赞过了',
-                    'liked': True,
-                    'like_count': cache_service.get(cache_count_key) or 0
+                    'success': True,
+                    'message': '取消点赞成功！',
+                    'liked': False,
+                    'like_count': new_count
                 })
-            
-            # 记录点赞
-            cache_service.set(cache_key, True, ttl=86400*30)
-            
-            # 更新点赞数
-            current_count = cache_service.get(cache_count_key) or 0
-            new_count = current_count + 1
-            cache_service.set(cache_count_key, new_count, ttl=86400*365)
-            
-            return jsonify({
-                'success': True,
-                'message': '点赞成功！',
-                'liked': True,
-                'like_count': new_count
-            })
+            else:
+                # 点赞
+                cache_service.set(cache_key, True, ttl=86400*30)
+                current_count = cache_service.get(cache_count_key) or 0
+                new_count = current_count + 1
+                cache_service.set(cache_count_key, new_count, ttl=86400*365)
+                
+                return jsonify({
+                    'success': True,
+                    'message': '点赞成功！',
+                    'liked': True,
+                    'like_count': new_count
+                })
         
     except Exception as e:
         return jsonify({

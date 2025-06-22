@@ -5,10 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">南意秋棠 - 汉文化布料</title>
     
-    <!-- 微信分享配置 -->
-    <meta property="og:title" content="南意秋棠 - 汉文化布料" />
-    <meta property="og:description" content="传承经典，创新未来" />
+    <!-- 微信分享优化 -->
+    <meta property="og:title" content="南意秋棠 - 汉文化布料设计" />
+    <meta property="og:description" content="传承经典，创新未来 - 汉文化布料设计的艺术之美" />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="" />
+    <meta property="og:image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
+    <meta property="og:image:width" content="800" />
+    <meta property="og:image:height" content="600" />
+    <meta property="og:site_name" content="南意秋棠" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="南意秋棠 - 汉文化布料设计" />
+    <meta name="twitter:description" content="传承经典，创新未来 - 汉文化布料设计的艺术之美" />
+    <meta name="twitter:image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
+    
+    <!-- 微信分享专用 -->
+    <meta itemprop="name" content="南意秋棠 - 汉文化布料设计" />
+    <meta itemprop="description" content="传承经典，创新未来 - 汉文化布料设计的艺术之美" />
+    <meta itemprop="image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
+    
+    <!-- 微信分享配置 -->
+    <meta name="wechat:title" content="南意秋棠 - 汉文化布料设计" />
+    <meta name="wechat:desc" content="传承经典，创新未来 - 汉文化布料设计的艺术之美" />
+    <meta name="wechat:imgUrl" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
+    <meta name="wechat:link" content="" />
     
     <style>
         * {
@@ -335,6 +357,9 @@
     
     <!-- 引入图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- 微信JS-SDK -->
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
 </head>
 <body>
     <div class="share-card" id="shareCard">
@@ -442,6 +467,28 @@
             loadCardData();
             initializeShare();
             showShareHint();
+            
+            // 如果URL包含debug参数，显示调试信息
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('debug') === '1') {
+                showDebugInfo();
+            }
+        });
+        
+        // 页面可见性变化时重新设置分享
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && typeof setupWechatShare === 'function') {
+                console.log('页面重新可见，重新设置微信分享');
+                setTimeout(setupWechatShare, 100);
+            }
+        });
+        
+        // URL变化时重新设置分享
+        window.addEventListener('popstate', function() {
+            if (typeof setupWechatShare === 'function') {
+                console.log('URL变化，重新设置微信分享');
+                setTimeout(setupWechatShare, 100);
+            }
         });
         
         // 加载卡片数据
@@ -472,8 +519,25 @@
         function fetchBrandData(brandName) {
             console.log('尝试获取品牌数据:', brandName);
             
-            // 直接使用分享API获取数据，它包含了完整的卡片信息
-            const shareApiUrl = `http://121.36.205.70:5001/api/share/card/${brandName}`;
+            // 根据当前域名动态构建API URL
+            const currentHost = window.location.hostname;
+            let apiBaseUrl = '';
+            
+            if (currentHost === '121.36.205.70') {
+                // IP访问时使用IP地址的后端端口
+                apiBaseUrl = 'http://121.36.205.70:5001';
+            } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com')) {
+                // 域名访问时使用域名
+                apiBaseUrl = `http://${currentHost}`;
+            } else {
+                // 其他情况（如本地开发）使用相对路径
+                apiBaseUrl = '';
+            }
+            
+            // 构建完整的API URL
+            const shareApiUrl = `${apiBaseUrl}/api/share/card/${brandName}`;
+            
+            console.log('使用API URL:', shareApiUrl);
             
             fetch(shareApiUrl)
                 .then(response => response.json())
@@ -546,12 +610,17 @@
             
             const sizeElement = document.getElementById('sizeValue');
             if (sizeElement) sizeElement.textContent = cardData.print_size || cardData.size || '循环印花料';
+            
+            // 内容更新后重新设置微信分享
+            if (typeof setupWechatShare === 'function') {
+                setupWechatShare();
+            }
         }
         
         // 初始化图片展示
         function initializeImages() {
             const imagesGrid = document.getElementById('imagesGrid');
-            const imageTypes = ['宣传图', '设计图', '布料图', '成衣图', '模特图', '买家秀图'];
+            const imageTypes = ['概念图', '设计图', '布料图', '成衣图', '模特图', '买家秀图'];
             
             // 清空现有图片
             imagesGrid.innerHTML = '';
@@ -597,6 +666,8 @@
         
         // 初始化分享功能
         function initializeShare() {
+            // 设置微信分享
+            setupWechatShare();
             // 长按保存图片
             let longPressTimer;
             const shareCard = document.getElementById('shareCard');
@@ -730,7 +801,7 @@
         
         // 跳转到主页
         function goToHomepage() {
-            window.open('http://121.36.205.70:8500', '_blank');
+            window.open(window.location.origin, '_blank');
             showToast('正在跳转到主页...');
         }
         
@@ -748,33 +819,64 @@
                 return;
             }
             
-            // 调用点赞API
-            const likeApiUrl = `http://121.36.205.70:5001/api/like/card/${encodeURIComponent(brandName)}`;
+            // 根据当前域名动态构建API URL
+            const currentHost = window.location.hostname;
+            let apiBaseUrl = '';
             
-            fetch(likeApiUrl, { method: 'POST' })
+            if (currentHost === '121.36.205.70') {
+                // IP访问时使用IP地址的后端端口
+                apiBaseUrl = 'http://121.36.205.70:5001';
+            } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com')) {
+                // 域名访问时使用域名
+                apiBaseUrl = `http://${currentHost}`;
+            } else {
+                // 其他情况（如本地开发）使用相对路径
+                apiBaseUrl = '';
+            }
+            
+            // 取消点赞API
+            const likeApiUrl = `${apiBaseUrl}/api/like/card/${encodeURIComponent(brandName)}`;
+            
+            fetch(likeApiUrl, { method: 'DELETE' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         // 更新UI状态
-                        likeButton.classList.add('liked');
+                        likeButton.classList.remove('liked');
                         likeIcon.className = 'fas fa-thumbs-up';
-                        likeText.textContent = '已赞';
+                        likeText.textContent = '点赞';
                         likeCount.textContent = data.like_count;
                         showToast(data.message);
                     } else {
-                        showToast(data.message || '点赞失败');
+                        showToast(data.message || '取消点赞失败');
                     }
                 })
                 .catch(error => {
-                    console.error('点赞失败:', error);
-                    showToast('点赞失败，请稍后重试');
+                    console.error('取消点赞失败:', error);
+                    showToast('取消点赞失败，请稍后重试');
                 });
         }
         
         // 获取点赞状态
         function loadLikeStatus() {
             const brandName = cardData.brand_name || '未知品牌';
-            const likeApiUrl = `http://121.36.205.70:5001/api/like/card/${encodeURIComponent(brandName)}`;
+            
+            // 根据当前域名动态构建API URL
+            const currentHost = window.location.hostname;
+            let apiBaseUrl = '';
+            
+            if (currentHost === '121.36.205.70') {
+                // IP访问时使用IP地址的后端端口
+                apiBaseUrl = 'http://121.36.205.70:5001';
+            } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com')) {
+                // 域名访问时使用域名
+                apiBaseUrl = `http://${currentHost}`;
+            } else {
+                // 其他情况（如本地开发）使用相对路径
+                apiBaseUrl = '';
+            }
+            
+            const likeApiUrl = `${apiBaseUrl}/api/like/card/${encodeURIComponent(brandName)}`;
             
             fetch(likeApiUrl)
                 .then(response => response.json())
@@ -801,8 +903,6 @@
                 });
         }
         
-
-        
         // 简单的markdown解析函数
         function parseMarkdown(text) {
             if (!text) return text;
@@ -821,9 +921,277 @@
                 // 包装段落（如果有多个段落）
                 .replace(/^(.*)$/s, text.includes('</p><p>') ? '<p>$1</p>' : '$1');
         }
+        
+        // 检测是否为微信浏览器
+        function isWechatBrowser() {
+            const ua = navigator.userAgent.toLowerCase();
+            return ua.includes('micromessenger');
+        }
+        
+        // 设置微信分享
+        function setupWechatShare() {
+            // 更新meta标签
+            updateMetaTags();
+            
+            // 如果在微信浏览器中，配置微信分享
+            if (isWechatBrowser() && typeof wx !== 'undefined') {
+                console.log('检测到微信浏览器，配置微信分享');
+                
+                // 配置微信分享
+                wx.config({
+                    debug: false,
+                    appId: 'dummy_app_id', // 这里需要真实的appId
+                    timestamp: Math.floor(Date.now() / 1000),
+                    nonceStr: 'dummy_nonce_str',
+                    signature: 'dummy_signature',
+                    jsApiList: [
+                        'updateAppMessageShareData',
+                        'updateTimelineShareData',
+                        'onMenuShareTimeline',
+                        'onMenuShareAppMessage'
+                    ]
+                });
+                
+                wx.ready(function() {
+                    console.log('微信JS-SDK初始化成功');
+                    configureWechatShare();
+                });
+                
+                wx.error(function(res) {
+                    console.log('微信JS-SDK初始化失败，使用Meta标签方式:', res);
+                    // 即使JS-SDK失败，meta标签仍然有效
+                });
+            } else {
+                console.log('非微信浏览器或JS-SDK未加载，使用Meta标签方式');
+            }
+        }
+        
+        // 配置微信分享内容
+        function configureWechatShare() {
+            const shareData = getShareData();
+            
+            // 新版API
+            if (wx.updateAppMessageShareData) {
+                wx.updateAppMessageShareData({
+                    title: shareData.title,
+                    desc: shareData.desc,
+                    link: shareData.link,
+                    imgUrl: shareData.imgUrl,
+                    success: function() {
+                        console.log('微信分享给朋友配置成功');
+                    },
+                    fail: function(err) {
+                        console.log('微信分享给朋友配置失败:', err);
+                    }
+                });
+            }
+            
+            if (wx.updateTimelineShareData) {
+                wx.updateTimelineShareData({
+                    title: shareData.title,
+                    link: shareData.link,
+                    imgUrl: shareData.imgUrl,
+                    success: function() {
+                        console.log('微信分享到朋友圈配置成功');
+                    },
+                    fail: function(err) {
+                        console.log('微信分享到朋友圈配置失败:', err);
+                    }
+                });
+            }
+            
+            // 兼容旧版API
+            if (wx.onMenuShareAppMessage) {
+                wx.onMenuShareAppMessage(shareData);
+            }
+            
+            if (wx.onMenuShareTimeline) {
+                wx.onMenuShareTimeline({
+                    title: shareData.title,
+                    link: shareData.link,
+                    imgUrl: shareData.imgUrl
+                });
+            }
+        }
+        
+        // 获取分享数据
+        function getShareData() {
+            const brandName = cardData.brand_name || '南意秋棠布料';
+            const inspiration = cardData.inspiration || cardData.inspiration_origin || '传承经典，创新未来 - 汉文化布料设计的艺术之美';
+            
+            // 获取第一张图片作为分享图片
+            let shareImage = 'http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg';
+            if (cardData.images && cardData.images.length > 0) {
+                const firstImage = cardData.images[0];
+                if (firstImage.medium_url && firstImage.medium_url.startsWith('http')) {
+                    shareImage = firstImage.medium_url;
+                } else if (firstImage.url && firstImage.url.startsWith('http')) {
+                    shareImage = firstImage.url;
+                } else if (firstImage.relative_path) {
+                    const encodedPath = firstImage.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
+                    shareImage = `http://products.nanyiqiutang.cn/static/images/${encodedPath}`;
+                }
+            }
+            
+            return {
+                title: `${brandName} - 南意秋棠`,
+                desc: inspiration.substring(0, 100) + (inspiration.length > 100 ? '...' : ''),
+                link: window.location.href,
+                imgUrl: shareImage,
+                success: function() {
+                    console.log('分享成功');
+                },
+                cancel: function() {
+                    console.log('取消分享');
+                }
+            };
+        }
+        
+        // 更新meta标签
+        function updateMetaTags() {
+            const shareData = getShareData();
+            
+            // 更新页面标题
+            document.title = shareData.title;
+            const pageTitleElement = document.getElementById('pageTitle');
+            if (pageTitleElement) {
+                pageTitleElement.textContent = shareData.title;
+            }
+            
+            // 更新或创建meta标签
+            const metaTags = [
+                { property: 'og:title', content: shareData.title },
+                { property: 'og:description', content: shareData.desc },
+                { property: 'og:url', content: shareData.link },
+                { property: 'og:image', content: shareData.imgUrl },
+                { name: 'twitter:title', content: shareData.title },
+                { name: 'twitter:description', content: shareData.desc },
+                { name: 'twitter:image', content: shareData.imgUrl },
+                { itemprop: 'name', content: shareData.title },
+                { itemprop: 'description', content: shareData.desc },
+                { itemprop: 'image', content: shareData.imgUrl },
+                { name: 'wechat:title', content: shareData.title },
+                { name: 'wechat:desc', content: shareData.desc },
+                { name: 'wechat:imgUrl', content: shareData.imgUrl },
+                { name: 'wechat:link', content: shareData.link }
+            ];
+            
+            metaTags.forEach(tag => {
+                let selector = '';
+                if (tag.property) {
+                    selector = `meta[property="${tag.property}"]`;
+                } else if (tag.name) {
+                    selector = `meta[name="${tag.name}"]`;
+                } else if (tag.itemprop) {
+                    selector = `meta[itemprop="${tag.itemprop}"]`;
+                }
+                
+                let metaElement = document.querySelector(selector);
+                if (metaElement) {
+                    metaElement.setAttribute('content', tag.content);
+                } else {
+                    metaElement = document.createElement('meta');
+                    if (tag.property) metaElement.setAttribute('property', tag.property);
+                    if (tag.name) metaElement.setAttribute('name', tag.name);
+                    if (tag.itemprop) metaElement.setAttribute('itemprop', tag.itemprop);
+                    metaElement.setAttribute('content', tag.content);
+                    document.head.appendChild(metaElement);
+                }
+            });
+        }
+        
+        // 显示调试信息
+        function showDebugInfo() {
+            const debugPanel = document.createElement('div');
+            debugPanel.id = 'debug-panel';
+            debugPanel.style.cssText = `
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                width: 300px;
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 15px;
+                border-radius: 10px;
+                font-size: 12px;
+                z-index: 10000;
+                max-height: 400px;
+                overflow-y: auto;
+            `;
+            
+            const isWeChat = isWechatBrowser();
+            const hasWxSDK = typeof wx !== 'undefined';
+            
+            debugPanel.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px;">🐛 调试信息</div>
+                <div>浏览器：${isWeChat ? '✅ 微信' : '❌ 非微信'}</div>
+                <div>微信SDK：${hasWxSDK ? '✅ 已加载' : '❌ 未加载'}</div>
+                <div>页面标题：${document.title}</div>
+                <div>当前URL：${window.location.href}</div>
+                <div style="margin-top: 10px;">
+                    <button onclick="testShareConfig()" style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">测试分享配置</button>
+                    <button onclick="document.getElementById('debug-panel').remove()" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-left: 5px;">关闭</button>
+                </div>
+                <div id="debug-log" style="margin-top: 10px; max-height: 200px; overflow-y: auto; background: rgba(255,255,255,0.1); padding: 5px; border-radius: 5px;"></div>
+            `;
+            
+            document.body.appendChild(debugPanel);
+            
+            // 重写console.log以显示在调试面板中
+            const originalLog = console.log;
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                const debugLog = document.getElementById('debug-log');
+                if (debugLog) {
+                    const logEntry = document.createElement('div');
+                    logEntry.textContent = args.join(' ');
+                    logEntry.style.marginBottom = '2px';
+                    debugLog.appendChild(logEntry);
+                    debugLog.scrollTop = debugLog.scrollHeight;
+                }
+            };
+        }
+        
+        // 测试分享配置
+        function testShareConfig() {
+            const debugLog = document.getElementById('debug-log');
+            if (debugLog) {
+                debugLog.innerHTML = '';
+            }
+            
+            console.log('=== 分享配置测试 ===');
+            console.log('浏览器UA:', navigator.userAgent);
+            console.log('是否微信浏览器:', isWechatBrowser());
+            console.log('微信SDK状态:', typeof wx !== 'undefined' ? '已加载' : '未加载');
+            
+            const shareData = getShareData();
+            console.log('分享数据:', shareData);
+            
+            // 检查meta标签
+            const metaTags = [
+                'og:title', 'og:description', 'og:image', 'og:url',
+                'twitter:title', 'twitter:description', 'twitter:image',
+                'wechat:title', 'wechat:desc', 'wechat:imgUrl'
+            ];
+            
+            console.log('=== Meta标签检查 ===');
+            metaTags.forEach(tag => {
+                const element = document.querySelector(`meta[property="${tag}"], meta[name="${tag}"]`);
+                if (element) {
+                    console.log(`${tag}: ${element.getAttribute('content')}`);
+                } else {
+                    console.log(`${tag}: 未找到`);
+                }
+            });
+            
+            if (isWechatBrowser() && typeof wx !== 'undefined') {
+                console.log('=== 微信分享测试 ===');
+                setupWechatShare();
+            }
+        }
     </script>
     
     <!-- html2canvas库用于将卡片转换为图片 -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </body>
-</html> 
+</html>

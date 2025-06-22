@@ -5,6 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>南意秋棠 - 汉文化布料设计</title>
     
+    <!-- 微信分享优化 -->
+    <meta name="description" content="传承经典 创新未来 - 汉文化布料设计的艺术之美，专业的汉服面料设计与制作">
+    <meta name="keywords" content="南意秋棠,汉服,汉文化,布料设计,传统文化,古风,面料">
+    <meta name="author" content="南意秋棠">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="http://products.nanyiqiutang.cn/" />
+    <meta property="og:title" content="南意秋棠 - 汉文化布料设计" />
+    <meta property="og:description" content="传承经典 创新未来 - 汉文化布料设计的艺术之美" />
+    <meta property="og:image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭/牡丹亭-概念图-01.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="南意秋棠" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="http://products.nanyiqiutang.cn/">
+    <meta property="twitter:title" content="南意秋棠 - 汉文化布料设计">
+    <meta property="twitter:description" content="传承经典 创新未来 - 汉文化布料设计的艺术之美">
+    <meta property="twitter:image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭/牡丹亭-概念图-01.jpg">
+    
+    <!-- 微信分享专用 -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    
+    <!-- 微信分享配置 -->
+    <meta name="weixin:timeline_title" content="南意秋棠 - 汉文化布料设计" />
+    <meta name="weixin:appmsg_title" content="南意秋棠 - 汉文化布料设计" />
+    <meta name="weixin:appmsg_desc" content="传承经典 创新未来 - 汉文化布料设计的艺术之美" />
+    <meta name="weixin:timeline_desc" content="传承经典 创新未来 - 汉文化布料设计的艺术之美" />
+    <meta name="weixin:img_url" content="http://products.nanyiqiutang.cn/static/images/牡丹亭/牡丹亭-概念图-01.jpg" />
+    
+    <!-- 微信JS-SDK -->
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    
     <!-- Vue.js 3 生产版本 -->
     <script src="static/lib/vue.global.prod.js"></script>
     
@@ -260,18 +297,30 @@
                         <div class="brand-info">
                             <h3 class="brand-name">{{ brand.name }}</h3>
                             <div class="brand-meta">
-                                <span v-if="brand.year && brand.year !== 'N/A' && brand.year !== ''" 
-                                      class="meta-tag" 
-                                      @click.stop="filterByTag('year', brand.year)">{{ brand.year }}年</span>
-                                <span v-if="brand.theme_series && brand.theme_series !== 'N/A' && brand.theme_series !== ''" 
-                                      class="meta-tag" 
-                                      @click.stop="filterByTag('theme_series', brand.theme_series)">{{ brand.theme_series }}</span>
-                                <span v-if="brand.material && brand.material !== 'N/A' && brand.material !== ''" 
-                                      class="meta-tag" 
-                                      @click.stop="filterByTag('materials', brand.material)">{{ brand.material }}</span>
-                                <span v-if="brand.print_size && brand.print_size !== 'N/A' && brand.print_size !== ''" 
-                                      class="meta-tag" 
-                                      @click.stop="filterByTag('print_sizes', brand.print_size)">{{ brand.print_size }}</span>
+                                <div class="meta-tags">
+                                    <span v-if="brand.year && brand.year !== 'N/A' && brand.year !== ''" 
+                                          class="meta-tag" 
+                                          @click.stop="filterByTag('year', brand.year)">{{ brand.year }}年</span>
+                                    <span v-if="brand.theme_series && brand.theme_series !== 'N/A' && brand.theme_series !== ''" 
+                                          class="meta-tag" 
+                                          @click.stop="filterByTag('theme_series', brand.theme_series)">{{ brand.theme_series }}</span>
+                                    <span v-if="brand.material && brand.material !== 'N/A' && brand.material !== ''" 
+                                          class="meta-tag" 
+                                          @click.stop="filterByTag('material', brand.material)">{{ brand.material }}</span>
+                                    <span v-if="brand.print_size && brand.print_size !== 'N/A' && brand.print_size !== ''" 
+                                          class="meta-tag" 
+                                          @click.stop="filterByTag('print_size', brand.print_size)">{{ brand.print_size }}</span>
+                                    <span v-if="brand.fabric_type && brand.fabric_type !== 'N/A' && brand.fabric_type !== ''" 
+                                          class="meta-tag" 
+                                          @click.stop="filterByTag('fabric_type', brand.fabric_type)">{{ brand.fabric_type }}</span>
+                                    <span v-if="brand.print_type && brand.print_type !== 'N/A' && brand.print_type !== ''" 
+                                          class="meta-tag" 
+                                          @click.stop="filterByTag('print_type', brand.print_type)">{{ brand.print_type }}</span>
+                                </div>
+                                <div class="like-display" @click.stop="toggleHomeLike(brand)" :class="{ liked: brand.user_liked }">
+                                    <i class="fas fa-thumbs-up"></i>
+                                    <span>{{ brand.like_count || 0 }}</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -323,7 +372,20 @@
                 <div class="modal-body">
                     <!-- 基本信息 -->
                     <div class="detail-section">
-                        <h3 class="section-title">基本信息</h3>
+                        <div class="section-header">
+                            <h3 class="section-title">基本信息</h3>
+                            <!-- 点赞按钮 -->
+                            <div class="detail-like-section">
+                                <button 
+                                    @click="toggleLike" 
+                                    :class="['detail-like-btn', { liked: brandLikeStatus.liked, loading: brandLikeStatus.loading }]"
+                                    :disabled="brandLikeStatus.loading"
+                                >
+                                    <i :class="brandLikeStatus.liked ? 'fas fa-thumbs-up' : 'far fa-thumbs-up'"></i>
+                                    <span class="like-count">{{ brandLikeStatus.count }}</span>
+                                </button>
+                            </div>
+                        </div>
                         <div class="detail-tags">
                             <span v-if="selectedBrand.year && selectedBrand.year !== 'N/A' && selectedBrand.year !== ''" 
                                   class="detail-tag" 
@@ -450,7 +512,12 @@
                     isLoadingMore: false,
                     
                     // 确保初始状态正确
-                    dataLoaded: false
+                    dataLoaded: false,
+                    brandLikeStatus: {
+                        liked: false,
+                        count: 0,
+                        loading: false
+                    }
                 };
             },
             
@@ -893,8 +960,8 @@
                 },
 
                 getBrandCoverImage(brand) {
-                    // 定义图片类型优先级顺序：宣传图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他
-                    const priorityOrder = ['宣传图', '设计图', '成衣图', '布料图', '模特图', '买家秀图', '其他'];
+                                    // 定义图片类型优先级顺序：概念图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他
+                const priorityOrder = ['概念图', '设计图', '成衣图', '布料图', '模特图', '买家秀图', '其他'];
                     
                     // 按优先级查找图片
                     for (const imageType of priorityOrder) {
@@ -948,6 +1015,12 @@
                     this.selectedBrand = brandDetail.brand_info;
                     this.brandImages = brandDetail.images;
                     
+                    // 获取点赞状态
+                    const brandName = this.selectedBrand.name || this.selectedBrand.brand_name;
+                    if (brandName) {
+                        await this.getLikeStatus(brandName);
+                    }
+                    
                     // 显示模态框
                     this.showModal = true;
                     document.body.style.overflow = 'hidden';
@@ -978,8 +1051,8 @@
                             type = img.image_type;
                         } else {
                             // 从文件名中提取图片类型
-                            if (img.filename.includes('-宣传图-') || img.filename.includes('宣传图')) {
-                                type = '宣传图';
+                                                if (img.filename.includes('-概念图-') || img.filename.includes('概念图')) {
+                        type = '概念图';
                             } else if (img.filename.includes('-设计图-') || img.filename.includes('设计图')) {
                                 type = '设计图';
                             } else if (img.filename.includes('-成衣图-') || img.filename.includes('成衣图')) {
@@ -999,9 +1072,9 @@
                         categories[type].push(img);
                     });
                     
-                    // 按用户要求的优先级顺序排序：宣传图 > 设计图 > 布料图 > 成衣图 > 模特图 > 买家秀图 > 其他类型
+                    // 按用户要求的优先级顺序排序：概念图 > 设计图 > 布料图 > 成衣图 > 模特图 > 买家秀图 > 其他类型
                     const orderedCategories = {};
-                    const order = ['宣传图', '设计图', '布料图', '成衣图', '模特图', '买家秀图', '其他'];
+                    const order = ['概念图', '设计图', '布料图', '成衣图', '模特图', '买家秀图', '其他'];
                     
                     order.forEach(type => {
                         if (categories[type] && categories[type].length > 0) {
@@ -1612,6 +1685,130 @@
                             document.head.removeChild(style);
                         }
                     }, duration);
+                },
+
+                // 首页点赞功能
+                async toggleHomeLike(brand) {
+                    if (!brand) return;
+                    
+                    try {
+                        const brandName = brand.name || brand.brand_name;
+                        const apiUrl = window.api ? 
+                            `${window.api.baseURL}/like/card/${encodeURIComponent(brandName)}` : 
+                            `/api/like/card/${encodeURIComponent(brandName)}`;
+                        
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            // 更新品牌的点赞状态和数量
+                            brand.user_liked = data.liked;
+                            brand.like_count = data.like_count;
+                            
+                            // 更新brandData中的数据
+                            if (this.brandData[brandName]) {
+                                this.brandData[brandName].user_liked = data.liked;
+                                this.brandData[brandName].like_count = data.like_count;
+                            }
+                            
+                            // 显示成功提示
+                            this.showToast(data.message || (data.liked ? '点赞成功！' : '取消点赞成功！'));
+                        } else {
+                            this.showToast(data.message || '操作失败，请稍后重试');
+                        }
+                    } catch (error) {
+                        console.error('首页点赞操作失败:', error);
+                        this.showToast('网络错误，请稍后重试');
+                    }
+                },
+                
+                async toggleLike() {
+                    if (this.brandLikeStatus.loading || !this.selectedBrand) {
+                        return;
+                    }
+                    
+                    this.brandLikeStatus.loading = true;
+                    
+                    try {
+                        const brandName = this.selectedBrand.name || this.selectedBrand.brand_name;
+                        const apiUrl = window.api ? 
+                            `${window.api.baseURL}/like/card/${encodeURIComponent(brandName)}` : 
+                            `/api/like/card/${encodeURIComponent(brandName)}`;
+                        
+                        const response = await fetch(apiUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            this.brandLikeStatus.liked = data.liked;
+                            this.brandLikeStatus.count = data.like_count;
+                            
+                            // 更新品牌列表中的点赞数
+                            if (this.brandData[brandName]) {
+                                this.brandData[brandName].like_count = data.like_count;
+                            }
+                            
+                            // 更新当前选中品牌的点赞数
+                            this.selectedBrand.like_count = data.like_count;
+                            
+                            // 显示成功提示
+                            this.showToast(data.message || (data.liked ? '点赞成功！' : '取消点赞成功！'));
+                        } else {
+                            this.showToast(data.message || '操作失败，请稍后重试');
+                        }
+                    } catch (error) {
+                        console.error('点赞操作失败:', error);
+                        this.showToast('网络错误，请稍后重试');
+                    } finally {
+                        this.brandLikeStatus.loading = false;
+                    }
+                },
+
+                async getLikeStatus(brandName) {
+                    try {
+                        const apiUrl = window.api ? 
+                            `${window.api.baseURL}/like/card/${encodeURIComponent(brandName)}` : 
+                            `/api/like/card/${encodeURIComponent(brandName)}`;
+                        
+                        const response = await fetch(apiUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            if (data.success) {
+                                this.brandLikeStatus.liked = data.liked;
+                                this.brandLikeStatus.count = data.like_count;
+                            }
+                        }
+                    } catch (error) {
+                        console.error('获取点赞状态失败:', error);
+                        // 使用本地数据作为默认值
+                        this.brandLikeStatus.liked = false;
+                        this.brandLikeStatus.count = this.selectedBrand?.like_count || 0;
+                    }
                 }
             }
         });
@@ -1693,6 +1890,194 @@
                 });
             }
         }
+
+        // API配置 - 智能检测访问方式
+        const currentHost = window.location.hostname;
+        let API_BASE_URL;
+        
+        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            // 本地开发环境
+            API_BASE_URL = 'http://localhost:5001';
+        } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
+            // 域名访问，使用相对路径让nginx代理处理
+            API_BASE_URL = '';
+        } else {
+            // IP访问，直接连接后端端口
+            API_BASE_URL = 'http://121.36.205.70:5001';
+        }
+            
+        console.log('API Base URL:', API_BASE_URL);
+        
+        // 确保API调用使用正确的地址
+        function getApiUrl(endpoint) {
+            return `${API_BASE_URL}${endpoint}`;
+        }
+    </script>
+    
+    <!-- 微信分享优化脚本 -->
+    <script>
+        // 检测是否在微信内置浏览器中
+        function isWeChatBrowser() {
+            return /micromessenger/i.test(navigator.userAgent);
+        }
+        
+        // 微信分享配置
+        function setupWeChatShare() {
+            // 设置分享内容
+            const shareConfig = {
+                title: '南意秋棠 - 汉文化布料设计',
+                desc: '传承经典 创新未来 - 汉文化布料设计的艺术之美',
+                link: window.location.href.split('?')[0], // 移除查询参数
+                                        imgUrl: window.location.origin + '/static/images/牡丹亭/牡丹亭-概念图-01.jpg'
+            };
+            
+            // 确保页面title正确
+            document.title = shareConfig.title;
+            
+            // 动态更新meta标签
+            updateMetaTag('og:title', shareConfig.title);
+            updateMetaTag('og:description', shareConfig.desc);
+            updateMetaTag('og:url', shareConfig.link);
+            updateMetaTag('og:image', shareConfig.imgUrl);
+            updateMetaTag('description', shareConfig.desc);
+            
+            // 如果在微信浏览器中且有微信JS-SDK
+            if (isWeChatBrowser() && typeof wx !== 'undefined') {
+                // 配置微信JS-SDK
+                wx.config({
+                    debug: false, // 开启调试模式
+                    appId: '', // 必填，公众号的唯一标识
+                    timestamp: Math.floor(Date.now() / 1000), // 必填，生成签名的时间戳
+                    nonceStr: 'nanyiqiutang' + Math.random().toString(36).substr(2, 15), // 必填，生成签名的随机串
+                    signature: '', // 必填，签名
+                    jsApiList: [
+                        'updateAppMessageShareData',
+                        'updateTimelineShareData'
+                    ] // 必填，需要使用的JS接口列表
+                });
+                
+                // 即使没有签名，也尝试设置分享内容（有些情况下仍然有效）
+                wx.ready(function() {
+                    console.log('微信JS-SDK已准备就绪');
+                    
+                    // 分享给朋友
+                    wx.updateAppMessageShareData({
+                        title: shareConfig.title,
+                        desc: shareConfig.desc,
+                        link: shareConfig.link,
+                        imgUrl: shareConfig.imgUrl,
+                        success: function () {
+                            console.log('微信分享给朋友配置成功');
+                        },
+                        fail: function(err) {
+                            console.log('微信分享给朋友配置失败:', err);
+                        }
+                    });
+                    
+                    // 分享到朋友圈
+                    wx.updateTimelineShareData({
+                        title: shareConfig.title,
+                        link: shareConfig.link,
+                        imgUrl: shareConfig.imgUrl,
+                        success: function () {
+                            console.log('微信朋友圈分享配置成功');
+                        },
+                        fail: function(err) {
+                            console.log('微信朋友圈分享配置失败:', err);
+                        }
+                    });
+                });
+                
+                wx.error(function(res) {
+                    console.log('微信JS-SDK配置失败:', res);
+                    // 如果JS-SDK配置失败，使用传统方法
+                    setupTraditionalShare(shareConfig);
+                });
+            } else {
+                // 非微信环境或没有JS-SDK，使用传统分享方法
+                setupTraditionalShare(shareConfig);
+            }
+        }
+        
+        // 传统分享方法（通过meta标签）
+        function setupTraditionalShare(shareConfig) {
+            console.log('使用传统分享方法');
+            
+            // 添加额外的meta标签以提高兼容性
+            addMetaTag('og:title', shareConfig.title);
+            addMetaTag('og:description', shareConfig.desc);
+            addMetaTag('og:image', shareConfig.imgUrl);
+            addMetaTag('og:url', shareConfig.link);
+            addMetaTag('description', shareConfig.desc);
+            
+            // 微信专用标签
+            addMetaTag('weixin:timeline_title', shareConfig.title);
+            addMetaTag('weixin:appmsg_title', shareConfig.title);
+            addMetaTag('weixin:appmsg_desc', shareConfig.desc);
+            addMetaTag('weixin:timeline_desc', shareConfig.desc);
+            addMetaTag('weixin:img_url', shareConfig.imgUrl);
+        }
+        
+        // 更新已存在的meta标签
+        function updateMetaTag(property, content) {
+            let meta = document.querySelector(`meta[property="${property}"], meta[name="${property}"]`);
+            if (meta) {
+                meta.setAttribute('content', content);
+            }
+        }
+        
+        // 添加新的meta标签
+        function addMetaTag(name, content) {
+            // 先尝试更新已存在的
+            updateMetaTag(name, content);
+            
+            // 如果不存在，则创建新的
+            if (!document.querySelector(`meta[property="${name}"], meta[name="${name}"]`)) {
+                const meta = document.createElement('meta');
+                if (name.startsWith('og:') || name.startsWith('twitter:')) {
+                    meta.setAttribute('property', name);
+                } else {
+                    meta.setAttribute('name', name);
+                }
+                meta.setAttribute('content', content);
+                document.head.appendChild(meta);
+            }
+        }
+        
+        // 页面加载完成后设置分享
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成，设置微信分享');
+            console.log('是否在微信浏览器:', isWeChatBrowser());
+            setupWeChatShare();
+        });
+        
+        // Vue应用加载后再次设置
+        if (window.Vue) {
+            setTimeout(function() {
+                console.log('Vue应用加载完成，重新设置微信分享');
+                setupWeChatShare();
+            }, 2000);
+        }
+        
+        // 页面可见性变化时重新设置（解决微信缓存问题）
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                setTimeout(function() {
+                    console.log('页面重新可见，重新设置微信分享');
+                    setupWeChatShare();
+                }, 500);
+            }
+        });
+        
+        // 监听页面URL变化（SPA应用）
+        let currentUrl = window.location.href;
+        setInterval(function() {
+            if (window.location.href !== currentUrl) {
+                currentUrl = window.location.href;
+                console.log('URL变化，重新设置微信分享');
+                setTimeout(setupWeChatShare, 500);
+            }
+        }, 1000);
     </script>
 
     <!-- 网页底部版权信息 -->

@@ -24,7 +24,7 @@ class OSSImageService:
             'buliaotu': '布料图',
             'shejitu': '设计图',
             'chengyitu': '成衣图',
-            'xuanchuantu': '宣传图',
+            'gainiangtu': '概念图',
             'motettu': '模特图',
             'maijiashow': '买家秀图'
         }
@@ -184,7 +184,7 @@ class OSSImageService:
             '布料图': 'buliaotu',
             '设计图': 'shejitu',
             '成衣图': 'chengyitu',
-            '宣传图': 'xuanchuantu',
+            '概念图': 'gainiangtu',
             '模特图': 'motettu',
             '买家秀图': 'maijiashow'
         }
@@ -212,7 +212,7 @@ class OSSImageService:
     def sort_images_by_priority(self, images: List[Dict]) -> List[Dict]:
         """按图片类型优先级排序图片"""
         priority_map = {
-            '宣传图': 1,
+            '概念图': 1,
             '设计图': 2,
             '成衣图': 3,
             '布料图': 4,

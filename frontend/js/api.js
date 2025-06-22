@@ -8,21 +8,22 @@ class NanyiAPI {
         const currentHost = window.location.hostname;
         const protocol = window.location.protocol;
         
-        // 如果是域名访问，使用对应的域名；否则使用IP
-        if (currentHost === 'chenxiaoshivivid.com.cn') {
-            this.baseURL = `${protocol}://chenxiaoshivivid.com.cn:5001/api`;
-        } else if (currentHost === 'www.chenxiaoshivivid.com.cn') {
-            this.baseURL = `${protocol}://www.chenxiaoshivivid.com.cn:5001/api`;
-        } else if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+        // 智能API路径配置
+        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            // 本地开发环境，直接连接后端端口
             this.baseURL = `${protocol}//${currentHost}:5001/api`;
+        } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
+            // 域名访问，使用相对路径让nginx代理处理
+            this.baseURL = '/api';
         } else {
-            // 默认使用IP地址
+            // IP访问，直接连接后端端口
             this.baseURL = 'http://121.36.205.70:5001/api';
         }
         
         // 只在调试模式下输出API基础URL
         if (window.PerformanceConfig && window.PerformanceConfig.performanceMonitoring.verboseLogging) {
             console.log('API Base URL:', this.baseURL);
+            console.log('Current Host:', currentHost);
         }
         this.timeout = 30000; // 增加到30秒超时
     }
@@ -111,7 +112,15 @@ class NanyiAPI {
     getImageViewURL(relativePath) {
         // 处理中文路径编码
         const encodedPath = relativePath.split('/').map(part => encodeURIComponent(part)).join('/');
-        return `${this.baseURL}/view/${encodedPath}`;
+        
+        // 使用相对路径，让nginx代理处理
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // 本地开发环境
+            return `${this.baseURL}/view/${encodedPath}`;
+        } else {
+            // 生产环境，使用相对路径
+            return `/api/view/${encodedPath}`;
+        }
     }
 
     /**
@@ -119,7 +128,15 @@ class NanyiAPI {
      */
     getImageDownloadURL(relativePath) {
         const encodedPath = relativePath.split('/').map(part => encodeURIComponent(part)).join('/');
-        return `${this.baseURL}/download/${encodedPath}`;
+        
+        // 使用相对路径，让nginx代理处理
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // 本地开发环境
+            return `${this.baseURL}/download/${encodedPath}`;
+        } else {
+            // 生产环境，使用相对路径
+            return `/api/download/${encodedPath}`;
+        }
     }
 
     /**

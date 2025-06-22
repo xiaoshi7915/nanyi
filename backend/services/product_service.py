@@ -6,6 +6,7 @@
 
 from backend.models import db, init_models
 from datetime import datetime
+from urllib.parse import unquote
 
 # 初始化模型
 Product, Admin, AccessLog = init_models()
@@ -76,6 +77,159 @@ class ProductService:
             return Product.query.filter_by(brand_name=brand_name).first()
         except Exception as e:
             print(f"获取产品失败: {str(e)}")
+            return None
+    
+    @staticmethod
+    def get_brand_detail(brand_name):
+        """获取品牌详细信息，包括处理多颜色品牌"""
+        try:
+            from urllib.parse import unquote
+            
+            # URL解码品牌名
+            decoded_brand_name = unquote(brand_name)
+            print(f"正在查询品牌: {brand_name} -> 解码后: {decoded_brand_name}")
+            
+            # 保存原始请求的品牌名（可能包含颜色信息）
+            requested_brand_name = decoded_brand_name
+            
+            # 首先尝试精确匹配
+            product = Product.query.filter_by(brand_name=decoded_brand_name).first()
+            
+            if not product:
+                # 如果没有找到，尝试模糊匹配（处理多颜色情况）
+                print(f"精确匹配失败，尝试模糊匹配: {decoded_brand_name}")
+                product = Product.query.filter(Product.brand_name.like(f'{decoded_brand_name}%')).first()
+            
+            if not product:
+                # 尝试反向模糊匹配（品牌名可能包含在查询字符串中）
+                print(f"正向模糊匹配失败，尝试反向匹配: {decoded_brand_name}")
+                product = Product.query.filter(Product.brand_name.like(f'%{decoded_brand_name}%')).first()
+            
+            if not product:
+                # 尝试去除括号和特殊字符后匹配
+                clean_brand = decoded_brand_name.split('(')[0] if '(' in decoded_brand_name else decoded_brand_name
+                clean_brand = clean_brand.strip().replace(' ', '').replace('-', '').replace('_', '')
+                print(f"特殊字符匹配: {clean_brand}")
+                products = Product.query.all()
+                for p in products:
+                    clean_p_name = p.brand_name.split('(')[0] if '(' in p.brand_name else p.brand_name
+                    clean_p_name = clean_p_name.replace(' ', '').replace('-', '').replace('_', '')
+                    if clean_brand == clean_p_name or clean_brand in clean_p_name or clean_p_name in clean_brand:
+                        product = p
+                        print(f"找到匹配品牌: {p.brand_name} (通过清理后匹配)")
+                        break
+            
+            if not product:
+                print(f"所有匹配方式都失败，未找到品牌: {decoded_brand_name}")
+                # 打印数据库中所有品牌名，用于调试
+                all_brands = Product.query.with_entities(Product.brand_name).distinct().limit(20).all()
+                print(f"数据库中的品牌示例: {[b[0] for b in all_brands]}")
+                return None
+            
+            print(f"找到匹配的品牌: {product.brand_name}")
+            
+            # 构建品牌详情数据 - 使用请求的品牌名而不是数据库中的品牌名
+            brand_info = {
+                'id': product.id,
+                'name': requested_brand_name,  # 使用用户请求的完整品牌名
+                'brand_name': requested_brand_name,  # 使用用户请求的完整品牌名
+                'db_brand_name': product.brand_name,  # 保留数据库中的品牌名用于内部查询
+                'title': product.title,
+                'year': product.year,
+                'publish_month': product.publish_month,
+                'material': product.material,
+                'theme_series': product.theme_series,
+                'print_size': product.print_size,
+                'inspiration_origin': product.inspiration_origin,
+                'created_at': product.created_at.isoformat() if product.created_at else None,
+                'updated_at': product.updated_at.isoformat() if product.updated_at else None
+            }
+            
+            # 获取图片数据 - 根据配置选择图片源
+            from flask import current_app
+            image_source = current_app.config.get('IMAGE_SOURCE', 'oss').lower()
+            print(f"🔧 当前图片源配置: {image_source}")
+            
+            try:
+                if image_source == 'local':
+                    # 优先使用本地图片服务
+                    print("📁 使用本地图片服务")
+                    from services.image_service import ImageService
+                    image_service = ImageService()
+                    # 使用请求的品牌名获取图片（可能包含颜色信息）
+                    brand_images = image_service.get_brand_images(requested_brand_name)
+                    
+                    # 如果使用完整品牌名没找到图片，尝试使用基础品牌名
+                    if not brand_images and requested_brand_name != product.brand_name:
+                        print(f"使用完整品牌名未找到图片，尝试基础品牌名: {product.brand_name}")
+                        brand_images = image_service.get_brand_images(product.brand_name)
+                    
+                    brand_info['images'] = brand_images
+                    brand_info['imageCount'] = len(brand_images)
+                    print(f"📁 本地图片服务获取到 {len(brand_images)} 张图片")
+                else:
+                    # 使用OSS图片服务
+                    print("🌐 使用OSS图片服务")
+                    from services.oss_image_service import OSSImageService
+                    oss_service = OSSImageService()
+                    # 使用请求的品牌名获取图片
+                    images = oss_service.get_brand_images(requested_brand_name)
+                    
+                    # 如果使用完整品牌名没找到图片，尝试使用基础品牌名
+                    if not images and requested_brand_name != product.brand_name:
+                        print(f"使用完整品牌名未找到图片，尝试基础品牌名: {product.brand_name}")
+                        images = oss_service.get_brand_images(product.brand_name)
+                    
+                    brand_info['images'] = images
+                    brand_info['imageCount'] = len(images)
+                    print(f"🌐 OSS图片服务获取到 {len(images)} 张图片")
+                    
+            except Exception as e:
+                print(f"获取图片失败: {e}")
+                # 如果主要图片服务失败，尝试备用服务
+                try:
+                    if image_source == 'local':
+                        # 本地失败，尝试OSS
+                        print("📁 本地图片服务失败，尝试OSS服务")
+                        from services.oss_image_service import OSSImageService
+                        oss_service = OSSImageService()
+                        images = oss_service.get_brand_images(requested_brand_name)
+                        if not images and requested_brand_name != product.brand_name:
+                            images = oss_service.get_brand_images(product.brand_name)
+                        brand_info['images'] = images
+                        brand_info['imageCount'] = len(images)
+                        print(f"🌐 备用OSS服务获取到 {len(images)} 张图片")
+                    else:
+                        # OSS失败，尝试本地
+                        print("🌐 OSS图片服务失败，尝试本地服务")
+                        from services.image_service import ImageService
+                        image_service = ImageService()
+                        brand_images = image_service.get_brand_images(requested_brand_name)
+                        if not brand_images and requested_brand_name != product.brand_name:
+                            brand_images = image_service.get_brand_images(product.brand_name)
+                        brand_info['images'] = brand_images
+                        brand_info['imageCount'] = len(brand_images)
+                        print(f"📁 备用本地服务获取到 {len(brand_images)} 张图片")
+                except Exception as e2:
+                    print(f"备用图片服务也失败: {e2}")
+                    brand_info['images'] = []
+                    brand_info['imageCount'] = 0
+            
+            # 获取点赞数 - 使用数据库中的品牌名
+            try:
+                from models.brand_like import BrandLike
+                like_count = BrandLike.get_like_count(product.brand_name)
+                brand_info['like_count'] = like_count
+            except Exception as e:
+                print(f"获取点赞数失败: {e}")
+                brand_info['like_count'] = 0
+            
+            return brand_info
+            
+        except Exception as e:
+            print(f"获取品牌详情失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return None
     
     @staticmethod

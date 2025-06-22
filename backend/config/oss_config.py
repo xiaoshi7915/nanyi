@@ -26,7 +26,7 @@ class OSSConfig:
     
     # 图片存储路径配置
     IMAGE_PATHS = {
-        '宣传图': 'xuanchuantu',      # 宣传图
+        '概念图': 'gainiangtu',      # 概念图
         '设计图': 'shejitu',          # 设计图  
         '成衣图': 'chengyitu',        # 成衣图
         '布料图': 'buliaotu',         # 布料图

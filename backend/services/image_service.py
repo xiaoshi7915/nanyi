@@ -24,8 +24,17 @@ class ImageService:
         self.images_dir = images_dir
         self.allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'}
         
-        # 获取图片源配置
-        self.image_source = current_app.config.get('IMAGE_SOURCE', 'oss').lower()
+        # 获取图片源配置 - 优先从环境变量获取
+        import os
+        self.image_source = os.environ.get('IMAGE_SOURCE', 'oss').lower()
+        
+        # 如果在Flask应用上下文中，也尝试从配置获取
+        try:
+            if current_app:
+                self.image_source = current_app.config.get('IMAGE_SOURCE', self.image_source).lower()
+        except:
+            pass
+            
         print(f"🔧 图片服务初始化: 当前图片源 = {self.image_source}")
         
         # 根据配置初始化相应的服务
@@ -133,9 +142,9 @@ class ImageService:
                         'has_color': parsed_info['has_color'],
                         'size': os.path.getsize(filepath),
                         # 本地图片URL
-                        'url': f"/api/view/{filename}",
-                        'thumbnail': f"/api/view/{filename}",
-                        'original': f"/api/view/{filename}"
+                        'url': f"/static/images/{filename}",
+                        'thumbnail': f"/static/images/{filename}",
+                        'original': f"/static/images/{filename}"
                     })
         
         # 扫描子文件夹中的图片
@@ -157,9 +166,9 @@ class ImageService:
                                 'has_color': parsed_info['has_color'],
                                 'size': os.path.getsize(filepath),
                                 # 本地图片URL
-                                'url': f"/api/view/{relative_path}",
-                                'thumbnail': f"/api/view/{relative_path}",
-                                'original': f"/api/view/{relative_path}"
+                                'url': f"/static/images/{relative_path}",
+                                'thumbnail': f"/static/images/{relative_path}",
+                                'original': f"/static/images/{relative_path}"
                             })
         
         print(f"📁 本地图片加载完成: 共{len(images)}张图片")
@@ -184,31 +193,81 @@ class ImageService:
         """从本地获取指定品牌的所有图片"""
         all_images = self._get_local_images()
         
+        print(f"📁 本地图片匹配: 查找品牌 '{brand_name}', 总图片数: {len(all_images)}")
+        
         # 首先尝试精确匹配
         exact_matches = [img for img in all_images if img['brand_name'] == brand_name]
         if exact_matches:
+            print(f"📁 精确匹配成功: 找到 {len(exact_matches)} 张图片")
             return self.sort_images_by_priority(exact_matches)
         
-        # 如果没有精确匹配，尝试基础品牌名匹配
-        # 查找所有以该品牌名开头的图片（包括带颜色的）
-        base_matches = []
+        # 如果是带颜色的品牌名（包含括号），尝试匹配基础品牌名
+        base_brand_name = brand_name
+        if '(' in brand_name:
+            base_brand_name = brand_name.split('(')[0].strip()
+            print(f"📁 提取基础品牌名: '{base_brand_name}'")
+            
+            # 尝试基础品牌名精确匹配
+            base_exact_matches = [img for img in all_images if img['brand_name'] == base_brand_name]
+            if base_exact_matches:
+                print(f"📁 基础品牌名精确匹配成功: 找到 {len(base_exact_matches)} 张图片")
+                return self.sort_images_by_priority(base_exact_matches)
+        
+        # 尝试模糊匹配 - 查找包含品牌名的图片
+        fuzzy_matches = []
         for img in all_images:
             img_brand = img['brand_name']
-            # 检查是否是同一基础品牌名
-            if img_brand.startswith(brand_name):
-                # 确保是完整的品牌名匹配，而不是部分匹配
-                if img_brand == brand_name or (len(img_brand) > len(brand_name) and img_brand[len(brand_name)] == '('):
-                    base_matches.append(img)
+            
+            # 方式1: 图片品牌名包含查询品牌名
+            if brand_name in img_brand:
+                fuzzy_matches.append(img)
+                continue
+                
+            # 方式2: 查询品牌名包含图片品牌名
+            if img_brand in brand_name:
+                fuzzy_matches.append(img)
+                continue
+                
+            # 方式3: 基础品牌名匹配（去除括号后的匹配）
+            if base_brand_name != brand_name:
+                img_base_brand = img_brand.split('(')[0].strip() if '(' in img_brand else img_brand
+                if base_brand_name == img_base_brand or base_brand_name in img_brand or img_brand in base_brand_name:
+                    fuzzy_matches.append(img)
+                    continue
         
-        return self.sort_images_by_priority(base_matches)
+        if fuzzy_matches:
+            print(f"📁 模糊匹配成功: 找到 {len(fuzzy_matches)} 张图片")
+            return self.sort_images_by_priority(fuzzy_matches)
+        
+        # 最后尝试部分匹配 - 去除所有特殊字符后匹配
+        clean_brand = brand_name.replace('(', '').replace(')', '').replace('/', '').replace('-', '').replace('_', '').replace(' ', '')
+        partial_matches = []
+        
+        for img in all_images:
+            img_brand = img['brand_name']
+            clean_img_brand = img_brand.replace('(', '').replace(')', '').replace('/', '').replace('-', '').replace('_', '').replace(' ', '')
+            
+            if clean_brand in clean_img_brand or clean_img_brand in clean_brand:
+                partial_matches.append(img)
+        
+        if partial_matches:
+            print(f"📁 部分匹配成功: 找到 {len(partial_matches)} 张图片")
+            return self.sort_images_by_priority(partial_matches)
+        
+        print(f"📁 未找到匹配的图片")
+        # 打印前10个图片的品牌名用于调试
+        sample_brands = [img['brand_name'] for img in all_images[:10]]
+        print(f"📁 图片示例品牌名: {sample_brands}")
+        
+        return []
     
     def sort_images_by_priority(self, images: List[Dict]) -> List[Dict]:
         """按图片类型优先级排序图片
-        优先级顺序：宣传图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他类型
+        优先级顺序：概念图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他类型
         """
         # 定义图片类型的优先级，数字越小优先级越高
         priority_map = {
-            '宣传图': 1,
+            '概念图': 1,
             '设计图': 2,
             '成衣图': 3,
             '布料图': 4,

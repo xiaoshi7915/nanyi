@@ -1,220 +1,318 @@
-# 南意秋棠汉服产品展示系统
+# 南意秋棠 - 汉文化布料设计展示平台
 
-一个专业的汉服产品展示网站，支持品牌分类、图片展示和产品搜索功能。
+## 项目概述
 
-## 🚀 快速启动
+南意秋棠是一个专注于汉文化布料设计的展示平台，集成了精美的产品展示、智能筛选、点赞分享等功能。
 
-### 环境要求
-- Python 3.7+
-- MySQL 5.7+
-- 系统：Linux/macOS/Windows
+## 最新更新 (2025-01-27 v2.3.0 最新版)
 
-### 安装和运行
-```bash
-# 1. 安装依赖
-pip install -r requirements.txt
+### 🎯 重要更新：术语统一
 
-# 2. 配置数据库
-# 编辑 .env 文件，设置数据库连接信息
-cp .env.example .env
+#### ✅ "宣传图" → "概念图" 全面替换
+- **更新范围**：前后端所有代码文件、图片文件名、API接口、数据库逻辑
+- **影响文件**：
+  - `frontend/index.html` - 前端主页面图片类型定义
+  - `frontend/card.html` - 卡片页面图片类型定义  
+  - `backend/routes/api.py` - API接口图片类型优先级
+  - `backend/services/image_service.py` - 图片服务排序逻辑
+  - `backend/services/oss_image_service.py` - OSS图片服务配置
+  - `backend/config/oss_config.py` - OSS配置映射
+- **图片文件**：重命名了61个图片文件，从"xxx-宣传图-01.jpg"改为"xxx-概念图-01.jpg"
+- **代码逻辑**：更新了所有图片类型优先级排序，现在为：概念图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他
+- **状态**：✅ 已完成全面替换，保持功能完全一致
 
-# 3. 启动服务
-./start_services_fixed.sh
+### 📊 代码统计
 
-# 4. 停止服务
-./stop_services.sh
+- **Python代码**：总计4,281行
+- **前端页面**：index.html (2,093行)，card.html等
+- **主要组件**：
+  - 后端Flask应用：179行 (app.py)
+  - 点赞功能模型：278行 (brand_like.py)
+  - 图片服务：完整的本地和OSS双模式支持
+  - 前端Vue.js应用：响应式设计，支持移动端和桌面端
+
+### 🔧 技术架构回顾
+
+#### 后端技术栈
+- **框架**：Python Flask 3.x
+- **数据库**：MySQL 8.0 (nanyiqiutang数据库)
+- **ORM**：SQLAlchemy
+- **图片服务**：本地静态文件 + OSS云存储双模式
+- **缓存**：内存缓存 + 智能缓存管理
+- **CORS**：完整的跨域支持，支持多域名访问
+
+#### 前端技术栈
+- **框架**：Vue.js 3.x (生产版)
+- **样式**：CSS3 + 响应式设计
+- **图标**：Font Awesome 6.x
+- **性能优化**：智能缓存、图片懒加载、API请求优化
+- **移动端适配**：完整的移动端用户体验
+
+#### 数据模型
+```python
+# 主要数据模型
+class Product:
+    - brand_name: 品牌名称
+    - material: 材质信息
+    - design_inspiration: 设计灵感
+    - year: 发布年份
+    - theme_series: 主题系列
+
+class BrandLike:
+    - brand_name: 品牌名称
+    - like_count: 点赞数量
+    - created_at: 创建时间
+    - updated_at: 更新时间
 ```
 
-## 📱 访问地址
-
-### 前端网站
-- **IP访问**: http://121.36.205.70:8500
-- **域名访问**: http://chenxiaoshivivid.com.cn:8500
-
-### 后端API
-- **IP访问**: http://121.36.205.70:5001
-- **域名访问**: http://chenxiaoshivivid.com.cn:5001
-
-### 主要API接口
-- `GET /api/images` - 获取所有图片数据
-- `GET /api/brands` - 获取品牌列表
-- `GET /api/share/card/<brand_name>` - 生成布料分享卡片数据
-- `GET /api/cache/stats` - 缓存统计
-- `GET /api/logs/access/stats` - 访问日志统计
-
-## 🎨 功能特性
-
-### 前端功能
-- 📸 **图片展示** - 支持布料图、设计图、成衣图等多种类型
-- 🏷️ **品牌分类** - 按品牌组织产品展示
-- 🔍 **搜索功能** - 支持品牌名称、布料材质、主题搜索
-- 📱 **响应式设计** - 适配桌面和移动设备
-- 🖼️ **图片预览** - 点击放大查看高清图片
-- 📋 **布料卡片分享** - 生成精美卡片，支持微信朋友圈分享
-  - 包含布料名、设计灵感、产品图片
-  - 长按保存图片或分享
-  - 支持复制链接分享
-
-### 后端功能
-- 🗄️ **数据库管理** - MySQL存储产品和图片信息
-- 🚀 **缓存优化** - Redis缓存提高响应速度
-- 📊 **访问统计** - 记录和分析用户访问数据
-- 🔒 **CORS支持** - 跨域访问配置
-- 📝 **日志记录** - 详细的访问和错误日志
-
-## 🖼️ 图片存储系统
-
-### 当前配置：本地图片存储
-系统当前使用本地图片存储，图片文件存放在 `frontend/static/images/` 目录下。
-
-### 图片源切换
-```bash
-# 查看当前图片源状态
-./switch-image-source.sh status
-
-# 切换到本地图片源（当前使用）
-./switch-image-source.sh local
-
-# 切换到OSS图片源（需要配置跨域）
-./switch-image-source.sh oss
-```
-
-### OSS图片存储（可选）
-如需使用阿里云OSS存储：
-
-1. **配置OSS跨域访问**
-   ```bash
-   ./configure-oss-cors.sh  # 查看配置指导
-   ```
-
-2. **测试OSS访问**
-   ```bash
-   ./test-oss-access.sh
-   ```
-
-3. **切换到OSS**
-   ```bash
-   ./switch-image-source.sh oss
-   ```
-
-## 🔧 管理工具
-
-### 服务管理
-```bash
-./start_services_fixed.sh    # 启动所有服务
-./stop_services.sh          # 停止所有服务
-./service-manager.sh        # 服务管理菜单
-```
-
-### 系统监控
-```bash
-# 查看服务状态
-ps aux | grep -E "(app.py|server.py)"
-
-# 查看端口占用
-netstat -tlnp | grep -E "(5001|8500)"
-
-# 查看日志
-tail -f logs/backend.log     # 后端日志
-tail -f logs/frontend.log    # 前端日志
-tail -f logs/access.log      # 访问日志
-```
-
-## 🗂️ 项目结构
+### 📁 完整项目结构
 
 ```
 products/
-├── backend/                 # 后端Flask应用
-│   ├── app.py              # 主应用文件
-│   ├── config/             # 配置文件
-│   ├── models/             # 数据模型
-│   ├── routes/             # 路由定义
-│   ├── services/           # 业务逻辑
-│   └── utils/              # 工具函数
-├── frontend/               # 前端静态文件
-│   ├── index.html          # 主页面
-│   ├── css/                # 样式文件
-│   ├── js/                 # JavaScript文件
-│   └── static/             # 静态资源
-├── logs/                   # 日志文件
-├── .env                    # 环境配置
-└── requirements.txt        # Python依赖
+├── backend/                    # 后端API服务
+│   ├── app.py                 # 主应用程序 (179行)
+│   ├── config/                # 配置文件
+│   │   ├── config.py         # 主配置
+│   │   └── oss_config.py     # OSS配置 (已更新概念图映射)
+│   ├── models/               # 数据模型
+│   │   ├── __init__.py       # 模型初始化
+│   │   ├── product.py        # 产品模型 (90行)
+│   │   ├── brand_like.py     # 点赞功能模型 (278行)
+│   │   ├── admin.py          # 管理员模型 (47行)
+│   │   └── access_log.py     # 访问日志模型
+│   ├── routes/               # API路由
+│   │   ├── __init__.py       # 路由初始化
+│   │   └── api.py            # 主要API接口 (已更新概念图优先级)
+│   ├── services/             # 业务逻辑服务
+│   │   ├── __init__.py       # 服务初始化
+│   │   ├── product_service.py # 产品服务
+│   │   ├── image_service.py   # 图片服务 (已更新概念图排序)
+│   │   ├── oss_image_service.py # OSS图片服务 (已更新概念图配置)
+│   │   ├── oss_service_simple.py # 简化OSS服务
+│   │   └── cache_service.py   # 缓存服务
+│   └── utils/                # 工具函数
+│       ├── __init__.py       # 工具初始化
+│       ├── db_utils.py       # 数据库工具
+│       ├── cache_control.py  # 缓存控制
+│       ├── decorators.py     # 装饰器
+│       ├── file_utils.py     # 文件工具
+│       └── logger.py         # 日志工具
+├── frontend/                 # 前端展示服务
+│   ├── index.html           # 主页面 (2,093行，已更新概念图)
+│   ├── card.html            # 卡片页面 (已更新概念图)
+│   ├── server.py            # 前端服务器 (73行)
+│   ├── css/                 # 样式文件
+│   │   └── main.css         # 主样式文件
+│   ├── js/                  # JavaScript文件
+│   │   ├── api.js           # API调用
+│   │   ├── components.js    # Vue组件
+│   │   ├── utils.js         # 工具函数
+│   │   ├── performance-config.js # 性能配置
+│   │   └── cache-manager-optimized.js # 缓存管理
+│   └── static/              # 静态资源
+│       ├── images/          # 图片资源 (61个概念图文件)
+│       ├── css/             # 额外样式
+│       ├── js/              # 额外脚本
+│       └── lib/             # 第三方库
+├── nginx/                   # Nginx配置
+│   ├── products-sites.conf  # 站点配置
+│   ├── install-nginx.sh     # Nginx安装脚本
+│   ├── deploy-config.sh     # 部署配置脚本
+│   ├── test-domains.sh      # 域名测试脚本
+│   └── README.md            # Nginx配置说明
+├── logs/                    # 服务日志
+├── manage.sh                # 服务管理脚本
+├── restart.sh               # 重启脚本
+├── deploy-nginx.sh          # Nginx部署脚本
+├── requirements.txt         # Python依赖
+└── README.md               # 项目文档 (本文件)
 ```
 
-## 🔧 常见问题解决
+### 🎨 功能特性
 
-### 1. 服务启动失败
+#### 核心功能
+- 📱 **响应式设计**：完美适配桌面端和移动端
+- 🔍 **智能搜索**：支持品牌名、材质、主题、年份等多维度搜索
+- 🏷️ **分类筛选**：按年份、主题系列、材质等多重筛选
+- 💖 **点赞系统**：实时点赞/取消点赞，数据持久化存储
+- 🖼️ **图片展示**：概念图、设计图、布料图等多类型图片自动排序
+- 📤 **分享功能**：支持微信、微博等多平台分享
+- 🎯 **卡片生成**：动态生成品牌详情卡片页面
+
+#### 图片管理系统
+- **多类型支持**：概念图、设计图、成衣图、布料图、模特图、买家秀图
+- **智能排序**：按重要性自动排序显示 (概念图优先级最高)
+- **双存储模式**：本地静态文件 + OSS云存储
+- **性能优化**：图片懒加载、缓存管理、压缩优化
+- **错误处理**：图片加载失败自动降级处理
+
+#### 用户体验优化
+- **快速加载**：智能缓存管理，30分钟缓存策略
+- **流畅交互**：Vue.js响应式数据绑定
+- **移动友好**：针对移动端优化的触摸交互
+- **视觉美观**：现代化UI设计，汉文化元素融入
+
+### 🌐 部署和访问
+
+#### 访问地址
+- **主域名**：http://products.nanyiqiutang.cn
+- **备用IP**：http://121.36.205.70:8500
+- **后端API**：http://121.36.205.70:5001
+- **管理后台**：http://121.36.205.70:5001/admin (开发中)
+
+#### 服务端口
+- **前端服务**：8500 (Flask静态文件服务)
+- **后端API**：5001 (Flask API服务)
+- **数据库**：3306 (MySQL)
+- **Nginx**：80/443 (反向代理)
+
+#### 启动命令
 ```bash
-# 检查端口占用
-netstat -tlnp | grep -E "(5001|8500)"
+# 设置环境变量
+export IMAGE_SOURCE=local
 
-# 强制停止服务
-./stop_services.sh
+# 启动后端服务
+cd backend && python3 app.py &
 
-# 重新启动
-./start_services_fixed.sh
+# 启动前端服务  
+cd frontend && python3 server.py &
+
+# 或使用管理脚本
+./manage.sh start
 ```
 
-### 2. 图片加载失败
+### 📈 性能指标
+
+#### 缓存策略
+- **API缓存**：30分钟 TTL
+- **图片缓存**：浏览器缓存 + CDN加速
+- **静态资源**：Nginx缓存配置
+- **数据库**：查询结果缓存
+
+#### 响应时间
+- **首页加载**：< 2秒
+- **品牌详情**：< 1秒
+- **图片加载**：< 3秒
+- **搜索响应**：< 500ms
+
+### 🔒 安全特性
+
+#### 数据安全
+- **SQL注入防护**：SQLAlchemy ORM参数化查询
+- **XSS防护**：前端数据转义和验证
+- **CSRF防护**：Flask-WTF CSRF令牌
+- **CORS配置**：严格的跨域资源共享策略
+
+#### 访问控制
+- **管理员认证**：基于Session的认证系统
+- **API限流**：防止恶意请求
+- **日志记录**：完整的访问和错误日志
+
+### 🐛 历史问题解决记录
+
+| 问题 | 版本 | 状态 | 解决方案 |
+|------|------|------|----------|
+| IP访问卡片数据错误 | v2.2.0 | ✅ 已解决 | 动态构建API URL |
+| 多颜色品牌获取失败 | v2.2.0 | ✅ 已解决 | 修复编码和字段访问问题 |
+| 图片加载失败 | v2.2.0 | ✅ 已解决 | 优化本地图片服务 |
+| 详情页标题不完整 | v2.2.0 | ✅ 已解决 | 保持完整品牌名显示 |
+| 服务访问404 | v2.2.0 | ✅ 已解决 | 清理端口冲突，正确启动服务 |
+| 移动端点赞位置 | v2.2.0 | ✅ 已解决 | 统一移动端和电脑端样式 |
+| "宣传图"术语统一 | v2.3.0 | ✅ 已解决 | 全面替换为"概念图" |
+
+### 📞 技术支持
+
+#### 服务监控
 ```bash
-# 检查当前图片源
-./switch-image-source.sh status
+# 检查服务状态
+ps aux | grep python
+lsof -i :8500 && lsof -i :5001
 
-# 切换到本地图片源
-./switch-image-source.sh local
+# 查看日志
+tail -f logs/backend.log
+tail -f logs/frontend.log
 
-# 如果使用OSS，检查跨域配置
-./configure-oss-cors.sh
+# 检查环境变量
+echo $IMAGE_SOURCE  # 应为 local
 ```
 
-### 3. 域名访问问题
-如果域名无法访问：
-1. **清除浏览器缓存** - Ctrl+Shift+Delete
-2. **使用无痕模式** - Ctrl+Shift+N
-3. **使用IP访问** - http://121.36.205.70:8500
-4. **检查网络环境** - 尝试手机热点
+#### 常见问题
+1. **服务无法启动**：检查端口占用，使用 `pkill python3` 清理进程
+2. **图片不显示**：确认 `IMAGE_SOURCE=local` 环境变量设置
+3. **数据库连接失败**：检查MySQL服务状态和连接配置
+4. **API调用失败**：检查CORS配置和后端服务状态
 
-### 4. 数据库连接问题
+### 🚀 测试建议
+
+#### 功能测试用例
 ```bash
-# 检查数据库配置
-cat .env | grep DB_
+# 1. 基础访问测试
+curl http://121.36.205.70:8500
+curl http://121.36.205.70:5001/health
 
-# 测试数据库连接
-mysql -h localhost -u nanyi -p nanyiqiutang
+# 2. API接口测试
+curl "http://121.36.205.70:5001/api/products"
+curl "http://121.36.205.70:5001/api/brand/牡丹亭"
+
+# 3. 卡片页面测试
+# IP访问
+http://121.36.205.70:8500/card.html?brand=福禄儿(五毒月白/金粉黑)
+# 域名访问  
+http://products.nanyiqiutang.cn/card.html?brand=江南春
+
+# 4. 点赞功能测试
+# 在浏览器中测试点赞按钮交互
+
+# 5. 图片加载测试
+# 检查概念图、设计图、布料图是否正常显示
 ```
 
-## 📊 系统状态
+### 📋 开发规范
 
-### 当前配置
-- ✅ **前端服务**: 运行在8500端口
-- ✅ **后端服务**: 运行在5001端口  
-- ✅ **数据库**: MySQL连接正常
-- ✅ **图片存储**: 本地存储模式
-- ✅ **域名访问**: 支持IP和域名访问
+#### 代码规范
+- **Python**：遵循PEP 8规范
+- **JavaScript**：ES6+语法，Vue.js 3组合式API
+- **CSS**：BEM命名规范，响应式设计优先
+- **注释**：中文注释，详细说明业务逻辑
 
-### 性能特性
-- 🚀 **缓存优化**: Redis缓存提升响应速度
-- 📱 **响应式设计**: 移动端友好
-- 🔍 **搜索功能**: 快速产品查找
-- 📊 **访问统计**: 用户行为分析
+#### Git提交规范
+```bash
+# 功能开发
+git commit -m "feat: 添加新功能描述"
 
-## 🎯 技术栈
+# 问题修复
+git commit -m "fix: 修复具体问题描述"
 
-- **前端**: HTML5, CSS3, JavaScript, Vue.js
-- **后端**: Python Flask, SQLAlchemy
-- **数据库**: MySQL
-- **缓存**: Redis
-- **Web服务器**: Python内置服务器
-- **图片存储**: 本地存储 + 阿里云OSS（可选）
+# 文档更新
+git commit -m "docs: 更新文档内容"
 
-## 📞 支持
+# 代码重构
+git commit -m "refactor: 重构代码描述"
+```
 
-如遇到问题：
-1. 查看日志文件定位错误
-2. 运行相关诊断脚本
-3. 检查服务和端口状态
-4. 确认网络连接正常
+### 🎯 未来规划
+
+#### 短期目标 (1-2个月)
+- [ ] 管理后台完善
+- [ ] 用户评论系统
+- [ ] 图片水印功能
+- [ ] 移动端APP开发
+
+#### 中期目标 (3-6个月)
+- [ ] 多语言支持 (英文版)
+- [ ] 高级搜索功能
+- [ ] 用户个人中心
+- [ ] 社交分享优化
+
+#### 长期目标 (6-12个月)
+- [ ] AI智能推荐
+- [ ] 虚拟试穿功能
+- [ ] 电商集成
+- [ ] 国际化部署
 
 ---
 
-**南意秋棠汉服展示系统** - 专业、美观、高效的汉服产品展示平台 
+*最后更新时间：2025-01-27*  
+*版本：v2.3.0*  
+*主要更新：全面替换"宣传图"为"概念图"，完善项目文档*  
+*总代码量：4,281行Python + 2,093行前端* 

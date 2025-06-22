@@ -35,19 +35,25 @@ def create_app(config_name='development'):
     # 初始化扩展
     db.init_app(app)
     
-    # 正式CORS配置，支持所有必要的域名
+    # 完整CORS配置，支持所有访问域名
     cors_origins = [
         'http://localhost:8500',
         'http://127.0.0.1:8500', 
         'http://121.36.205.70:8500',
-        'http://chenxiaoshivivid.com.cn:8500',
-        'http://www.chenxiaoshivivid.com.cn:8500'
+        'http://products.nanyiqiutang.cn',
+        'http://www.products.nanyiqiutang.cn',
+        'http://products.chenxiaoshivivid.com.cn',
+        'http://www.products.chenxiaoshivivid.com.cn',
+        'http://nanyiqiutang.cn',
+        'http://www.nanyiqiutang.cn',
+        'http://chenxiaoshivivid.com.cn',
+        'http://www.chenxiaoshivivid.com.cn'
     ]
     
     CORS(app, 
          origins=cors_origins,
          methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-         allow_headers=['Content-Type', 'Authorization', 'Access-Control-Allow-Credentials'],
+         allow_headers=['Content-Type', 'Authorization', 'Access-Control-Allow-Credentials', 'X-Requested-With'],
          supports_credentials=True)
     
     # 初始化日志
@@ -101,10 +107,19 @@ def create_app(config_name='development'):
     # 注册基本路由
     @app.route('/')
     def index():
-        """主页重定向到前端"""
-        from flask import redirect
-        frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:8500')
-        return redirect(frontend_url)
+        """API根路径，返回服务状态"""
+        return {
+            'service': '南意秋棠后端API',
+            'version': '1.0.0',
+            'status': 'running',
+            'frontend_url': 'http://121.36.205.70:8500',
+            'api_docs': '/api',
+            'endpoints': {
+                'products': '/api/products',
+                'brands': '/api/brand/<brand_name>',
+                'health': '/health'
+            }
+        }
     
     @app.route('/health')
     def health():
@@ -141,15 +156,14 @@ def main():
     config_name = os.environ.get('FLASK_ENV', 'development')
     port = int(os.environ.get('BACKEND_PORT', 5001))
     host = os.environ.get('HOST', '0.0.0.0')
-    domain = os.environ.get('DOMAIN', 'chenxiaoshivivid.com.cn')
     
     # 创建应用
     app = create_app(config_name)
     
     print(f"🚀 南意秋棠后端服务启动")
     print(f"📱 本地访问: http://localhost:{port}")
-    print(f"🌐 域名访问: http://{domain}:{port}")
     print(f"🌐 IP访问: http://121.36.205.70:{port}")
+    print(f"🌐 域名访问: http://products.nanyiqiutang.cn (通过nginx代理)")
     print(f"🔧 环境: {config_name}")
     print(f"💾 数据库: {app.config['SQLALCHEMY_DATABASE_URI'].split('@')[1] if '@' in app.config['SQLALCHEMY_DATABASE_URI'] else 'N/A'}")
     

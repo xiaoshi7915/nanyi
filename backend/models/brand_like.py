@@ -184,4 +184,96 @@ class BrandLike:
             return []
         finally:
             if 'connection' in locals():
+                connection.close()
+    
+    @staticmethod
+    def remove_like(brand_name, user_hash):
+        """取消点赞记录"""
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            
+            # 检查是否已经点赞过
+            cursor.execute("""
+                SELECT id FROM brand_likes 
+                WHERE brand_name = %s AND user_hash = %s
+            """, (brand_name, user_hash))
+            
+            if not cursor.fetchone():
+                return False, "您还没有点赞过"
+            
+            # 删除点赞记录
+            cursor.execute("""
+                DELETE FROM brand_likes 
+                WHERE brand_name = %s AND user_hash = %s
+            """, (brand_name, user_hash))
+            
+            # 更新统计
+            cursor.execute("""
+                UPDATE brand_like_stats 
+                SET like_count = GREATEST(like_count - 1, 0)
+                WHERE brand_name = %s
+            """, (brand_name,))
+            
+            connection.commit()
+            
+            # 获取最新点赞数
+            cursor.execute("""
+                SELECT like_count FROM brand_like_stats WHERE brand_name = %s
+            """, (brand_name,))
+            
+            result = cursor.fetchone()
+            like_count = result['like_count'] if result else 0
+            
+            return True, like_count
+            
+        except Exception as e:
+            logger.error(f"取消点赞记录失败: {e}")
+            return False, str(e)
+        finally:
+            if 'connection' in locals():
+                connection.close()
+
+    @staticmethod
+    def toggle_like(brand_name, user_hash, ip_address=None, user_agent=None):
+        """切换点赞状态（点赞/取消点赞）"""
+        try:
+            # 检查当前状态
+            has_liked = BrandLike.check_user_liked(brand_name, user_hash)
+            
+            if has_liked:
+                # 已点赞，执行取消点赞
+                success, result = BrandLike.remove_like(brand_name, user_hash)
+                return success, result, False  # False表示取消点赞
+            else:
+                # 未点赞，执行点赞
+                success, result = BrandLike.add_like(brand_name, user_hash, ip_address, user_agent)
+                return success, result, True   # True表示点赞
+                
+        except Exception as e:
+            logger.error(f"切换点赞状态失败: {e}")
+            return False, str(e), False
+
+    @staticmethod
+    def get_all_like_counts():
+        """获取所有品牌的点赞数"""
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor()
+            
+            cursor.execute("""
+                SELECT brand_name, like_count 
+                FROM brand_like_stats 
+                WHERE like_count > 0
+                ORDER BY like_count DESC
+            """)
+            
+            results = cursor.fetchall()
+            return {row['brand_name']: row['like_count'] for row in results}
+            
+        except Exception as e:
+            logger.error(f"获取所有点赞数失败: {e}")
+            return {}
+        finally:
+            if 'connection' in locals():
                 connection.close() 
