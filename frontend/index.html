@@ -1280,8 +1280,8 @@
 
                 openCustomerService() {
                     // 智能客服功能
-                    const wechatId = 'LPumpkin0217';
-                    const qqNumber = '502517787';
+                                    const wechatId = 'LPumpkin0217';  // 小南的微信号
+                const wechatId2 = 'moonysy511'; // 染白的微信号
 
                     // 创建客服选择弹窗
                     const modal = document.createElement('div');
@@ -1301,18 +1301,18 @@
                                             <i class="fab fa-weixin"></i>
                                         </div>
                                         <div class="service-info">
-                                            <div class="service-name">微信客服</div>
+                                            <div class="service-name">微信客服（小南）</div>
                                             <div class="service-id">${wechatId}</div>
                                         </div>
                                         <div class="copy-hint">点击复制</div>
                                     </div>
-                                    <div class="service-option" onclick="window.copyToClipboard('${qqNumber}', 'QQ号')">
+                                    <div class="service-option" onclick="window.copyToClipboard('${wechatId2}', '微信号')">
                                         <div class="service-icon">
-                                            <i class="fab fa-qq"></i>
+                                            <i class="fab fa-weixin"></i>
                                         </div>
                                         <div class="service-info">
-                                            <div class="service-name">QQ客服</div>
-                                            <div class="service-id">${qqNumber}</div>
+                                            <div class="service-name">微信客服（染白）</div>
+                                            <div class="service-id">${wechatId2}</div>
                                         </div>
                                         <div class="copy-hint">点击复制</div>
                                     </div>
