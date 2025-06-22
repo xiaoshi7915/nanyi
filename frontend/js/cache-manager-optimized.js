@@ -7,27 +7,27 @@ class OptimizedCacheManager {
     constructor() {
         this.cachePrefix = 'nanyi_cache_';
         this.versionKey = 'nanyi_version';
-        this.defaultTTL = 60 * 60 * 1000; // 1小时默认缓存时间
+        this.defaultTTL = 60 * 1000; // 1分钟默认缓存时间
         
-        // 优化的缓存策略 - 针对稳定资源延长缓存时间
+        // 优化的缓存策略 - 统一1分钟缓存时间
         this.cacheStrategies = {
             'brands': {
-                ttl: 2 * 60 * 60 * 1000,     // 2小时 - 品牌数据稳定
+                ttl: 60 * 1000,              // 1分钟 - 品牌数据
                 checkUpdate: false,           // 不主动检查更新，减少请求
                 priority: 'high'              // 高优先级缓存
             },
             'images': {
-                ttl: 24 * 60 * 60 * 1000,    // 24小时 - 图片列表很稳定
+                ttl: 60 * 1000,              // 1分钟 - 图片列表
                 checkUpdate: false,           // 不主动检查更新
                 priority: 'high'
             },
             'filters': {
-                ttl: 12 * 60 * 60 * 1000,    // 12小时 - 筛选选项很少变化
+                ttl: 60 * 1000,              // 1分钟 - 筛选选项
                 checkUpdate: false,
                 priority: 'medium'
             },
             'brand_detail': {
-                ttl: 6 * 60 * 60 * 1000,     // 6小时 - 品牌详情稳定
+                ttl: 60 * 1000,              // 1分钟 - 品牌详情
                 checkUpdate: false,           // 不主动检查更新
                 priority: 'high'
             }
@@ -104,10 +104,10 @@ class OptimizedCacheManager {
     }
     
     /**
-     * 获取应用版本（基于当前时间戳的天数，每天检查一次更新）
+     * 获取应用版本（基于当前时间戳的小时数，每小时检查一次更新）
      */
     getAppVersion() {
-        return Math.floor(Date.now() / (24 * 60 * 60 * 1000)).toString();
+        return Math.floor(Date.now() / (60 * 60 * 1000)).toString();
     }
     
     /**

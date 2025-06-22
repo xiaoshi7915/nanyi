@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">南意秋棠 - 汉文化布料</title>
+    <title id="pageTitle">南意秋棠 - 传统美学设计</title>
     
     <!-- 微信分享优化 -->
-    <meta property="og:title" content="南意秋棠 - 汉文化布料设计" />
-    <meta property="og:description" content="传承经典，创新未来 - 汉文化布料设计的艺术之美" />
+    <meta property="og:title" content="南意秋棠 - 传统美学设计" />
+    <meta property="og:description" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="" />
     <meta property="og:image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
@@ -17,18 +17,18 @@
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="南意秋棠 - 汉文化布料设计" />
-    <meta name="twitter:description" content="传承经典，创新未来 - 汉文化布料设计的艺术之美" />
+    <meta name="twitter:title" content="南意秋棠 - 传统美学设计" />
+    <meta name="twitter:description" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
     <meta name="twitter:image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     
     <!-- 微信分享专用 -->
-    <meta itemprop="name" content="南意秋棠 - 汉文化布料设计" />
-    <meta itemprop="description" content="传承经典，创新未来 - 汉文化布料设计的艺术之美" />
+    <meta itemprop="name" content="南意秋棠 - 传统美学设计" />
+    <meta itemprop="description" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
     <meta itemprop="image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     
     <!-- 微信分享配置 -->
-    <meta name="wechat:title" content="南意秋棠 - 汉文化布料设计" />
-    <meta name="wechat:desc" content="传承经典，创新未来 - 汉文化布料设计的艺术之美" />
+    <meta name="wechat:title" content="南意秋棠 - 传统美学设计" />
+    <meta name="wechat:desc" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
     <meta name="wechat:imgUrl" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     <meta name="wechat:link" content="" />
     
@@ -251,8 +251,13 @@
             transform: scale(1.05);
         }
         
+        /* 未点赞时的灰色样式 */
+        .like-button i, .like-button span {
+            color: #999 !important;  /* 未点赞时改为灰色 */
+        }
+        
         .like-button.liked {
-            background: #667eea;
+            background: #dc3545;  /* 点赞后改为红色背景 */
             color: white;
         }
         
@@ -366,7 +371,7 @@
         <div class="card-header">
             <div class="watermark">南意秋棠</div>
             <div class="brand-name" id="brandName">加载中...</div>
-            <div class="brand-subtitle">汉文化布料设计</div>
+            <div class="brand-subtitle">传统美学设计</div>
         </div>
         
         <div class="card-body">
@@ -552,7 +557,7 @@
                             material: data.card_data.material,
                             theme_series: data.card_data.theme_series,
                             print_size: data.card_data.print_size,
-                            inspiration: data.card_data.inspiration_origin || '汉文化布料设计精髓',
+                            inspiration: data.card_data.inspiration_origin || '传统美学设计精髓',
                             images: data.card_data.images || []
                         };
                         updatePageContent();
@@ -562,6 +567,9 @@
                             document.getElementById('likeCount').textContent = data.card_data.like_count;
                         }
                         loadLikeStatus();
+                        
+                        // 每30秒刷新一次点赞状态，确保数据实时性
+                        setInterval(loadLikeStatus, 30000);
                     } else {
                         console.error('API返回失败:', data.error || '未知错误');
                         // 使用默认数据，但设置正确的品牌名
@@ -813,11 +821,13 @@
             const likeText = document.getElementById('likeText');
             const likeCount = document.getElementById('likeCount');
             
-            // 如果已经点赞过，提示用户
-            if (likeButton.classList.contains('liked')) {
-                showToast('您已经点赞过了！');
+            // 防止重复点击
+            if (likeButton.disabled) {
                 return;
             }
+            
+            // 暂时禁用按钮
+            likeButton.disabled = true;
             
             // 根据当前域名动态构建API URL
             const currentHost = window.location.hostname;
@@ -834,26 +844,36 @@
                 apiBaseUrl = '';
             }
             
-            // 取消点赞API
+            // 点赞/取消点赞API（使用POST方法，后端会自动切换状态）
             const likeApiUrl = `${apiBaseUrl}/api/like/card/${encodeURIComponent(brandName)}`;
             
-            fetch(likeApiUrl, { method: 'DELETE' })
+            fetch(likeApiUrl, { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
                         // 更新UI状态
-                        likeButton.classList.remove('liked');
-                        likeIcon.className = 'fas fa-thumbs-up';
-                        likeText.textContent = '点赞';
+                        if (data.liked) {
+                            likeButton.classList.add('liked');
+                            likeIcon.className = 'fas fa-thumbs-up';
+                            likeText.textContent = '已赞';
+                        } else {
+                            likeButton.classList.remove('liked');
+                            likeIcon.className = 'fas fa-thumbs-up';
+                            likeText.textContent = '点赞';
+                        }
                         likeCount.textContent = data.like_count;
                         showToast(data.message);
                     } else {
-                        showToast(data.message || '取消点赞失败');
+                        showToast(data.message || '操作失败');
                     }
                 })
                 .catch(error => {
-                    console.error('取消点赞失败:', error);
-                    showToast('取消点赞失败，请稍后重试');
+                    console.error('点赞操作失败:', error);
+                    showToast('操作失败，请稍后重试');
+                })
+                .finally(() => {
+                    // 重新启用按钮
+                    likeButton.disabled = false;
                 });
         }
         
@@ -876,7 +896,9 @@
                 apiBaseUrl = '';
             }
             
-            const likeApiUrl = `${apiBaseUrl}/api/like/card/${encodeURIComponent(brandName)}`;
+            // 添加时间戳防止缓存
+            const timestamp = new Date().getTime();
+            const likeApiUrl = `${apiBaseUrl}/api/like/card/${encodeURIComponent(brandName)}?t=${timestamp}`;
             
             fetch(likeApiUrl)
                 .then(response => response.json())
@@ -890,16 +912,30 @@
                         // 更新点赞数
                         likeCount.textContent = data.like_count || 0;
                         
-                        // 如果已经点赞过，更新UI状态
+                        // 更新UI状态
                         if (data.liked) {
                             likeButton.classList.add('liked');
                             likeIcon.className = 'fas fa-thumbs-up';
                             likeText.textContent = '已赞';
+                        } else {
+                            likeButton.classList.remove('liked');
+                            likeIcon.className = 'fas fa-thumbs-up';
+                            likeText.textContent = '点赞';
                         }
                     }
                 })
                 .catch(error => {
                     console.error('获取点赞状态失败:', error);
+                    // 设置默认状态
+                    const likeButton = document.getElementById('likeButton');
+                    const likeIcon = document.getElementById('likeIcon');
+                    const likeText = document.getElementById('likeText');
+                    const likeCount = document.getElementById('likeCount');
+                    
+                    likeButton.classList.remove('liked');
+                    likeIcon.className = 'fas fa-thumbs-up';
+                    likeText.textContent = '点赞';
+                    likeCount.textContent = '0';
                 });
         }
         
@@ -1017,7 +1053,7 @@
         // 获取分享数据
         function getShareData() {
             const brandName = cardData.brand_name || '南意秋棠布料';
-            const inspiration = cardData.inspiration || cardData.inspiration_origin || '传承经典，创新未来 - 汉文化布料设计的艺术之美';
+            const inspiration = cardData.inspiration || cardData.inspiration_origin || '传承经典，美美与共 - 古典美学设计，望君着美于裳';
             
             // 获取第一张图片作为分享图片
             let shareImage = 'http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg';

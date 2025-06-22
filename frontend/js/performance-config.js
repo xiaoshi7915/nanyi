@@ -25,13 +25,13 @@ const PerformanceConfig = {
     // 缓存策略配置
     cacheStrategy: {
         // 静态资源缓存时间（毫秒）
-        staticAssets: 7 * 24 * 60 * 60 * 1000, // 7天
+        staticAssets: 60 * 1000, // 1分钟
         // API数据缓存时间
-        apiData: 24 * 60 * 60 * 1000, // 24小时
+        apiData: 60 * 1000, // 1分钟
         // 图片缓存时间
-        images: 30 * 24 * 60 * 60 * 1000, // 30天
+        images: 60 * 1000, // 1分钟
         // 品牌详情缓存时间
-        brandDetails: 7 * 24 * 60 * 60 * 1000 // 7天
+        brandDetails: 60 * 1000 // 1分钟
     },
 
     // 网络请求优化
@@ -238,27 +238,27 @@ class OptimizedCacheManager {
     constructor() {
         this.cachePrefix = 'nanyi_cache_';
         this.versionKey = 'nanyi_version';
-        this.defaultTTL = 60 * 60 * 1000; // 1小时默认缓存时间
+        this.defaultTTL = 60 * 1000; // 1分钟默认缓存时间
         
-        // 优化的缓存策略 - 针对稳定资源延长缓存时间
+        // 优化的缓存策略 - 统一1分钟缓存时间
         this.cacheStrategies = {
             'brands': {
-                ttl: 7 * 24 * 60 * 60 * 1000,     // 7天 - 品牌数据非常稳定
+                ttl: 60 * 1000,               // 1分钟 - 品牌数据
                 checkUpdate: false,               // 不主动检查更新，减少请求
                 priority: 'high'                  // 高优先级缓存
             },
             'images': {
-                ttl: 7 * 24 * 60 * 60 * 1000,    // 7天 - 图片列表非常稳定
+                ttl: 60 * 1000,               // 1分钟 - 图片列表
                 checkUpdate: false,               // 不主动检查更新
                 priority: 'high'
             },
             'filters': {
-                ttl: 3 * 24 * 60 * 60 * 1000,    // 3天 - 筛选选项很少变化
+                ttl: 60 * 1000,               // 1分钟 - 筛选选项
                 checkUpdate: false,
                 priority: 'medium'
             },
             'brand_detail': {
-                ttl: 7 * 24 * 60 * 60 * 1000,     // 7天 - 品牌详情非常稳定
+                ttl: 60 * 1000,               // 1分钟 - 品牌详情
                 checkUpdate: false,               // 不主动检查更新
                 priority: 'high'
             }
@@ -293,10 +293,10 @@ class OptimizedCacheManager {
     }
     
     /**
-     * 获取应用版本（基于当前时间戳的天数，每天检查一次更新）
+     * 获取应用版本（基于当前时间戳的小时数，每小时检查一次更新）
      */
     getAppVersion() {
-        return Math.floor(Date.now() / (24 * 60 * 60 * 1000)).toString();
+        return Math.floor(Date.now() / (60 * 60 * 1000)).toString();
     }
     
     /**

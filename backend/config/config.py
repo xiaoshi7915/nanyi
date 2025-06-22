@@ -55,7 +55,7 @@ class Config:
     
     # 图片源配置 - 支持命令行切换
     # 可选值: 'oss', 'local'
-    IMAGE_SOURCE = os.environ.get('IMAGE_SOURCE', 'oss').lower()
+    IMAGE_SOURCE = os.environ.get('IMAGE_SOURCE', 'local').lower()
     
     # 图片处理参数
     OSS_THUMBNAIL_PARAMS = '?x-oss-process=image/resize,w_300,h_300,m_lfit/quality,q_80/format,webp'

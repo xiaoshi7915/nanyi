@@ -304,7 +304,7 @@ def get_filters():
 
 @api_bp.route('/brand/<path:brand_name>')
 @log_access
-@cached(ttl=900, key_prefix='api_brand')  # 15分钟缓存
+@cached(ttl=60, key_prefix='api_brand')  # 1分钟缓存
 @handle_errors
 def get_brand_detail(brand_name):
     """获取品牌详细信息"""
@@ -534,7 +534,7 @@ def get_access_log_stats():
 
 @api_bp.route('/share/card/<path:brand_name>')
 @log_access
-@cached(ttl=1800, key_prefix='share_card')  # 30分钟缓存
+@cached(ttl=60, key_prefix='share_card')  # 1分钟缓存
 @handle_errors
 def generate_share_card(brand_name):
     """生成分享卡片数据"""
@@ -610,9 +610,10 @@ def generate_share_card(brand_name):
         frontend_url = f"http://{frontend_host}/card.html?brand={decoded_brand_name}"
         card_data['card_url'] = frontend_url
         
-        # 获取点赞数（使用缓存）
+        # 获取点赞数（直接从数据库获取最新数据，不使用缓存）
         try:
             from models.brand_like import BrandLike
+            # 直接从数据库获取最新点赞数，确保实时性
             like_count = BrandLike.get_like_count(base_brand_name)
             card_data['like_count'] = like_count
         except Exception as e:

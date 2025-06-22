@@ -182,7 +182,7 @@ const BrandDetailModal = {
             if (navigator.share) {
                 navigator.share({
                     title: `南意秋棠 - ${this.brand.name}`,
-                    text: `查看这个漂亮的汉文化布料设计：${this.brand.name}`,
+                    text: `查看这个漂亮的传统美学设计：${this.brand.name}`,
                     url: window.location.href
                 });
             } else {
