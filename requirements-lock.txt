@@ -1,0 +1,53 @@
+# 南意秋棠项目锁定依赖版本
+# 防止其他项目依赖冲突
+
+# 核心 Web 框架 - 精确版本锁定
+Flask==2.3.3
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.23
+Flask-CORS==4.0.0
+Werkzeug==2.3.7
+
+# 数据库驱动
+PyMySQL==1.1.0
+
+# 模板引擎
+Jinja2==3.1.6
+MarkupSafe==2.1.5
+
+# 工具库
+python-dotenv==1.0.0
+requests==2.31.0
+Pillow==10.0.1
+
+# 阿里云OSS
+oss2==2.18.4
+aliyun-python-sdk-core==2.16.0
+aliyun-python-sdk-kms==2.16.5
+
+# 加密和安全
+cryptography==45.0.4
+pycryptodome==3.23.0
+cffi==1.17.1
+pycparser==2.22
+
+# 系统依赖
+click==8.1.8
+blinker==1.8.2
+itsdangerous==2.2.0
+greenlet==3.1.1
+typing_extensions==4.13.2
+importlib_metadata==8.5.0
+zipp==3.20.2
+
+# 网络和编码
+urllib3==2.2.3
+charset-normalizer==3.4.2
+idna==3.10
+certifi==2025.6.15
+
+# 其他工具
+six==1.17.0
+jmespath==0.10.0
+crcmod==1.7
+packaging==25.0 

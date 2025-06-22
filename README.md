@@ -1,367 +1,420 @@
-# 南意秋棠 - 传统美学设计展示平台
+# 南意秋棠汉服展示网站
 
-## 项目概述
+<div align="center">
 
-南意秋棠是一个专注于传统美学设计的展示平台，集成了精美的产品展示、智能筛选、点赞分享等功能。
+![南意秋棠](https://img.shields.io/badge/南意秋棠-汉服展示-red?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMSA5TDE0IDEyTDEzLjA5IDE1Ljc0TDEyIDIyTDEwLjkxIDE1Ljc0TDMgMTJMMTAgOUwxMC45MSA4LjI2TDEyIDJaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K)
+![Python](https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python)
+![Flask](https://img.shields.io/badge/Flask-2.3.3-green?style=for-the-badge&logo=flask)
+![Vue.js](https://img.shields.io/badge/Vue.js-3.x-green?style=for-the-badge&logo=vue.js)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-orange?style=for-the-badge&logo=mysql)
 
-## 最新更新 (2025-01-27 v2.4.0 最新版)
+**传承经典 美美与共 - 古典美学设计，望君着美于裳**
 
-### ⚡ 重要更新：缓存策略优化
+🌸 专业的汉服面料设计与展示平台 🌸
 
-#### ✅ 缓存时间统一调整为1小时
-- **版本检测**：从每24小时检查改为每1小时自动检查更新
-- **缓存时长**：所有数据类型统一调整为1小时缓存
-  - 品牌数据：从2小时 → 1小时
-  - 图片列表：从24小时 → 1小时  
-  - 筛选选项：从12小时 → 1小时
-  - 品牌详情：从6小时 → 1小时
-- **影响文件**：
-  - `frontend/js/performance-config.js` - 性能配置缓存策略
-  - `frontend/js/cache-manager-optimized.js` - 优化缓存管理器
-  - `frontend/js/optimized-cache.js` - 缓存管理器
-- **用户体验**：用户最多1小时后就能看到最新更新内容
-- **状态**：✅ 已完成所有缓存文件调整
+</div>
 
-### 🎯 历史更新：术语统一
+## 📖 项目简介
 
-#### ✅ "宣传图" → "概念图" 全面替换
-- **更新范围**：前后端所有代码文件、图片文件名、API接口、数据库逻辑
-- **影响文件**：
-  - `frontend/index.html` - 前端主页面图片类型定义
-  - `frontend/card.html` - 卡片页面图片类型定义  
-  - `backend/routes/api.py` - API接口图片类型优先级
-  - `backend/services/image_service.py` - 图片服务排序逻辑
-  - `backend/services/oss_image_service.py` - OSS图片服务配置
-  - `backend/config/oss_config.py` - OSS配置映射
-- **图片文件**：重命名了61个图片文件，从"xxx-宣传图-01.jpg"改为"xxx-概念图-01.jpg"
-- **代码逻辑**：更新了所有图片类型优先级排序，现在为：概念图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他
-- **状态**：✅ 已完成全面替换，保持功能完全一致
+南意秋棠汉服展示网站是一个专业的汉服设计展示平台，致力于传承和发扬中华传统服饰文化。网站展示了各种精美的汉服设计，包括不同材质、主题系列和印花工艺的产品。
 
-### 📊 代码统计
+### ✨ 主要特色
 
-- **Python代码**：总计4,281行
-- **前端页面**：index.html (2,093行)，card.html等
-- **主要组件**：
-  - 后端Flask应用：179行 (app.py)
-  - 点赞功能模型：278行 (brand_like.py)
-  - 图片服务：完整的本地和OSS双模式支持
-  - 前端Vue.js应用：响应式设计，支持移动端和桌面端
+- 🎨 **精美设计展示** - 高质量汉服设计图片展示
+- 🔍 **智能筛选系统** - 按年份、材质、主题等多维度筛选
+- 💖 **互动点赞功能** - 用户可为喜爱的设计点赞
+- 📱 **响应式设计** - 完美适配移动端和桌面端
+- 🚀 **高性能加载** - 优化的图片加载和缓存策略
+- 🎪 **分享功能** - 精美的设计分享卡片
 
-### 🔧 技术架构回顾
+## 🏗️ 技术架构
 
-#### 后端技术栈
-- **框架**：Python Flask 3.x
-- **数据库**：MySQL 8.0 (nanyiqiutang数据库)
-- **ORM**：SQLAlchemy
-- **图片服务**：本地静态文件 + OSS云存储双模式
-- **缓存**：内存缓存 + 智能缓存管理
-- **CORS**：完整的跨域支持，支持多域名访问
+### 前端技术栈
+- **Vue.js 3.x** - 现代化前端框架
+- **HTML5/CSS3** - 响应式布局
+- **JavaScript ES6+** - 交互逻辑
+- **Axios** - HTTP请求库
 
-#### 前端技术栈
-- **框架**：Vue.js 3.x (生产版)
-- **样式**：CSS3 + 响应式设计
-- **图标**：Font Awesome 6.x
-- **性能优化**：智能缓存、图片懒加载、API请求优化
-- **移动端适配**：完整的移动端用户体验
+### 后端技术栈
+- **Python 3.8+** - 编程语言
+- **Flask 2.3.3** - Web应用框架
+- **Flask-SQLAlchemy 3.1.1** - ORM数据库操作
+- **PyMySQL** - MySQL数据库连接
+- **Flask-CORS** - 跨域资源共享
 
-#### 数据模型
-```python
-# 主要数据模型
-class Product:
-    - brand_name: 品牌名称
-    - material: 材质信息
-    - design_inspiration: 设计灵感
-    - year: 发布年份
-    - theme_series: 主题系列
+### 数据存储
+- **MySQL 8.0** - 关系型数据库
+- **本地文件系统** - 图片资源存储
+- **内存缓存** - 提升响应速度
 
-class BrandLike:
-    - brand_name: 品牌名称
-    - like_count: 点赞数量
-    - created_at: 创建时间
-    - updated_at: 更新时间
+### 部署环境
+- **CentOS/Linux** - 服务器操作系统
+- **Nginx** - 反向代理和静态资源服务
+- **Python虚拟环境** - 依赖隔离
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Python 3.8+
+- MySQL 8.0+
+- Git
+- Linux/MacOS/Windows
+
+### 一键部署
+
+```bash
+# 克隆项目
+git clone <repository-url>
+cd products
+
+# 运行一键部署脚本
+chmod +x deploy.sh
+./deploy.sh
+
+# 或者分步骤部署
+./deploy.sh install  # 仅安装环境
+./deploy.sh start     # 仅启动服务
+./deploy.sh verify    # 验证部署状态
 ```
 
-### 📁 完整项目结构
+### 手动部署
+
+#### 1. 环境设置
+
+```bash
+# 创建虚拟环境
+python3 -m venv products_env
+source products_env/bin/activate
+
+# 或使用快速设置脚本
+chmod +x setup-env.sh
+./setup-env.sh
+```
+
+#### 2. 安装依赖
+
+```bash
+# 安装Python依赖
+pip install -r requirements.txt
+
+# 或使用当前版本依赖
+pip install -r requirements-current.txt
+```
+
+#### 3. 配置环境变量
+
+创建 `.env` 文件：
+
+```env
+# 服务配置
+FLASK_ENV=development
+DEBUG=True
+BACKEND_PORT=5001
+FRONTEND_PORT=8500
+HOST=0.0.0.0
+
+# 数据库配置
+DB_HOST=your_db_host
+DB_PORT=3306
+DB_NAME=nanyiqiutang
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+
+# 安全配置
+SECRET_KEY=your_secret_key_here
+```
+
+#### 4. 初始化数据库
+
+```bash
+# 激活虚拟环境
+source products_env/bin/activate
+
+# 初始化数据库
+cd backend
+python app.py
+```
+
+#### 5. 启动服务
+
+```bash
+# 使用管理脚本
+./manage.sh start
+
+# 或手动启动
+# 后端服务
+cd backend && python app.py &
+
+# 前端服务  
+cd frontend && python server.py &
+```
+
+## 📁 项目结构
 
 ```
 products/
-├── backend/                    # 后端API服务
-│   ├── app.py                 # 主应用程序 (179行)
-│   ├── config/                # 配置文件
-│   │   ├── config.py         # 主配置
-│   │   └── oss_config.py     # OSS配置 (已更新概念图映射)
-│   ├── models/               # 数据模型
-│   │   ├── __init__.py       # 模型初始化
-│   │   ├── product.py        # 产品模型 (90行)
-│   │   ├── brand_like.py     # 点赞功能模型 (278行)
-│   │   ├── admin.py          # 管理员模型 (47行)
-│   │   └── access_log.py     # 访问日志模型
-│   ├── routes/               # API路由
-│   │   ├── __init__.py       # 路由初始化
-│   │   └── api.py            # 主要API接口 (已更新概念图优先级)
-│   ├── services/             # 业务逻辑服务
-│   │   ├── __init__.py       # 服务初始化
-│   │   ├── product_service.py # 产品服务
-│   │   ├── image_service.py   # 图片服务 (已更新概念图排序)
-│   │   ├── oss_image_service.py # OSS图片服务 (已更新概念图配置)
-│   │   ├── oss_service_simple.py # 简化OSS服务
-│   │   └── cache_service.py   # 缓存服务
-│   └── utils/                # 工具函数
-│       ├── __init__.py       # 工具初始化
-│       ├── db_utils.py       # 数据库工具
-│       ├── cache_control.py  # 缓存控制
-│       ├── decorators.py     # 装饰器
-│       ├── file_utils.py     # 文件工具
-│       └── logger.py         # 日志工具
-├── frontend/                 # 前端展示服务
-│   ├── index.html           # 主页面 (2,093行，已更新概念图)
-│   ├── card.html            # 卡片页面 (已更新概念图)
-│   ├── server.py            # 前端服务器 (73行)
-│   ├── css/                 # 样式文件
-│   │   └── main.css         # 主样式文件
-│   ├── js/                  # JavaScript文件
-│   │   ├── api.js           # API调用
-│   │   ├── components.js    # Vue组件
-│   │   ├── utils.js         # 工具函数
-│   │   ├── performance-config.js # 性能配置
-│   │   └── cache-manager-optimized.js # 缓存管理
-│   └── static/              # 静态资源
-│       ├── images/          # 图片资源 (61个概念图文件)
-│       ├── css/             # 额外样式
-│       ├── js/              # 额外脚本
-│       └── lib/             # 第三方库
-├── nginx/                   # Nginx配置
-│   ├── products-sites.conf  # 站点配置
-│   ├── install-nginx.sh     # Nginx安装脚本
-│   ├── deploy-config.sh     # 部署配置脚本
-│   ├── test-domains.sh      # 域名测试脚本
-│   └── README.md            # Nginx配置说明
-├── logs/                    # 服务日志
-├── manage.sh                # 服务管理脚本
-├── restart.sh               # 重启脚本
-├── deploy-nginx.sh          # Nginx部署脚本
-├── requirements.txt         # Python依赖
-└── README.md               # 项目文档 (本文件)
+├── backend/                 # 后端代码
+│   ├── app.py              # Flask应用入口
+│   ├── config/             # 配置文件
+│   ├── models/             # 数据模型
+│   ├── routes/             # API路由
+│   ├── services/           # 业务逻辑服务
+│   └── utils/              # 工具函数
+├── frontend/               # 前端代码
+│   ├── index.html          # 主页面
+│   ├── css/                # 样式文件
+│   ├── js/                 # JavaScript文件
+│   ├── static/             # 静态资源
+│   └── server.py           # 前端服务器
+├── nginx/                  # Nginx配置
+├── logs/                   # 日志文件
+├── requirements.txt        # Python依赖(主要)
+├── requirements-current.txt # 当前环境依赖(完整)
+├── deploy.sh               # 一键部署脚本
+├── setup-env.sh            # 环境设置脚本
+├── manage.sh               # 服务管理脚本
+└── README.md               # 项目说明
 ```
 
-### 🎨 功能特性
+## 🛠️ 开发指南
 
-#### 核心功能
-- 📱 **响应式设计**：完美适配桌面端和移动端
-- 🔍 **智能搜索**：支持品牌名、材质、主题、年份等多维度搜索
-- 🏷️ **分类筛选**：按年份、主题系列、材质等多重筛选
-- 💖 **点赞系统**：
-  - 点赞操作本身：**实时更新**到数据库
-  - 其他用户看到更新：**1分钟**内生效
-  - 分享页面的点赞数：**1分钟**内更新
-  - 用户自己的操作：立即在前端显示
-  - UI颜色设计：未点赞时显示灰色，点赞后显示红色
-- 🖼️ **图片展示**：概念图、设计图、布料图等多类型图片自动排序
-- 📤 **分享功能**：支持微信、微博等多平台分享
-- 🎯 **卡片生成**：动态生成品牌详情卡片页面
+### 开发环境设置
 
-#### 图片管理系统
-- **多类型支持**：概念图、设计图、成衣图、布料图、模特图、买家秀图
-- **智能排序**：按重要性自动排序显示 (概念图优先级最高)
-- **双存储模式**：本地静态文件 + OSS云存储
-- **性能优化**：图片懒加载、缓存管理、压缩优化
-- **错误处理**：图片加载失败自动降级处理
-
-#### 用户体验优化
-- **快速加载**：智能缓存管理，1小时缓存策略
-- **流畅交互**：Vue.js响应式数据绑定
-- **移动友好**：针对移动端优化的触摸交互
-- **视觉美观**：现代化UI设计，汉文化元素融入
-
-### 🌐 部署和访问
-
-#### 访问地址
-- **主域名**：http://products.nanyiqiutang.cn
-- **备用IP**：http://121.36.205.70:8500
-- **后端API**：http://121.36.205.70:5001
-- **管理后台**：http://121.36.205.70:5001/admin (开发中)
-
-#### 服务端口
-- **前端服务**：8500 (Flask静态文件服务)
-- **后端API**：5001 (Flask API服务)
-- **数据库**：3306 (MySQL)
-- **Nginx**：80/443 (反向代理)
-
-#### 启动命令
 ```bash
-# 设置环境变量
-export IMAGE_SOURCE=local
+# 激活开发环境
+source products_env/bin/activate
 
-# 启动后端服务
-cd backend && python3 app.py &
-
-# 启动前端服务  
-cd frontend && python3 server.py &
-
-# 或使用管理脚本
+# 启动开发服务器
 ./manage.sh start
-```
-
-### 📈 性能指标
-
-#### 缓存策略
-- **版本检测**：每1分钟自动检查更新（已优化）
-- **API缓存**：1分钟 TTL，快速响应数据变更（已优化）
-- **前端缓存**：1分钟 TTL，确保数据实时性（已优化）
-- **图片缓存**：浏览器缓存 + CDN加速
-- **静态资源**：Nginx缓存配置
-- **数据库**：查询结果缓存
-
-#### 响应时间
-- **首页加载**：< 2秒
-- **品牌详情**：< 1秒
-- **图片加载**：< 3秒
-- **搜索响应**：< 500ms
-
-### 🔒 安全特性
-
-#### 数据安全
-- **SQL注入防护**：SQLAlchemy ORM参数化查询
-- **XSS防护**：前端数据转义和验证
-- **CSRF防护**：Flask-WTF CSRF令牌
-- **CORS配置**：严格的跨域资源共享策略
-
-#### 访问控制
-- **管理员认证**：基于Session的认证系统
-- **API限流**：防止恶意请求
-- **日志记录**：完整的访问和错误日志
-
-### 🐛 历史问题解决记录
-
-| 问题 | 版本 | 状态 | 解决方案 |
-|------|------|------|----------|
-| IP访问卡片数据错误 | v2.2.0 | ✅ 已解决 | 动态构建API URL |
-| 多颜色品牌获取失败 | v2.2.0 | ✅ 已解决 | 修复编码和字段访问问题 |
-| 图片加载失败 | v2.2.0 | ✅ 已解决 | 优化本地图片服务 |
-| 详情页标题不完整 | v2.2.0 | ✅ 已解决 | 保持完整品牌名显示 |
-| 服务访问404 | v2.2.0 | ✅ 已解决 | 清理端口冲突，正确启动服务 |
-| 移动端点赞位置 | v2.2.0 | ✅ 已解决 | 统一移动端和电脑端样式 |
-| 缓存时间优化 | v2.3.0 | ✅ 已解决 | 缓存时间从1小时调整为1分钟 |
-| 点赞UI颜色 | v2.3.0 | ✅ 已解决 | 未点赞灰色，点赞后红色 |
-| 分享卡片点赞功能 | v2.3.1 | ✅ 已解决 | 修复点赞逻辑错误，实现正确的点赞/取消点赞切换 |
-| 点赞数实时更新 | v2.3.1 | ✅ 已解决 | 分享卡片获取实时点赞数，30秒自动刷新 |
-| 详情页布局优化 | v2.4.2 | ✅ 已解决 | 基本信息标题与点赞按钮同行显示，字体大小统一 |
-| 详情页字体优化 | v2.4.3 | ✅ 已解决 | 调大标题字体，调小内容字体，保持点赞图标大小不变 |
-| Logo图片替换 | v2.4.4 | ✅ 已解决 | 支持自定义logo图片，自动转为白色适配背景 |
-| Logo显示优化 | v2.4.5 | ✅ 已解决 | 移除白色滤镜效果，显示原始图片颜色，提供文字logo备选方案 |
-| "宣传图"术语统一 | v2.3.0 | ✅ 已解决 | 全面替换为"概念图" |
-
-### 📞 技术支持
-
-#### 服务监控
-```bash
-# 检查服务状态
-ps aux | grep python
-lsof -i :8500 && lsof -i :5001
 
 # 查看日志
-tail -f logs/backend.log
-tail -f logs/frontend.log
-
-# 检查环境变量
-echo $IMAGE_SOURCE  # 应为 local
+tail -f logs/app.log
 ```
 
-#### 常见问题
-1. **服务无法启动**：检查端口占用，使用 `pkill python3` 清理进程
-2. **图片不显示**：确认 `IMAGE_SOURCE=local` 环境变量设置
-3. **数据库连接失败**：检查MySQL服务状态和连接配置
-4. **API调用失败**：检查CORS配置和后端服务状态
+### API接口文档
 
-### 🚀 测试建议
+#### 核心接口
 
-#### 功能测试用例
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/images` | GET | 获取图片列表(支持分页) |
+| `/api/filters` | GET | 获取筛选选项 |
+| `/api/brand/<name>` | GET | 获取品牌详情 |
+| `/api/like/card/<name>` | POST | 品牌点赞 |
+| `/api/share/card/<name>` | GET | 生成分享卡片 |
+| `/health` | GET | 健康检查 |
+
+#### 请求示例
+
+```javascript
+// 获取图片列表
+fetch('/api/images?page=1&per_page=12')
+  .then(response => response.json())
+  .then(data => console.log(data));
+
+// 品牌点赞
+fetch('/api/like/card/一丛花令', {
+  method: 'POST',
+  headers: {'Content-Type': 'application/json'}
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+### 数据库设计
+
+#### 主要数据表
+
+- **products** - 产品信息表
+- **brand_likes** - 品牌点赞表  
+- **access_logs** - 访问日志表
+- **admins** - 管理员表
+
+### 前端组件
+
+- **ProductCard** - 产品卡片组件
+- **FilterPanel** - 筛选面板组件
+- **LikeButton** - 点赞按钮组件
+- **ShareCard** - 分享卡片组件
+
+## 🔧 服务管理
+
+### 服务控制命令
+
 ```bash
-# 1. 基础访问测试
-curl http://121.36.205.70:8500
-curl http://121.36.205.70:5001/health
+# 启动所有服务
+./manage.sh start
 
-# 2. API接口测试
-curl "http://121.36.205.70:5001/api/products"
-curl "http://121.36.205.70:5001/api/brand/牡丹亭"
+# 停止所有服务
+./manage.sh stop
 
-# 3. 卡片页面测试
-# IP访问
-http://121.36.205.70:8500/card.html?brand=福禄儿(五毒月白/金粉黑)
-# 域名访问  
-http://products.nanyiqiutang.cn/card.html?brand=江南春
+# 重启所有服务
+./manage.sh restart
 
-# 4. 点赞功能测试
-# 在浏览器中测试点赞按钮交互
+# 查看服务状态
+./manage.sh status
 
-# 5. 图片加载测试
-# 检查概念图、设计图、布料图是否正常显示
+# 查看日志
+./manage.sh logs
 ```
 
-### 📋 开发规范
+### 访问地址
 
-#### 代码规范
-- **Python**：遵循PEP 8规范
-- **JavaScript**：ES6+语法，Vue.js 3组合式API
-- **CSS**：BEM命名规范，响应式设计优先
-- **注释**：中文注释，详细说明业务逻辑
+- **前端页面**: http://localhost:8500
+- **后端API**: http://localhost:5001  
+- **健康检查**: http://localhost:5001/health
+- **域名访问**: http://products.nanyiqiutang.cn
 
-#### Git提交规范
+## 📊 性能优化
+
+### 缓存策略
+- API响应缓存(Redis/内存)
+- 图片资源CDN加速
+- 数据库查询优化
+- 前端资源压缩
+
+### 监控指标
+- 响应时间监控
+- 数据库性能监控
+- 服务器资源监控
+- 用户访问统计
+
+## 🐛 故障排除
+
+### 常见问题
+
+#### 1. 数据库连接失败
 ```bash
-# 功能开发
-git commit -m "feat: 添加新功能描述"
+# 检查数据库配置
+cat .env | grep DB_
 
-# 问题修复
-git commit -m "fix: 修复具体问题描述"
-
-# 文档更新
-git commit -m "docs: 更新文档内容"
-
-# 代码重构
-git commit -m "refactor: 重构代码描述"
+# 测试数据库连接
+mysql -h your_db_host -u your_db_user -p
 ```
 
-### 🎯 未来规划
+#### 2. 服务启动失败
+```bash
+# 检查端口占用
+netstat -tlnp | grep -E ":(5001|8500)"
 
-#### 短期目标 (1-2个月)
-- [ ] 管理后台完善
-- [ ] 用户评论系统
-- [ ] 图片水印功能
-- [ ] 移动端APP开发
+# 查看错误日志
+tail -f logs/app.log
+```
 
-#### 中期目标 (3-6个月)
-- [ ] 多语言支持 (英文版)
-- [ ] 高级搜索功能
-- [ ] 用户个人中心
-- [ ] 社交分享优化
+#### 3. 图片无法显示
+```bash
+# 检查图片目录权限
+ls -la frontend/static/images/
 
-#### 长期目标 (6-12个月)
-- [ ] AI智能推荐
-- [ ] 虚拟试穿功能
-- [ ] 电商集成
-- [ ] 国际化部署
+# 检查Nginx配置
+nginx -t
+```
 
-## 版本记录
+## 📦 依赖管理
 
-### v2.4.11 (2025-01-22)
-- **Logo显示修复**：恢复使用原始logo文件并保持合适尺寸
-  - 恢复使用用户原始的logo.svg文件，替换简化版本
-  - 修改CSS让logo保持原始比例，不再强制正方形
-  - 桌面端：高度1.4rem，自动宽度，最大宽度2rem
-  - 移动端：高度1.0rem，自动宽度，最大宽度1.5rem
-  - 超小屏幕：高度0.9rem，自动宽度，最大宽度1.2rem
-  - 确保logo在所有设备上都正确显示且保持原始设计
+### 更新依赖
 
-### v2.4.10 (2025-01-22)
-- **移动端logo尺寸优化**：解决移动端logo显示过大问题
-  - 强制固定logo尺寸，使用!important确保优先级
-  - 添加min-width和max-width双重限制
-  - 修改SVG文件本身的width和height从100改为24
-  - 确保在所有设备上logo都保持合适大小
+```bash
+# 激活虚拟环境
+source products_env/bin/activate
+
+# 生成当前依赖清单
+pip freeze > requirements-current.txt
+
+# 安装新依赖
+pip install package_name
+pip freeze > requirements-current.txt
+```
+
+### 依赖文件说明
+
+- `requirements.txt` - 主要依赖，手动维护
+- `requirements-current.txt` - 完整依赖快照，自动生成
+- `requirements-lock.txt` - 锁定版本依赖
+
+## 🚀 部署到生产环境
+
+### 生产环境配置
+
+```bash
+# 修改环境变量
+export FLASK_ENV=production
+export DEBUG=False
+
+# 使用生产级WSGI服务器
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5001 backend.app:app
+```
+
+### Nginx配置
+
+```nginx
+server {
+    listen 80;
+    server_name products.nanyiqiutang.cn;
+    
+    location / {
+        proxy_pass http://127.0.0.1:8500;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+    
+    location /api {
+        proxy_pass http://127.0.0.1:5001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+## 📝 更新日志
+
+### v2.0.0 (2025-06-23)
+- ✅ 修复Flask-SQLAlchemy 3.x兼容性问题
+- ✅ 完善虚拟环境管理
+- ✅ 添加一键部署脚本
+- ✅ 优化图片加载性能
+- ✅ 完善项目文档
+
+### v1.5.0
+- ✅ 添加品牌点赞功能
+- ✅ 实现分享卡片功能
+- ✅ 优化移动端适配
+
+### v1.0.0
+- ✅ 基础功能实现
+- ✅ 图片展示系统
+- ✅ 筛选功能
+
+## 🤝 贡献指南
+
+欢迎提交Issue和Pull Request来改进项目！
+
+### 开发流程
+
+1. Fork 项目
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+
+## 👥 联系我们
+
+- **项目负责人**: 南意秋棠团队
+- **技术支持**: 请通过 GitHub Issues 联系
+- **网站**: http://products.nanyiqiutang.cn
 
 ---
 
-*最后更新时间：2025-01-27*  
-*版本：v2.4.11*  
-*主要更新：恢复使用原始logo文件，保持原始设计比例，在所有设备上正确显示*  
-*总代码量：4,281行Python + 2,093行前端* 
+<div align="center">
+
+**南意秋棠 - 传承经典，美美与共** 🌸
+
+Made with ❤️ by 南意秋棠团队
+
+</div>

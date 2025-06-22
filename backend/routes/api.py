@@ -8,11 +8,23 @@ import os
 import time
 from functools import wraps
 from flask import Blueprint, jsonify, request, send_file, abort, current_app
-from services.image_service import ImageService
-from services.product_service import ProductService
-from services.cache_service import cached, cache_service, DatabaseQueryCache
-from utils.logger import log_access
-from utils.cache_control import smart_cache, cache_control
+
+# 导入数据库和模型 - 修复导入路径
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# 使用相对导入，确保使用正确的数据库实例
+from backend.models import db
+from backend.models.product import Product
+from backend.models.brand_like import BrandLike
+
+# 导入服务层
+from backend.services.image_service import ImageService
+from backend.services.product_service import ProductService
+from backend.services.cache_service import cached, cache_service, DatabaseQueryCache
+from backend.utils.logger import log_access
+from backend.utils.cache_control import smart_cache, cache_control
 
 def handle_errors(f):
     """错误处理装饰器"""
@@ -53,33 +65,23 @@ def _get_images_with_pagination(page, per_page, load_all):
     images = image_service.get_all_images()
     
     # 从数据库获取产品信息
-    Product = None
-    try:
-        # 确保在应用上下文中导入
-        with current_app.app_context():
-            from models.product import Product
-    except ImportError as e:
-        print(f"Product模型导入失败: {e}")
-        Product = None
+    # Product已经在文件顶部导入，无需重复导入
     
     # 按品牌分组，合并同名不同颜色的品牌
     brands = {}
     brand_products = {}  # 存储品牌对应的产品信息
     
     # 获取所有产品信息
-    if Product:
-        try:
-            products = Product.query.all()
-            print(f"🔍 数据库查询到 {len(products)} 个产品")
-            for product in products:
-                brand_products[product.brand_name] = product
-                # 调试输出新品牌
-                if product.brand_name in ['江南春', '有才华']:
-                    print(f"🎯 找到目标品牌: {product.brand_name} - {product.year} - {product.theme_series}")
-        except Exception as e:
-            print(f"数据库查询错误: {e}")
-            products = []
-    else:
+    try:
+        products = Product.query.all()
+        print(f"🔍 数据库查询到 {len(products)} 个产品")
+        for product in products:
+            brand_products[product.brand_name] = product
+            # 调试输出新品牌
+            if product.brand_name in ['江南春', '有才华']:
+                print(f"🎯 找到目标品牌: {product.brand_name} - {product.year} - {product.theme_series}")
+    except Exception as e:
+        print(f"数据库查询错误: {e}")
         products = []
     
     # 首先按基础品牌名分组
@@ -158,7 +160,6 @@ def _get_images_with_pagination(page, per_page, load_all):
     
     # 批量获取所有品牌的点赞数
     try:
-        from models.brand_like import BrandLike
         all_like_counts = BrandLike.get_all_like_counts()
     except Exception as e:
         print(f"获取点赞数失败: {e}")
@@ -224,14 +225,10 @@ def _get_images_with_pagination(page, per_page, load_all):
 @handle_errors
 def get_filters():
     """获取筛选选项"""
-    Product = None
     try:
-        # 确保在应用上下文中导入
-        with current_app.app_context():
-            from models.product import Product
-        
         # 从数据库获取所有产品信息
         products = Product.query.all()
+        print(f"🔍 筛选API: 查询到 {len(products)} 个产品")
         
         # 统计各个属性的数量
         years = {}
@@ -279,6 +276,8 @@ def get_filters():
             }
         }
         
+        print(f"✅ 筛选API: 返回真实数据 - 年份:{len(years)}, 材质:{len(materials)}, 主题:{len(theme_series)}")
+        
         return jsonify({
             'success': True,
             'filters': filter_data,
@@ -286,7 +285,9 @@ def get_filters():
         })
         
     except Exception as e:
-        print(f"获取筛选选项错误: {e}")
+        print(f"❌ 获取筛选选项错误: {e}")
+        import traceback
+        traceback.print_exc()
         # 如果数据库查询失败，返回默认选项
         return jsonify({
             'success': True,
@@ -356,7 +357,6 @@ def get_brand_detail(brand_name):
     
     # 添加点赞数
     try:
-        from models.brand_like import BrandLike
         like_count = BrandLike.get_like_count(base_brand_name)
         result['brand_info']['like_count'] = like_count
         print(f"获取点赞数成功: {like_count}")

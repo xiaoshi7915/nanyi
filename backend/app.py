@@ -8,6 +8,9 @@ import os
 import sys
 from dotenv import load_dotenv
 
+# 清理系统Python路径，避免版本冲突
+sys.path = [p for p in sys.path if '/usr/local/lib/python3.8/site-packages' not in p]
+
 # 加载环境变量
 load_dotenv()
 
