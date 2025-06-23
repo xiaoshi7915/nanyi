@@ -524,23 +524,25 @@
         function fetchBrandData(brandName) {
             console.log('尝试获取品牌数据:', brandName);
             
-            // 根据当前域名动态构建API URL
+            // 智能API路径配置 - 修复HTTPS混合内容问题
             const currentHost = window.location.hostname;
+            const protocol = window.location.protocol;
             let apiBaseUrl = '';
             
-            if (currentHost === '121.36.205.70') {
-                // IP访问时使用IP地址的后端端口
-                apiBaseUrl = 'http://121.36.205.70:5001';
-            } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com')) {
-                // 域名访问时使用域名
-                apiBaseUrl = `http://${currentHost}`;
-            } else {
-                // 其他情况（如本地开发）使用相对路径
+            if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+                // 本地开发环境，直接连接后端端口
+                apiBaseUrl = `${protocol}//${currentHost}:5001`;
+            } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
+                // 域名访问，使用相对路径让nginx代理处理
                 apiBaseUrl = '';
+            } else {
+                // IP访问，直接连接后端端口
+                apiBaseUrl = 'http://121.36.205.70:5001';
             }
             
-            // 构建完整的API URL
-            const shareApiUrl = `${apiBaseUrl}/api/share/card/${brandName}`;
+            // 构建完整的API URL - 正确编码品牌名
+            const encodedBrandName = encodeURIComponent(brandName);
+            const shareApiUrl = `${apiBaseUrl}/api/share/card/${encodedBrandName}`;
             
             console.log('使用API URL:', shareApiUrl);
             
@@ -557,7 +559,7 @@
                             material: data.card_data.material,
                             theme_series: data.card_data.theme_series,
                             print_size: data.card_data.print_size,
-                            inspiration: data.card_data.inspiration_origin || '传统美学设计精髓',
+                            inspiration_origin: data.card_data.inspiration_origin || '传统美学设计精髓',
                             images: data.card_data.images || []
                         };
                         updatePageContent();

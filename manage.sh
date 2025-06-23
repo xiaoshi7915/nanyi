@@ -40,7 +40,8 @@ start_backend() {
     # 切换到backend目录
     cd "${SCRIPT_DIR}/backend"
     
-    # 使用虚拟环境中的python启动，确保有详细日志
+    # 设置环境变量并使用虚拟环境中的python启动
+    export PYTHONPATH="${SCRIPT_DIR}:"
     "${VENV_PATH}/bin/python" app.py > "${LOG_DIR}/backend.log" 2>&1 &
     BACKEND_PID=$!
     echo $BACKEND_PID > "${SCRIPT_DIR}/backend.pid"
@@ -60,6 +61,8 @@ start_frontend() {
     
     # 切换到frontend目录
     cd "${SCRIPT_DIR}/frontend"
+    
+    export PYTHONPATH="${SCRIPT_DIR}:"
     
     # 使用虚拟环境中的python启动，确保有详细日志
     "${VENV_PATH}/bin/python" server.py > "${LOG_DIR}/frontend.log" 2>&1 &
@@ -97,8 +100,6 @@ case "$1" in
         # 等待后端启动
         echo "⏳ 等待后端服务启动..."
         sleep 5
-        # 激活虚拟环境并设置环境变量
-        activate_env
         
         # 启动前端服务
         start_frontend
