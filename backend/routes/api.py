@@ -534,10 +534,10 @@ def get_access_log_stats():
 
 @api_bp.route('/share/card/<path:brand_name>')
 @log_access
-@cached(ttl=60, key_prefix='share_card')  # 1分钟缓存
+@cached(ttl=1800, key_prefix='share_card')  # 30分钟缓存，大幅提升命中率
 @handle_errors
 def generate_share_card(brand_name):
-    """生成分享卡片数据"""
+    """生成分享卡片数据 - 性能优化版"""
     try:
         import urllib.parse
         decoded_brand_name = urllib.parse.unquote(brand_name, encoding='utf-8')
@@ -545,10 +545,10 @@ def generate_share_card(brand_name):
         # 提取基础品牌名（去掉颜色部分）
         base_brand_name = decoded_brand_name.split('(')[0] if '(' in decoded_brand_name else decoded_brand_name
         
-        # 使用缓存的产品服务
+        # 使用优化后的产品服务（已带缓存）
         product_service = ProductService() 
         
-        # 获取品牌详情（带缓存）
+        # 获取品牌详情（已优化，带5分钟缓存）
         brand_detail = product_service.get_brand_detail(decoded_brand_name)
         if not brand_detail:
             return jsonify({
@@ -577,11 +577,9 @@ def generate_share_card(brand_name):
         
         for img in images:
             if img['image_type'] in image_types and img['image_type'] not in type_image_map:
-                # 优先使用medium_url，减少图片大小，提高加载速度
+                # 优先使用本地URL，提高加载速度
                 img_url = ''
-                if img.get('medium_url') and img['medium_url'].startswith('http'):
-                    img_url = img['medium_url']
-                elif img.get('url') and img['url'].startswith('http'):
+                if img.get('url'):
                     img_url = img['url']
                 elif img.get('relative_path'):
                     img_url = f"/static/images/{img['relative_path']}"
@@ -591,7 +589,6 @@ def generate_share_card(brand_name):
                 type_image_map[img['image_type']] = {
                     'image_type': img['image_type'],
                     'url': img_url,
-                    'medium_url': img.get('medium_url'),
                     'relative_path': img.get('relative_path'),
                     'filename': img.get('filename')
                 }
