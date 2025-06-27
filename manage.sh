@@ -100,6 +100,8 @@ case "$1" in
         # 等待后端启动
         echo "⏳ 等待后端服务启动..."
         sleep 5
+        # 激活虚拟环境并设置环境变量
+        activate_env
         
         # 启动前端服务
         start_frontend

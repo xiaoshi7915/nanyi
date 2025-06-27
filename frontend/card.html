@@ -520,10 +520,68 @@
             fetchBrandData(brandName);
         }
         
-        // 从API获取品牌数据
+        // 缓存管理器
+        const cardCache = {
+            get: function(key) {
+                try {
+                    const item = localStorage.getItem('card_' + key);
+                    if (item) {
+                        const data = JSON.parse(item);
+                        // 检查缓存是否过期（5分钟）
+                        if (Date.now() - data.timestamp < 5 * 60 * 1000) {
+                            return data.value;
+                        } else {
+                            localStorage.removeItem('card_' + key);
+                        }
+                    }
+                } catch (e) {
+                    console.error('缓存读取失败:', e);
+                }
+                return null;
+            },
+            set: function(key, value) {
+                try {
+                    localStorage.setItem('card_' + key, JSON.stringify({
+                        value: value,
+                        timestamp: Date.now()
+                    }));
+                } catch (e) {
+                    console.error('缓存存储失败:', e);
+                }
+            }
+        };
+
+        // 从API获取品牌数据（优化版）
         function fetchBrandData(brandName) {
             console.log('尝试获取品牌数据:', brandName);
             
+            // 先检查缓存
+            const cachedData = cardCache.get(brandName);
+            if (cachedData) {
+                console.log('使用缓存数据:', cachedData);
+                cardData = {
+                    ...cardData,
+                    ...cachedData
+                };
+                updatePageContent();
+                initializeImages();
+                // 设置点赞数
+                if (typeof cachedData.like_count !== 'undefined') {
+                    document.getElementById('likeCount').textContent = cachedData.like_count;
+                }
+                // 异步更新点赞状态
+                loadLikeStatus();
+                // 预加载图片
+                preloadImages();
+                return;
+            }
+            
+            // 缓存未命中，从API加载
+            loadFromAPI(brandName);
+        }
+        
+        // 从API加载数据
+        function loadFromAPI(brandName) {
             // 智能API路径配置 - 修复HTTPS混合内容问题
             const currentHost = window.location.hostname;
             const protocol = window.location.protocol;
@@ -546,29 +604,55 @@
             
             console.log('使用API URL:', shareApiUrl);
             
-            fetch(shareApiUrl)
-                .then(response => response.json())
+            // 设置请求超时
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒超时
+            
+            fetch(shareApiUrl, { signal: controller.signal })
+                .then(response => {
+                    clearTimeout(timeoutId);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     console.log('API响应:', data);
                     if (data.success && data.card_data) {
                         console.log('成功获取卡片数据:', data.card_data);
-                        cardData = {
-                            ...cardData,
+                        
+                        const newCardData = {
                             brand_name: data.card_data.brand_name,
                             year: data.card_data.year,
                             material: data.card_data.material,
                             theme_series: data.card_data.theme_series,
                             print_size: data.card_data.print_size,
                             inspiration_origin: data.card_data.inspiration_origin || '传统美学设计精髓',
-                            images: data.card_data.images || []
+                            images: data.card_data.images || [],
+                            like_count: data.card_data.like_count || 0
                         };
+                        
+                        // 缓存数据
+                        cardCache.set(brandName, newCardData);
+                        
+                        // 更新全局数据
+                        cardData = {
+                            ...cardData,
+                            ...newCardData
+                        };
+                        
                         updatePageContent();
                         initializeImages();
-                        // 如果API返回了点赞数，先设置它
-                        if (typeof data.card_data.like_count !== 'undefined') {
-                            document.getElementById('likeCount').textContent = data.card_data.like_count;
+                        
+                        // 设置点赞数
+                        if (typeof newCardData.like_count !== 'undefined') {
+                            document.getElementById('likeCount').textContent = newCardData.like_count;
                         }
+                        
                         loadLikeStatus();
+                        
+                        // 预加载图片
+                        preloadImages();
                         
                         // 每30秒刷新一次点赞状态，确保数据实时性
                         setInterval(loadLikeStatus, 30000);
@@ -581,11 +665,43 @@
                     }
                 })
                 .catch(error => {
+                    clearTimeout(timeoutId);
                     console.error('获取数据失败:', error);
+                    
+                    if (error.name === 'AbortError') {
+                        console.error('请求超时');
+                    }
+                    
                     // 使用默认数据，但设置正确的品牌名
                     cardData.brand_name = brandName;
                     updatePageContent();
+                    loadLikeStatus();
                 });
+        }
+        
+        // 预加载图片
+        function preloadImages() {
+            if (cardData.images && cardData.images.length > 0) {
+                console.log('开始预加载图片...');
+                cardData.images.forEach((image, index) => {
+                    let imageUrl = '';
+                    if (image.medium_url && image.medium_url.startsWith('http')) {
+                        imageUrl = image.medium_url;
+                    } else if (image.url && image.url.startsWith('http')) {
+                        imageUrl = image.url;
+                    } else if (image.relative_path) {
+                        const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
+                        imageUrl = `/static/images/${encodedPath}`;
+                    }
+                    
+                    if (imageUrl) {
+                        const img = new Image();
+                        img.onload = () => console.log(`图片 ${index + 1} 预加载完成`);
+                        img.onerror = () => console.log(`图片 ${index + 1} 预加载失败`);
+                        img.src = imageUrl;
+                    }
+                });
+            }
         }
         
         // 更新页面内容
@@ -627,51 +743,72 @@
             }
         }
         
-        // 初始化图片展示
+        // 初始化图片展示（支持布料图多张）
         function initializeImages() {
             const imagesGrid = document.getElementById('imagesGrid');
-            const imageTypes = ['概念图', '设计图', '布料图', '成衣图', '模特图', '买家秀图'];
+            const imageTypes = ['概念图', '设计图', '布料图', '成衣图'];
             
             // 清空现有图片
             imagesGrid.innerHTML = '';
             
-            // 按类型筛选并显示图片
+            // 按类型分组图片，布料图允许多张
             const typeImageMap = {};
             cardData.images.forEach(image => {
                 if (imageTypes.includes(image.image_type)) {
                     if (!typeImageMap[image.image_type]) {
-                        typeImageMap[image.image_type] = image;
+                        typeImageMap[image.image_type] = [];
                     }
+                    typeImageMap[image.image_type].push(image);
                 }
             });
             
             // 按指定顺序显示图片
             imageTypes.forEach(type => {
-                if (typeImageMap[type]) {
-                    const image = typeImageMap[type];
-                    const imageItem = document.createElement('div');
-                    imageItem.className = 'image-item';
+                if (typeImageMap[type] && typeImageMap[type].length > 0) {
+                    // 对于布料图，显示最多2张；其他类型显示1张
+                    const maxImages = type === '布料图' ? 2 : 1;
+                    const imagesToShow = typeImageMap[type].slice(0, maxImages);
                     
-                    // 处理图片URL
-                    let imageUrl = '';
-                    if (image.medium_url && image.medium_url.startsWith('http')) {
-                        imageUrl = image.medium_url;
-                    } else if (image.url && image.url.startsWith('http')) {
-                        imageUrl = image.url;
-                    } else if (image.relative_path) {
-                        const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
-                        imageUrl = `/static/images/${encodedPath}`;
-                    } else {
-                        imageUrl = `/static/images/${image.filename || 'placeholder.jpg'}`;
-                    }
-                    
-                    imageItem.innerHTML = `
-                        <img src="${imageUrl}" alt="${image.image_type}" onerror="this.parentElement.style.display='none'">
-                        <div class="image-type">${image.image_type}</div>
-                    `;
-                    imagesGrid.appendChild(imageItem);
+                    imagesToShow.forEach((image, index) => {
+                        const imageItem = document.createElement('div');
+                        imageItem.className = 'image-item';
+                        
+                        // 处理图片URL
+                        let imageUrl = '';
+                        if (image.medium_url && image.medium_url.startsWith('http')) {
+                            imageUrl = image.medium_url;
+                        } else if (image.url && image.url.startsWith('http')) {
+                            imageUrl = image.url;
+                        } else if (image.relative_path) {
+                            const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
+                            imageUrl = `/static/images/${encodedPath}`;
+                        } else {
+                            imageUrl = `/static/images/${image.filename || 'placeholder.jpg'}`;
+                        }
+                        
+                        // 为布料图添加序号
+                        const displayType = type === '布料图' && imagesToShow.length > 1 ? 
+                            `${type} ${index + 1}` : type;
+                        
+                        imageItem.innerHTML = `
+                            <img src="${imageUrl}" alt="${displayType}" onerror="this.parentElement.style.display='none'" loading="lazy">
+                            <div class="image-type">${displayType}</div>
+                        `;
+                        imagesGrid.appendChild(imageItem);
+                    });
                 }
             });
+            
+            // 如果没有图片，显示占位符
+            if (imagesGrid.children.length === 0) {
+                const placeholderItem = document.createElement('div');
+                placeholderItem.className = 'image-item';
+                placeholderItem.innerHTML = `
+                    <img src="/static/images/placeholder.svg" alt="暂无图片" style="opacity: 0.5;">
+                    <div class="image-type">暂无图片</div>
+                `;
+                imagesGrid.appendChild(placeholderItem);
+            }
         }
         
         // 初始化分享功能

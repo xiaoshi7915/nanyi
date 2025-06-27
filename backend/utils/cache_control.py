@@ -20,7 +20,7 @@ class CacheControlManager:
         self.cache_strategies = {
             # 图片资源 - 长期缓存，稳定资源
             'images': {
-                'max_age': 86400 * 7,  # 7天缓存，图片基本不变
+                'max_age': 86400 * 30,  # 30天缓存，图片基本不会更新
                 'must_revalidate': False,
                 'etag': True
             },
@@ -32,7 +32,7 @@ class CacheControlManager:
             },
             # API响应 - 中期缓存，提升性能
             'api': {
-                'max_age': 300,  # 5分钟，平衡性能和更新
+                'max_age': 600,  # 10分钟，提升性能
                 'must_revalidate': False,
                 'etag': True
             },

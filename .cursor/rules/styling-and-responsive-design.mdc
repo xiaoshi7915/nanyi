@@ -1,0 +1,137 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 样式和响应式设计规则
+
+## CSS架构和组织
+
+### 主样式文件
+- **主样式**: [frontend/css/main.css](mdc:frontend/css/main.css) - 包含所有主要样式和响应式设计
+- **版本控制**: CSS文件使用版本参数 `?v=20250622-3` 确保缓存更新
+
+### 响应式断点
+```css
+/* 移动端 */
+@media (max-width: 768px) { }
+
+/* 超小屏幕 */
+@media (max-width: 480px) { }
+
+/* 中等屏幕 */
+@media (min-width: 414px) and (max-width: 768px) { }
+
+/* 桌面端 */
+@media (min-width: 769px) { }
+```
+
+## 关键组件样式规范
+
+### 头部导航 (Header)
+- **基础容器**: `.header` - 固定高度，渐变背景
+- **内容区域**: `.header-content` - flex布局，两端对齐
+- **Logo区域**: `.logo` - 可点击，包含图片和文字
+- **社交图标**: `.header-actions` - 右对齐的图标组
+
+#### 社交图标间距规则
+```css
+/* 桌面端 */
+.header-actions {
+    gap: 0.05rem; /* 小间距 */
+}
+
+/* 移动端强制优化 */
+@media (max-width: 768px) {
+    .header-actions {
+        gap: 0 !important; /* 完全无间距 */
+    }
+    
+    .header-actions .social-icon,
+    .header-actions .header-icon {
+        margin-left: 1px !important; /* 极小间距 */
+        margin-right: 0 !important;
+    }
+}
+
+/* 超小屏幕 */
+@media (max-width: 480px) {
+    .header-actions .social-icon,
+    .header-actions .header-icon {
+        margin-left: 0.5px !important; /* 超小间距 */
+    }
+}
+```
+
+### 品牌卡片 (Brand Cards)
+- **网格布局**: `.brands-grid` - 响应式网格，自动调整列数
+- **卡片容器**: `.brand-card` - 圆角、阴影、悬停效果
+- **图片容器**: `.brand-image-container` - 固定宽高比，溢出隐藏
+- **信息区域**: `.brand-info` - 品牌名称和标签
+
+#### 响应式网格规则
+```css
+/* 桌面端：4列 */
+.brands-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* 移动端：2列 */
+@media (max-width: 768px) {
+    .brands-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+}
+```
+
+### 标签系统 (Tags)
+- **基础标签**: `.meta-tag` - 圆角背景，小字体
+- **年份标签**: `.filter-tag` - 可点击的筛选标签
+- **激活状态**: `.active` - 高亮显示当前选中状态
+
+## 样式修改最佳实践
+
+### 移动端优先原则
+1. 先写移动端样式（基础样式）
+2. 使用媒体查询添加桌面端增强
+3. 确保触摸友好的交互区域（最小44px）
+
+### CSS优先级管理
+- 避免过度使用 `!important`
+- 移动端样式冲突时才使用 `!important`
+- 使用具体的选择器提高优先级
+
+### 性能优化
+- 减少重排和重绘操作
+- 使用 `transform` 和 `opacity` 做动画
+- 避免复杂的CSS选择器
+
+## 颜色和主题
+
+### 主色调
+- **主要渐变**: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`
+- **成功绿色**: `#4ade80`
+- **文字颜色**: `#333` (深色), `#666` (中等), `#999` (浅色)
+
+### 阴影系统
+- **轻微阴影**: `0 2px 8px rgba(0,0,0,0.05)`
+- **卡片阴影**: `0 4px 12px rgba(0,0,0,0.1)`
+- **悬停阴影**: `0 8px 25px rgba(0,0,0,0.15)`
+
+## 常见样式问题解决
+
+### 间距问题
+- 检查是否有conflicting的gap或margin设置
+- 使用浏览器开发者工具检查计算后的样式
+- 移动端问题优先检查媒体查询优先级
+
+### 布局问题
+- 确认flex或grid容器设置正确
+- 检查子元素的flex-grow、flex-shrink属性
+- 验证响应式断点是否正确触发
+
+### 图片显示问题
+- 使用 `object-fit: contain` 保持比例
+- 设置明确的宽高避免布局抖动
+- 考虑使用 `aspect-ratio` 属性（现代浏览器）

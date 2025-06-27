@@ -46,24 +46,42 @@ const PerformanceConfig = {
         maxConcurrentRequests: 6
     },
 
-            // 性能监控配置
-        performanceMonitoring: {
-            // 是否启用性能监控（生产环境建议关闭详细日志）
-            enabled: false,
-            // 监控指标
-            metrics: {
-                // 首次内容绘制
-                fcp: true,
-                // 最大内容绘制
-                lcp: true,
-                // 首次输入延迟
-                fid: true,
-                // 累积布局偏移
-                cls: true
-            },
-            // 是否输出详细日志
-            verboseLogging: false
-        }
+    // 图片加载优化
+    imageLoading: {
+        enablePreload: true,
+        lazyLoadThreshold: 200,
+        loadTimeout: 8000,
+        retryCount: 2,
+        preloadCount: 6
+    },
+    
+    // 缓存策略优化
+    caching: {
+        enableAggressiveCaching: true,
+        imageCacheTTL: 24,
+        apiCacheTTL: 30,
+        brandDetailCacheTTL: 6
+    },
+
+    // 性能监控配置
+    performanceMonitoring: {
+        // 是否启用性能监控（生产环境建议关闭详细日志）
+        enabled: true,
+        // 监控指标
+        metrics: {
+            // 首次内容绘制
+            fcp: true,
+            // 最大内容绘制
+            lcp: true,
+            // 首次输入延迟
+            fid: true,
+            // 累积布局偏移
+            cls: true
+        },
+        // 是否输出详细日志
+        verboseLogging: false,
+        slowQueryThreshold: 2000
+    }
 };
 
 // 性能监控工具
@@ -583,6 +601,14 @@ class EnhancedCacheManager extends OptimizedCacheManager {
     }
 }
 
+// 性能优化器
+class PerformanceOptimizer {
+    constructor() {
+        this.config = PerformanceConfig;
+        console.log('🚀 性能优化器已初始化');
+    }
+}
+
 // 导出配置和工具
 if (typeof window !== 'undefined') {
     window.PerformanceConfig = PerformanceConfig;
@@ -590,6 +616,7 @@ if (typeof window !== 'undefined') {
     window.ImageOptimizer = ImageOptimizer;
     window.OptimizedCacheManager = OptimizedCacheManager;
     window.EnhancedCacheManager = EnhancedCacheManager;
+    window.performanceOptimizer = new PerformanceOptimizer();
 }
 
 // Node.js环境导出

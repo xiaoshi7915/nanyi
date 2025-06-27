@@ -182,8 +182,8 @@ class ProductService:
                 brand_info['images'] = []
                 brand_info['imageCount'] = 0
             
-            # 缓存结果（5分钟）
-            cache_service.set(cache_key, brand_info, ttl=300)
+            # 缓存结果（30分钟，图片很少变化）
+            cache_service.set(cache_key, brand_info, ttl=1800)
             print(f"✅ 品牌详情已缓存: {brand_name}")
             
             return brand_info

@@ -94,9 +94,18 @@ class ImageService:
             print(f"⚠️ 本地图片目录不存在: {self.images_dir}")
             return images
         
+        # 定义需要排除的社交图标文件
+        social_icons = {
+            'taobao.png', 'taobao.jpg', 'taobao.jpeg',
+            'xiaohongshu.png', 'xiaohongshu.jpg', 'xiaohongshu.jpeg',
+            'weidian.png', 'weidian.jpg', 'weidian.jpeg',
+            'wechat.png', 'wechat.jpg', 'wechat.jpeg',
+            'logo.png', 'logo.jpg', 'logo.jpeg', 'logo.svg'  # 也排除logo文件
+        }
+        
         # 扫描根目录下的图片文件
         for filename in os.listdir(self.images_dir):
-            if self.is_allowed_file(filename):
+            if self.is_allowed_file(filename) and filename.lower() not in social_icons:
                 filepath = os.path.join(self.images_dir, filename)
                 if os.path.isfile(filepath):
                     parsed_info = self.parse_filename(filename)
@@ -119,7 +128,7 @@ class ImageService:
             item_path = os.path.join(self.images_dir, item)
             if os.path.isdir(item_path):
                 for filename in os.listdir(item_path):
-                    if self.is_allowed_file(filename):
+                    if self.is_allowed_file(filename) and filename.lower() not in social_icons:
                         filepath = os.path.join(item_path, filename)
                         if os.path.isfile(filepath):
                             parsed_info = self.parse_filename(filename)
@@ -158,8 +167,8 @@ class ImageService:
         exact_matches = [img for img in all_images if img['brand_name'] == brand_name]
         if exact_matches:
             print(f"📁 精确匹配找到: {len(exact_matches)}张图片")
-            # 缓存结果（10分钟）
-            cache_service.set(cache_key, exact_matches, ttl=600)
+            # 缓存结果（2小时，图片很少变化）
+            cache_service.set(cache_key, exact_matches, ttl=7200)
             return self.sort_images_by_priority(exact_matches)
         
         # 如果精确匹配失败，尝试模糊匹配
