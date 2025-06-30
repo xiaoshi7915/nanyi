@@ -1,0 +1,185 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 性能优化规则
+
+## 缓存策略架构
+
+### 多层缓存体系
+1. **浏览器缓存** - 静态资源长期缓存
+2. **前端内存缓存** - JavaScript对象缓存
+3. **后端应用缓存** - Python内存缓存
+4. **Redis缓存** - 持久化缓存存储
+
+### 缓存配置文件
+- **后端缓存控制**: [backend/utils/cache_control.py](mdc:backend/utils/cache_control.py) - HTTP缓存头设置
+- **前端缓存管理**: [frontend/js/cache-manager.js](mdc:frontend/js/cache-manager.js) - 客户端缓存逻辑
+- **性能配置**: [frontend/js/performance-config.js](mdc:frontend/js/performance-config.js) - 统一性能参数管理
+
+## 缓存时间策略
+
+### 静态资源缓存
+```python
+# 图片资源 - 30天缓存
+STATIC_FILE_CACHE_TIME = 30 * 24 * 60 * 60  # 30天
+
+# CSS/JS文件 - 7天缓存（带版本号）
+VERSIONED_ASSETS_CACHE = 7 * 24 * 60 * 60   # 7天
+```
+
+### API响应缓存
+```python
+# 品牌列表API - 10分钟缓存
+BRAND_LIST_CACHE_TIME = 10 * 60
+
+# 品牌详情API - 30分钟缓存
+BRAND_DETAIL_CACHE_TIME = 30 * 60
+
+# 图片列表API - 2小时缓存
+IMAGE_LIST_CACHE_TIME = 2 * 60 * 60
+```
+
+### 前端缓存策略
+```javascript
+// 品牌数据缓存 - 4小时
+BRAND_DATA_CACHE_TTL = 4 * 60 * 60 * 1000
+
+// 图片列表缓存 - 12小时
+IMAGE_LIST_CACHE_TTL = 12 * 60 * 60 * 1000
+
+// 筛选选项缓存 - 24小时
+FILTER_OPTIONS_CACHE_TTL = 24 * 60 * 60 * 1000
+```
+
+## 图片优化策略
+
+### 图片处理服务
+- **图片扫描**: [backend/services/image_service.py](mdc:backend/services/image_service.py) - 自动扫描和分类图片
+- **缓存优化**: 图片数据缓存15分钟，减少文件系统访问
+- **过滤优化**: 排除社交图标和系统文件，提高扫描效率
+
+### 图片加载优化
+```javascript
+// 图片预加载
+function preloadImages(imageUrls) {
+    imageUrls.forEach(url => {
+        const img = new Image();
+        img.src = url;
+    });
+}
+
+// 懒加载实现
+const imageObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            imageObserver.unobserve(img);
+        }
+    });
+});
+```
+
+## API性能优化
+
+### 响应时间优化
+- **品牌详情API**: 从3秒优化到0.5-1秒
+- **首页加载**: 从3秒优化到1秒内
+- **分享卡片生成**: 从5-8秒优化到1-2秒
+
+### 数据库查询优化
+```python
+# 批量查询而不是单个查询
+def get_multiple_brands(brand_names):
+    return Brand.query.filter(Brand.name.in_(brand_names)).all()
+
+# 使用索引优化查询
+def get_brands_by_year(year):
+    return Brand.query.filter(Brand.year == year).order_by(Brand.created_at.desc()).all()
+```
+
+### 缓存服务优化
+- **缓存键策略**: 使用有意义的键名，便于管理和清理
+- **缓存过期策略**: 根据数据更新频率设置合理的TTL
+- **缓存预热**: 在服务启动时预加载热点数据
+
+## 前端性能监控
+
+### 性能指标监控
+```javascript
+// 页面加载时间监控
+const performanceMonitor = {
+    // 记录API响应时间
+    recordApiResponse: (endpoint, duration) => {
+        console.log(`API ${endpoint}: ${duration}ms`);
+    },
+    
+    // 记录图片加载时间
+    recordImageLoad: (imageUrl, duration) => {
+        console.log(`Image ${imageUrl}: ${duration}ms`);
+    },
+    
+    // 记录缓存命中率
+    recordCacheHit: (cacheType, hit) => {
+        console.log(`Cache ${cacheType}: ${hit ? 'HIT' : 'MISS'}`);
+    }
+};
+```
+
+### 性能优化检查清单
+1. **图片优化**
+   - ✅ 使用适当的图片格式（WebP优先）
+   - ✅ 设置合理的图片尺寸
+   - ✅ 实现图片懒加载
+   - ✅ 添加图片预加载
+
+2. **缓存优化**
+   - ✅ 设置HTTP缓存头
+   - ✅ 实现前端内存缓存
+   - ✅ 配置合理的缓存时间
+   - ✅ 添加缓存版本控制
+
+3. **API优化**
+   - ✅ 减少不必要的API调用
+   - ✅ 实现API响应缓存
+   - ✅ 优化数据库查询
+   - ✅ 添加请求超时控制
+
+4. **代码优化**
+   - ✅ 减少DOM操作
+   - ✅ 使用事件委托
+   - ✅ 避免内存泄漏
+   - ✅ 优化JavaScript执行
+
+## 性能测试和监控
+
+### 关键性能指标 (KPI)
+- **首屏加载时间**: < 1秒
+- **品牌详情加载**: < 0.5秒（缓存命中）
+- **分享卡片生成**: < 2秒
+- **缓存命中率**: > 80%
+
+### 性能测试工具
+- 使用浏览器开发者工具的Performance面板
+- 监控Network面板的请求时间
+- 使用Lighthouse进行性能评估
+- 定期检查Core Web Vitals指标
+
+### 性能报告
+- **优化前后对比**: 记录在 [PERFORMANCE_OPTIMIZATION_REPORT.md](mdc:PERFORMANCE_OPTIMIZATION_REPORT.md)
+- **移动端优化**: 记录在 [MOBILE_OPTIMIZATION_REPORT.md](mdc:MOBILE_OPTIMIZATION_REPORT.md)
+- **社交图标修复**: 记录在 [SOCIAL_ICONS_FIX_REPORT.md](mdc:SOCIAL_ICONS_FIX_REPORT.md)
+
+## 持续优化建议
+
+### 定期检查项目
+1. **每周检查**: 缓存命中率和API响应时间
+2. **每月检查**: 图片文件大小和加载时间
+3. **每季度检查**: 整体性能指标和用户体验
+
+### 优化优先级
+1. **高优先级**: 影响用户体验的性能问题
+2. **中优先级**: 服务器资源优化
+3. **低优先级**: 代码结构和可维护性优化

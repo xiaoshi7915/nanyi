@@ -1,0 +1,246 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 故障排除和常见问题解决指南
+
+## 服务管理和部署问题
+
+### 服务启动失败
+**问题**: 使用 [manage.sh](mdc:manage.sh) 启动服务失败
+
+**排查步骤**:
+1. 检查端口占用: `netstat -tlnp | grep :8500`
+2. 检查Python环境: `source products_env/bin/activate`
+3. 检查依赖安装: `pip list | grep -E "(flask|requests)"`
+4. 查看错误日志: `tail -f logs/backend.log`
+
+**解决方案**:
+```bash
+# 强制停止服务
+./manage.sh stop
+
+# 清理残留进程
+pkill -f "python.*app.py"
+pkill -f "python.*server.py"
+
+# 重新启动
+./manage.sh start
+```
+
+### 服务重启问题
+**问题**: `./manage.sh restart` 导致服务无法正常启动
+
+**根本原因**: restart命令可能导致进程清理不完全
+
+**解决方案**:
+```bash
+# 不要使用restart，而是分别执行stop和start
+./manage.sh stop
+sleep 2
+./manage.sh start
+```
+
+## 样式和界面问题
+
+### 移动端样式不生效
+**问题**: CSS修改后移动端样式没有变化
+
+**排查步骤**:
+1. 检查CSS优先级: 使用浏览器开发者工具查看计算后的样式
+2. 检查媒体查询: 确认断点是否正确 `@media (max-width: 768px)`
+3. 检查缓存: 强制刷新浏览器缓存 `Ctrl+Shift+R`
+
+**解决方案**:
+```css
+/* 使用!important强制应用移动端样式 */
+@media (max-width: 768px) {
+    .header-actions {
+        gap: 0 !important;
+    }
+}
+
+/* 增加CSS版本号强制更新缓存 */
+<link rel="stylesheet" href="css/main.css?v=20250622-4">
+```
+
+### 社交图标间距问题
+**问题**: 社交图标间距过大，调整CSS无效
+
+**常见原因**:
+- 基础样式优先级高于媒体查询样式
+- 使用了conflicting的gap和margin设置
+- 浏览器缓存了旧的CSS文件
+
+**解决方案参考**: [frontend/css/main.css](mdc:frontend/css/main.css) 中的社交图标样式部分
+
+## 图片和数据问题
+
+### 社交图标被当作品牌显示
+**问题**: taobao.png、wechat.png等图标出现在品牌列表中
+
+**根本原因**: [backend/services/image_service.py](mdc:backend/services/image_service.py) 扫描所有图片文件
+
+**解决方案**:
+1. 在 `_scan_local_images()` 方法中添加过滤逻辑
+2. 定义需要排除的文件列表
+3. 重启服务清除缓存
+
+```python
+# 排除社交图标文件
+social_icons = {
+    'taobao.png', 'xiaohongshu.jpg', 'weidian.jpg', 'wechat.png',
+    'logo.png', 'logo.svg'
+}
+
+if filename.lower() not in social_icons:
+    # 处理图片逻辑
+```
+
+### 图片加载缓慢
+**问题**: 品牌图片加载时间过长
+
+**排查步骤**:
+1. 检查图片文件大小: `ls -lh frontend/static/images/`
+2. 检查缓存设置: 查看 [backend/utils/cache_control.py](mdc:backend/utils/cache_control.py)
+3. 检查网络请求: 使用浏览器Network面板分析
+
+**优化方案**:
+- 启用图片压缩和WebP格式
+- 设置合理的缓存时间（30天）
+- 实现图片懒加载和预加载
+
+## 性能问题
+
+### API响应缓慢
+**问题**: 品牌详情API响应时间超过3秒
+
+**排查步骤**:
+1. 检查缓存命中率: 查看后端日志中的缓存信息
+2. 检查数据库查询: 分析SQL查询性能
+3. 检查文件系统访问: 图片扫描是否频繁
+
+**优化方案**:
+```python
+# 增加缓存时间
+BRAND_DETAIL_CACHE_TIME = 30 * 60  # 30分钟
+
+# 使用批量查询
+def get_multiple_brands(brand_names):
+    return Brand.query.filter(Brand.name.in_(brand_names)).all()
+```
+
+### 分享卡片生成缓慢
+**问题**: 点击生成分享卡片需要5-8秒
+
+**常见原因**:
+- 前端没有缓存品牌数据
+- API请求超时时间设置不当
+- 图片加载没有预加载机制
+
+**解决方案参考**: [frontend/card.html](mdc:frontend/card.html) 中的性能优化部分
+
+## 缓存问题
+
+### 缓存不生效
+**问题**: 修改后的内容没有更新，仍显示旧内容
+
+**排查步骤**:
+1. 检查浏览器缓存: 使用无痕模式测试
+2. 检查服务端缓存: 重启服务清除内存缓存
+3. 检查CDN缓存: 如果使用CDN需要手动刷新
+
+**解决方案**:
+```bash
+# 清除服务端缓存
+./manage.sh stop
+./manage.sh start
+
+# 清除浏览器缓存
+# 1. 硬刷新: Ctrl+Shift+R
+# 2. 清除站点数据: F12 -> Application -> Storage -> Clear storage
+```
+
+### 缓存过期策略问题
+**问题**: 缓存时间设置不合理，导致数据不一致
+
+**最佳实践**:
+- 静态资源: 30天缓存
+- API响应: 10-30分钟缓存
+- 图片数据: 15分钟-2小时缓存
+- 用户数据: 5-10分钟缓存
+
+## 开发环境问题
+
+### Python环境问题
+**问题**: 依赖包版本冲突或缺失
+
+**解决方案**:
+```bash
+# 重新创建虚拟环境
+rm -rf products_env
+python3 -m venv products_env
+source products_env/bin/activate
+
+# 安装依赖
+pip install -r requirements-lock.txt
+```
+
+### 端口冲突问题
+**问题**: 8500或5001端口被占用
+
+**排查和解决**:
+```bash
+# 查找占用端口的进程
+netstat -tlnp | grep :8500
+lsof -i :8500
+
+# 杀死占用进程
+kill -9 <PID>
+
+# 或者修改端口配置
+# 在 backend/app.py 和 frontend/server.py 中修改端口号
+```
+
+## 日志和监控
+
+### 日志文件位置
+- **后端日志**: `logs/backend.log`
+- **前端日志**: `logs/frontend.log`
+- **Nginx日志**: `nginx/logs/access.log`, `nginx/logs/error.log`
+
+### 常用监控命令
+```bash
+# 实时查看后端日志
+tail -f logs/backend.log
+
+# 查看服务状态
+./manage.sh status
+
+# 检查端口监听
+netstat -tlnp | grep -E "(8500|5001)"
+
+# 检查进程状态
+ps aux | grep -E "(app.py|server.py)"
+```
+
+## 紧急修复流程
+
+### 服务完全无法访问
+1. **立即检查**: `./manage.sh status`
+2. **查看日志**: `tail -20 logs/backend.log logs/frontend.log`
+3. **重启服务**: `./manage.sh stop && ./manage.sh start`
+4. **验证访问**: 测试 `http://localhost:8500`
+
+### 数据显示异常
+1. **清除缓存**: 重启服务
+2. **检查图片**: 确认图片文件完整性
+3. **验证API**: 直接访问API端点测试
+4. **回滚代码**: 如果是代码问题，回滚到上一个稳定版本
+
+### 性能严重下降
+1. **检查资源使用**: `top`, `htop`, `df -h`
+2. **分析慢查询**: 查看数据库和文件系统访问
+3. **临时优化**: 增加缓存时间，减少API调用
+4. **长期优化**: 参考 [performance-optimization.mdc](mdc:.cursor/rules/performance-optimization.mdc)

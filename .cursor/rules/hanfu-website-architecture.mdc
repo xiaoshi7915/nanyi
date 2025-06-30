@@ -1,0 +1,80 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# 南意秋棠汉服网站架构指南
+
+## 项目概述
+这是一个专为南意秋棠汉服品牌设计的产品展示网站，采用前后端分离架构，主要展示汉服品牌图片和详情信息。
+
+## 核心架构
+
+### 前端架构 (Frontend)
+- **主要文件**: [index.html](mdc:frontend/index.html) - 网站主页面，包含品牌展示和筛选功能
+- **分享卡片**: [card.html](mdc:frontend/card.html) - 品牌分享卡片生成页面  
+- **静态资源**: [static/](mdc:frontend/static) - 包含图片、CSS、JS等静态文件
+- **样式文件**: [css/main.css](mdc:frontend/css/main.css) - 主要样式文件，包含响应式设计
+- **JavaScript**: [js/](mdc:frontend/js) - 前端交互逻辑和API调用
+
+### 后端架构 (Backend)
+- **应用入口**: [app.py](mdc:backend/app.py) - Flask应用主文件
+- **路由定义**: [routes/api.py](mdc:backend/routes/api.py) - API路由和端点定义
+- **服务层**: [services/](mdc:backend/services) - 业务逻辑服务
+  - [image_service.py](mdc:backend/services/image_service.py) - 图片处理和扫描服务
+  - [product_service.py](mdc:backend/services/product_service.py) - 品牌产品数据服务
+  - [cache_service.py](mdc:backend/services/cache_service.py) - 缓存管理服务
+- **配置文件**: [config/](mdc:backend/config) - 应用配置和环境设置
+- **工具模块**: [utils/](mdc:backend/utils) - 通用工具函数
+
+## 关键特性
+
+### 图片处理系统
+- 自动扫描 `static/images` 目录下的汉服图片
+- 基于文件名解析品牌信息（品牌名-图片类型-颜色.扩展名）
+- 支持多种图片类型：概念图、设计图、布料图、成衣图等
+- 排除社交图标和系统文件（taobao.png, wechat.png等）
+
+### 缓存优化
+- 多层缓存策略：浏览器缓存 → 前端内存缓存 → 后端Redis缓存
+- 图片数据缓存30分钟，品牌详情缓存6小时
+- 性能监控和缓存命中率统计
+
+### 响应式设计
+- 移动端优先设计，支持各种屏幕尺寸
+- 社交图标在移动端紧凑排列（间距1px）
+- 桌面端和移动端不同的布局和交互方式
+
+## 部署和管理
+
+### 服务管理
+- **管理脚本**: [manage.sh](mdc:manage.sh) - 服务启动、停止、重启脚本
+- **部署脚本**: [deploy.sh](mdc:deploy.sh) - 自动化部署脚本
+- **环境配置**: [setup-env.sh](mdc:setup-env.sh) - 环境初始化脚本
+
+### 依赖管理
+- **Python依赖**: [requirements.txt](mdc:requirements.txt) - 基础依赖列表
+- **锁定版本**: [requirements-lock.txt](mdc:requirements-lock.txt) - 精确版本依赖
+- **当前环境**: [requirements-current.txt](mdc:requirements-current.txt) - 当前安装的包版本
+
+## 开发指南
+
+### 添加新品牌
+1. 将品牌图片放入 `frontend/static/images/` 目录
+2. 按照命名规范：`品牌名-图片类型-颜色.扩展名`
+3. 重启服务让图片扫描生效
+
+### 修改样式
+- 主要样式在 [frontend/css/main.css](mdc:frontend/css/main.css)
+- 移动端样式使用媒体查询 `@media (max-width: 768px)`
+- 使用 `!important` 确保移动端样式优先级
+
+### API开发
+- 新API端点添加到 [backend/routes/api.py](mdc:backend/routes/api.py)
+- 业务逻辑放在对应的service文件中
+- 添加适当的缓存策略提高性能
+
+### 性能优化
+- 图片缓存时间：静态资源30天，API响应10分钟
+- 使用 [frontend/js/performance-config.js](mdc:frontend/js/performance-config.js) 管理性能配置
+- 监控加载时间和缓存命中率

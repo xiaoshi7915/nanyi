@@ -9,22 +9,22 @@ class CacheManager {
         this.versionKey = 'nanyi_version';
         this.defaultTTL = 5 * 60 * 1000; // 5分钟默认缓存时间
         
-        // 不同类型数据的缓存策略
+        // 不同类型数据的缓存策略 - 大幅延长缓存时间，提升性能
         this.cacheStrategies = {
             'brands': {
-                ttl: 60 * 60 * 1000,     // 1小时 - 品牌数据稳定，延长缓存
-                checkUpdate: true         // 需要检查更新
+                ttl: 4 * 60 * 60 * 1000, // 4小时 - 品牌数据稳定，大幅延长缓存
+                checkUpdate: false        // 禁用主动检查，减少请求
             },
             'images': {
-                ttl: 2 * 60 * 60 * 1000, // 2小时 - 图片列表很稳定
+                ttl: 12 * 60 * 60 * 1000, // 12小时 - 图片列表极稳定
                 checkUpdate: false        // 不主动检查更新，减少请求
             },
             'filters': {
-                ttl: 4 * 60 * 60 * 1000, // 4小时 - 筛选选项很少变化
+                ttl: 24 * 60 * 60 * 1000, // 24小时 - 筛选选项很少变化
                 checkUpdate: false
             },
             'brand_detail': {
-                ttl: 2 * 60 * 60 * 1000, // 2小时 - 品牌详情稳定
+                ttl: 6 * 60 * 60 * 1000, // 6小时 - 品牌详情稳定，延长缓存
                 checkUpdate: false        // 不主动检查更新
             }
         };

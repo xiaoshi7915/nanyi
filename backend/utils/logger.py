@@ -161,15 +161,38 @@ def log_access(f):
     return decorated_function
 
 def save_access_log_to_db(log_data):
-    """异步保存访问日志到数据库"""
-    # 简化实现，暂时禁用数据库访问日志保存
-    # 因为异步保存会遇到应用上下文问题
-    # 如果需要数据库访问日志，建议在同步请求处理中完成
+    """保存访问日志到数据库"""
     try:
-        print(f"访问日志: {log_data.get('client_ip')} {log_data.get('method')} {log_data.get('path')} - {log_data.get('status_code')}")
+        # 导入AccessLog模型（延迟导入避免循环依赖）
+        from backend.models.access_log import AccessLog
+        from backend.models import db
+        from flask import current_app
+        
+        # 检查是否在应用上下文中
+        if not current_app:
+            print(f"访问日志(无应用上下文): {log_data.get('client_ip')} {log_data.get('method')} {log_data.get('path')} - {log_data.get('status_code')}")
+            return
+        
+        # 创建访问日志记录
+        access_log = AccessLog.create_from_request_data(log_data)
+        
+        # 保存到数据库
+        db.session.add(access_log)
+        db.session.commit()
+        
+        print(f"✅ 访问日志已存储到数据库: {log_data.get('client_ip')} {log_data.get('method')} {log_data.get('path')} - {log_data.get('status_code')}")
+        
     except Exception as e:
-        print(f"输出访问日志失败: {e}")
-        # 不影响主请求处理
+        print(f"❌ 保存访问日志到数据库失败: {e}")
+        # 回滚事务
+        try:
+            from backend.models import db
+            db.session.rollback()
+        except:
+            pass
+        
+        # 不影响主请求处理，仅记录到控制台
+        print(f"访问日志(数据库失败): {log_data.get('client_ip')} {log_data.get('method')} {log_data.get('path')} - {log_data.get('status_code')}")
 
 def setup_logging(app):
     """设置应用日志"""

@@ -83,7 +83,7 @@
             <div class="container">
                 <div class="header-content">
                     <!-- 可点击的logo，跳转到淘宝店铺 -->
-                    <a href="https://shop357296168.taobao.com/?spm=a21n57.shop_search.0.0.1ad93904ohsQt4" 
+                    <a href="https://m.tb.cn/h.hVSffucqrHuJeRZ " 
                        target="_blank" 
                        class="logo-link"
                        @click="handleLogoClick">
@@ -96,14 +96,30 @@
                     </a>
                     <!-- 右侧图标 -->
                     <div class="header-actions">
+                        <!-- 淘宝 -->
+                        <a href="https://m.tb.cn/h.hVSffucqrHuJeRZ" 
+                           target="_blank" 
+                           class="header-icon social-icon" 
+                           title="淘宝店铺">
+                            <img src="static/images/taobao.png" alt="淘宝" class="social-logo">
+                        </a>
+                        <!-- 小红书 -->
+                        <a href="https://www.xiaohongshu.com/user/profile/60195c9800000000010082c4?xsec_token=YB1BH1TjtfnytsvsrjY04NwbL-imBjpdmhN77tdQI-dJ8%3D&xsec_source=app_share&xhsshare=&appuid=59323f4d6a6a6909b8d61108&apptime=1750969716&share_id=58b8161578144290a1446460b37aacc4&share_channel=copy_link" 
+                           target="_blank" 
+                           class="header-icon social-icon" 
+                           title="小红书">
+                            <img src="static/images/xiaohongshu.jpg" alt="小红书" class="social-logo">
+                        </a>
+                        <!-- 微店 -->
                         <a href="https://weidian.com/?userid=1330457134&distributorid=142259736&share_relation=eae4bd30b7458ac1_142259736_1&wfr=h5direct_wxh5" 
                            target="_blank" 
-                           class="header-icon" 
+                           class="header-icon social-icon" 
                            title="微店">
-                            <i class="fas fa-store"></i>
+                            <img src="static/images/weidian.jpg" alt="微店" class="social-logo">
                         </a>
-                        <button @click="openCustomerService" class="header-icon" title="智能客服">
-                            <i class="fas fa-comments"></i>
+                        <!-- 微信客服 -->
+                        <button @click="openCustomerService" class="header-icon social-icon" title="微信客服">
+                            <img src="static/images/wechat.png" alt="微信" class="social-logo">
                         </button>
                     </div>
                 </div>
