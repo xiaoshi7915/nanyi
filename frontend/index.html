@@ -51,9 +51,13 @@
     <!-- 引入样式文件 -->
     <link rel="stylesheet" href="css/main.css?v=20250622-3">
     <link rel="stylesheet" href="static/css/responsive.css?v=20250622-3">
+    <link rel="stylesheet" href="css/skeleton.css?v=20250622-3">
     
     <!-- 引入性能优化配置 -->
     <script src="js/performance-config.js"></script>
+    
+    <!-- 引入图片预加载管理器 -->
+    <script src="js/image-preloader.js"></script>
     
     <!-- 引入优化的缓存管理器 -->
     <script>
@@ -279,10 +283,19 @@
         <!-- 主要内容 -->
         <main class="main-content">
             <div class="container">
-                <!-- 加载状态 -->
-                <div v-if="loading" class="loading">
-                    <div class="spinner"></div>
-                    <p>加载中...</p>
+                <!-- 加载状态 - 使用骨架屏 -->
+                <div v-if="loading" class="skeleton-grid">
+                    <div v-for="n in 12" :key="n" class="brand-card-skeleton">
+                        <div class="skeleton skeleton-image"></div>
+                        <div class="skeleton-content">
+                            <div class="skeleton skeleton-title"></div>
+                            <div class="skeleton-meta">
+                                <div class="skeleton skeleton-meta-item"></div>
+                                <div class="skeleton skeleton-meta-item"></div>
+                                <div class="skeleton skeleton-meta-item"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 错误状态 -->
@@ -302,6 +315,7 @@
                         :key="brand.name"
                         class="brand-card"
                         @click="openBrandDetail(brand)"
+                        @mouseenter="preloadBrandData(brand)"
                     >
                         <div class="brand-image-container">
                             <img 
@@ -388,6 +402,18 @@
                     </button>
                 </div>
                 <div class="modal-body">
+                    <!-- 加载状态骨架屏 -->
+                    <div v-if="!brandImages || brandImages.length === 0" class="modal-skeleton">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton skeleton-text"></div>
+                        <div class="skeleton-image-grid">
+                            <div v-for="n in 6" :key="n" class="skeleton skeleton-image-item"></div>
+                        </div>
+                    </div>
+                    <!-- 实际内容 -->
+                    <template v-else>
                     <!-- 基本信息 -->
                     <div class="detail-section">
                         <div class="section-header">
@@ -466,6 +492,7 @@
                             生成精美卡片，轻松分享到朋友圈
                         </div>
                     </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -517,6 +544,7 @@
                     brandImages: [],
                     showModal: false,
                     previewImage: null,
+                    preloadTimer: null, // 预加载定时器
                     
                     // 分页相关数据
                     pagination: {
@@ -1033,6 +1061,12 @@
                     this.selectedBrand = brandDetail.brand_info;
                     this.brandImages = brandDetail.images;
                     
+                    // 预加载品牌详情中的所有图片
+                    if (window.imagePreloader && this.brandImages.length > 0) {
+                        const imageUrls = this.brandImages.map(img => this.getImageURL(img));
+                        window.imagePreloader.preloadImages(imageUrls);
+                    }
+                    
                     // 获取点赞状态
                     const brandName = this.selectedBrand.name || this.selectedBrand.brand_name;
                     if (brandName) {
@@ -1044,7 +1078,62 @@
                     document.body.style.overflow = 'hidden';
                 },
 
+                /**
+                 * 预加载品牌数据（鼠标悬停时）
+                 * @param {Object} brand - 品牌对象
+                 */
+                preloadBrandData(brand) {
+                    // 延迟预加载，避免频繁触发
+                    if (this.preloadTimer) {
+                        clearTimeout(this.preloadTimer);
+                    }
+                    
+                    this.preloadTimer = setTimeout(async () => {
+                        try {
+                            // 预加载品牌详情API
+                            const brandName = brand.name || brand.brand_name;
+                            
+                            // 如果已经在缓存中，跳过
+                            if (window.cacheManager && window.cacheManager.cache) {
+                                const cacheKey = `brand_detail_${brandName}`;
+                                if (window.cacheManager.cache.has(cacheKey)) {
+                                    return;
+                                }
+                            }
+                            
+                            // 静默预加载品牌详情
+                            const response = await window.api.getBrandDetail(brandName);
+                            if (response && response.success && response.images) {
+                                // 预加载品牌图片（优先预加载概念图和设计图）
+                                if (window.imagePreloader && response.images.length > 0) {
+                                    const priorityImages = response.images
+                                        .filter(img => img.image_type === '概念图' || img.image_type === '设计图')
+                                        .slice(0, 3); // 只预加载前3张优先级图片
+                                    
+                                    priorityImages.forEach(img => {
+                                        const imageUrl = this.getImageURL(img);
+                                        if (imageUrl) {
+                                            window.imagePreloader.preloadImage(imageUrl);
+                                        }
+                                    });
+                                }
+                            }
+                        } catch (error) {
+                            // 静默失败，不影响用户体验
+                            if (PerformanceConfig && PerformanceConfig.performanceMonitoring && PerformanceConfig.performanceMonitoring.verboseLogging) {
+                                console.debug('预加载品牌数据失败:', error);
+                            }
+                        }
+                    }, 300); // 300ms延迟，避免鼠标快速移动时频繁请求
+                },
+
                 closeModal() {
+                    // 清除预加载定时器
+                    if (this.preloadTimer) {
+                        clearTimeout(this.preloadTimer);
+                        this.preloadTimer = null;
+                    }
+                    
                     this.showModal = false;
                     document.body.style.overflow = 'auto';
                     setTimeout(() => {
