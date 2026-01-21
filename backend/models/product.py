@@ -13,11 +13,11 @@ class Product(db.Model):
     
     # 主要字段
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, comment="产品ID，格式：30000001开始")
-    brand_name = db.Column(db.String(100), nullable=False, unique=True, comment='品牌名称')
-    title = db.Column(db.String(200), comment='标题')
+    brand_name = db.Column(db.String(100), nullable=False, unique=True, index=True, comment='品牌名称')
+    title = db.Column(db.String(200), index=True, comment='标题')
     year = db.Column(db.Integer, index=True, comment='年份')
-    publish_month = db.Column(db.String(7), comment='发布月份 (YYYY-MM)')
-    material = db.Column(db.String(100), comment='材质')
+    publish_month = db.Column(db.String(7), index=True, comment='发布月份 (YYYY-MM)')
+    material = db.Column(db.String(100), index=True, comment='材质')
     theme_series = db.Column(db.String(100), default='其他', index=True, comment='主题系列')
     print_size = db.Column(db.String(50), default='循环印花料', index=True, comment='印花尺寸')
     inspiration_origin = db.Column(db.Text, comment='设计灵感来源')

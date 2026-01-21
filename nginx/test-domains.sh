@@ -68,7 +68,7 @@ test_domain() {
 # 本地服务测试
 echo -e "${YELLOW}📋 本地服务状态检查${NC}"
 echo "前端服务(8500): $(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:8500 2>/dev/null || echo "无法连接")"
-echo "后端服务(5001): $(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5001 2>/dev/null || echo "无法连接")"
+echo "后端服务(5432): $(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5432 2>/dev/null || echo "无法连接")"
 echo ""
 
 # 测试所有域名

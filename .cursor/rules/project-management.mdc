@@ -56,7 +56,7 @@ alwaysApply: false
 - 生产环境使用SystemD服务：[service-manager.sh](mdc:service-manager.sh)
 
 ### 健康检查
-- 后端健康检查：http://121.36.205.70:5001/health
+- 后端健康检查：http://121.36.205.70:5432/health
 - 前端服务检查：http://121.36.205.70:8500
 
 ### 日志管理
@@ -148,7 +148,7 @@ python3 -c "import pymysql; pymysql.connect(host='47.118.250.53', user='nanyi', 
 ### 端口占用
 ```bash
 # 检查端口占用
-netstat -tlnp | grep :5001
+netstat -tlnp | grep :5432
 netstat -tlnp | grep :8500
 
 # 强制清理（如需要）

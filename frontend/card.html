@@ -10,7 +10,7 @@
     <meta property="og:description" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="" />
-    <meta property="og:image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
+    <meta property="og:image" content="https://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     <meta property="og:image:width" content="800" />
     <meta property="og:image:height" content="600" />
     <meta property="og:site_name" content="南意秋棠" />
@@ -19,17 +19,17 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="南意秋棠 - 传统美学设计" />
     <meta name="twitter:description" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
-    <meta name="twitter:image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
+    <meta name="twitter:image" content="https://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     
     <!-- 微信分享专用 -->
     <meta itemprop="name" content="南意秋棠 - 传统美学设计" />
     <meta itemprop="description" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
-    <meta itemprop="image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
+    <meta itemprop="image" content="https://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     
     <!-- 微信分享配置 -->
     <meta name="wechat:title" content="南意秋棠 - 传统美学设计" />
     <meta name="wechat:desc" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
-    <meta name="wechat:imgUrl" content="http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
+    <meta name="wechat:imgUrl" content="https://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     <meta name="wechat:link" content="" />
     
     <style>
@@ -589,13 +589,13 @@
             
             if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
                 // 本地开发环境，直接连接后端端口
-                apiBaseUrl = `${protocol}//${currentHost}:5001`;
+                apiBaseUrl = `${protocol}//${currentHost}:5432`;
             } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
-                // 域名访问，使用相对路径让nginx代理处理
+                // 域名访问，使用相对路径让nginx代理处理（自动使用当前协议）
                 apiBaseUrl = '';
             } else {
-                // IP访问，直接连接后端端口
-                apiBaseUrl = 'http://121.36.205.70:5001';
+                // IP访问，使用当前协议
+                apiBaseUrl = `${protocol}//${currentHost}:5432`;
             }
             
             // 构建完整的API URL - 正确编码品牌名
@@ -618,18 +618,20 @@
                 })
                 .then(data => {
                     console.log('API响应:', data);
-                    if (data.success && data.card_data) {
-                        console.log('成功获取卡片数据:', data.card_data);
+                    // 兼容两种响应格式：data.card_data 或 data直接包含字段
+                    const cardDataFromApi = data.data || data.card_data || data;
+                    if (data.success && cardDataFromApi) {
+                        console.log('成功获取卡片数据:', cardDataFromApi);
                         
                         const newCardData = {
-                            brand_name: data.card_data.brand_name,
-                            year: data.card_data.year,
-                            material: data.card_data.material,
-                            theme_series: data.card_data.theme_series,
-                            print_size: data.card_data.print_size,
-                            inspiration_origin: data.card_data.inspiration_origin || '传统美学设计精髓',
-                            images: data.card_data.images || [],
-                            like_count: data.card_data.like_count || 0
+                            brand_name: cardDataFromApi.brand_name || cardDataFromApi.brand_name,
+                            year: cardDataFromApi.year,
+                            material: cardDataFromApi.material,
+                            theme_series: cardDataFromApi.theme_series,
+                            print_size: cardDataFromApi.print_size,
+                            inspiration_origin: cardDataFromApi.inspiration_origin || '传统美学设计精髓',
+                            images: cardDataFromApi.images || [],
+                            like_count: cardDataFromApi.like_count || 0
                         };
                         
                         // 缓存数据
@@ -974,7 +976,7 @@
             
             if (currentHost === '121.36.205.70') {
                 // IP访问时使用IP地址的后端端口
-                apiBaseUrl = 'http://121.36.205.70:5001';
+                apiBaseUrl = 'http://121.36.205.70:5432';
             } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com')) {
                 // 域名访问时使用域名
                 apiBaseUrl = `http://${currentHost}`;
@@ -989,9 +991,11 @@
             fetch(likeApiUrl, { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
+                    // 兼容APIResponse格式：data.data 或 data直接包含字段
+                    const responseData = data.data || data;
                     if (data.success) {
                         // 更新UI状态
-                        if (data.liked) {
+                        if (responseData.liked) {
                             likeButton.classList.add('liked');
                             likeIcon.className = 'fas fa-thumbs-up';
                             likeText.textContent = '已赞';
@@ -1000,8 +1004,8 @@
                             likeIcon.className = 'fas fa-thumbs-up';
                             likeText.textContent = '点赞';
                         }
-                        likeCount.textContent = data.like_count;
-                        showToast(data.message);
+                        likeCount.textContent = responseData.like_count || 0;
+                        showToast(data.message || (responseData.liked ? '点赞成功！' : '取消点赞成功！'));
                     } else {
                         showToast(data.message || '操作失败');
                     }
@@ -1026,10 +1030,10 @@
             
             if (currentHost === '121.36.205.70') {
                 // IP访问时使用IP地址的后端端口
-                apiBaseUrl = 'http://121.36.205.70:5001';
+                apiBaseUrl = 'http://121.36.205.70:5432';
             } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com')) {
-                // 域名访问时使用域名
-                apiBaseUrl = `http://${currentHost}`;
+                // 域名访问时使用相对路径（自动使用当前协议，避免混合内容问题）
+                apiBaseUrl = '';
             } else {
                 // 其他情况（如本地开发）使用相对路径
                 apiBaseUrl = '';
@@ -1042,6 +1046,8 @@
             fetch(likeApiUrl)
                 .then(response => response.json())
                 .then(data => {
+                    // 兼容APIResponse格式：data.data 或 data直接包含字段
+                    const responseData = data.data || data;
                     if (data.success) {
                         const likeButton = document.getElementById('likeButton');
                         const likeIcon = document.getElementById('likeIcon');
@@ -1049,10 +1055,10 @@
                         const likeCount = document.getElementById('likeCount');
                         
                         // 更新点赞数
-                        likeCount.textContent = data.like_count || 0;
+                        likeCount.textContent = responseData.like_count || 0;
                         
                         // 更新UI状态
-                        if (data.liked) {
+                        if (responseData.liked) {
                             likeButton.classList.add('liked');
                             likeIcon.className = 'fas fa-thumbs-up';
                             likeText.textContent = '已赞';
@@ -1195,7 +1201,10 @@
             const inspiration = cardData.inspiration || cardData.inspiration_origin || '传承经典，美美与共 - 古典美学设计，望君着美于裳';
             
             // 获取第一张图片作为分享图片
-            let shareImage = 'http://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg';
+            // 使用当前协议，避免混合内容问题
+            const currentProtocol = window.location.protocol;
+            const currentHost = window.location.hostname;
+            let shareImage = `${currentProtocol}//${currentHost}/static/images/牡丹亭概念图.jpg`;
             if (cardData.images && cardData.images.length > 0) {
                 const firstImage = cardData.images[0];
                 if (firstImage.medium_url && firstImage.medium_url.startsWith('http')) {
@@ -1204,7 +1213,7 @@
                     shareImage = firstImage.url;
                 } else if (firstImage.relative_path) {
                     const encodedPath = firstImage.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
-                    shareImage = `http://products.nanyiqiutang.cn/static/images/${encodedPath}`;
+                    shareImage = `${currentProtocol}//${currentHost}/static/images/${encodedPath}`;
                 }
             }
             

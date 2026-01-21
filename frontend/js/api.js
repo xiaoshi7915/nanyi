@@ -11,13 +11,13 @@ class NanyiAPI {
         // 智能API路径配置
         if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
             // 本地开发环境，直接连接后端端口
-            this.baseURL = `${protocol}//${currentHost}:5001/api`;
+            this.baseURL = `${protocol}//${currentHost}:5432/api`;
         } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
             // 域名访问，使用相对路径让nginx代理处理
             this.baseURL = '/api';
         } else {
             // IP访问，直接连接后端端口
-            this.baseURL = 'http://121.36.205.70:5001/api';
+            this.baseURL = 'http://121.36.205.70:5432/api';
         }
         
         // 只在调试模式下输出API基础URL

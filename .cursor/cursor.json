@@ -1,0 +1,7 @@
+{
+  "minimax": {
+    "apiKey": "sk-xCHgFs402ejpDd0vDNdcWnaszOwmozNbRTRItIQvdtnJaR31",
+    "model": "MiniMax-M2.1",
+    "apiBase": "https://api.cts.flamelephant.com/v1"
+  }
+}

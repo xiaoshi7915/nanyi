@@ -104,10 +104,10 @@ else
 fi
 
 # 测试后端服务
-if curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5001 | grep -q "200"; then
-    echo -e "${GREEN}✅ 后端服务(5001)连接正常${NC}"
+if curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:5432 | grep -q "200"; then
+    echo -e "${GREEN}✅ 后端服务(5432)连接正常${NC}"
 else
-    echo -e "${YELLOW}⚠️ 后端服务(5001)连接异常，请检查服务状态${NC}"
+    echo -e "${YELLOW}⚠️ 后端服务(5432)连接异常，请检查服务状态${NC}"
 fi
 
 # 10. 显示配置摘要
@@ -117,7 +117,7 @@ echo ""
 echo "📋 配置摘要:"
 echo "  - products.nanyiqiutang.cn -> 127.0.0.1:8500"
 echo "  - products.chenxiaoshivivid.com.cn -> 127.0.0.1:8500" 
-echo "  - API路由: /api/* -> 127.0.0.1:5001"
+echo "  - API路由: /api/* -> 127.0.0.1:5432"
 echo "  - 裸域名重定向: nanyiqiutang.cn -> products.nanyiqiutang.cn"
 echo "  - 裸域名重定向: chenxiaoshivivid.com.cn -> products.chenxiaoshivivid.com.cn"
 echo ""

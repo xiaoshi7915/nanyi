@@ -20,23 +20,26 @@ from flask_cors import CORS
 
 def create_frontend_app():
     """创建前端应用"""
+    # 获取前端目录的绝对路径
+    frontend_dir = os.path.dirname(os.path.abspath(__file__))
+    
     app = Flask(__name__, 
-                static_folder='static',
-                template_folder='.')
+                static_folder=os.path.join(frontend_dir, 'static'),
+                template_folder=frontend_dir)
     
     # CORS配置
-    cors_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:5001').split(',')
+    cors_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:5432').split(',')
     CORS(app, origins=cors_origins)
     
     @app.route('/')
     def index():
         """主页"""
-        return send_from_directory('.', 'index.html')
+        return send_from_directory(frontend_dir, 'index.html')
     
     @app.route('/<path:filename>')
     def static_files(filename):
         """静态文件服务"""
-        return send_from_directory('.', filename)
+        return send_from_directory(frontend_dir, filename)
     
     @app.route('/health')
     def health():
@@ -51,7 +54,7 @@ def main():
     # 获取环境变量
     port = int(os.environ.get('FRONTEND_PORT', 8500))
     host = os.environ.get('HOST', '0.0.0.0')
-    backend_url = os.environ.get('BACKEND_URL', 'http://121.36.205.70:5001')
+    backend_url = os.environ.get('BACKEND_URL', 'http://121.36.205.70:5432')
     
     # 创建应用
     app = create_frontend_app()
@@ -63,11 +66,13 @@ def main():
     print(f"🔗 后端API: {backend_url}")
     
     # 启动应用
+    # 注意：在生产环境中禁用 debug 模式，避免自动重启导致服务退出
     app.run(
         host=host,
         port=port,
-        debug=True,
-        threaded=True
+        debug=False,  # 改为 False，避免后台运行时自动重启导致进程退出
+        threaded=True,
+        use_reloader=False  # 禁用自动重载
     )
 
 if __name__ == '__main__':

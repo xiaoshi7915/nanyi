@@ -4,29 +4,9 @@
 数据库工具函数
 """
 
-import pymysql
 import os
 from backend.models import db, Admin
-
-def get_db_connection():
-    """获取数据库连接"""
-    # 使用和config.py相同的数据库配置
-    host = os.environ.get('DB_HOST', '47.118.250.53')
-    port = int(os.environ.get('DB_PORT', 3306))
-    user = os.environ.get('DB_USER', 'nanyi')
-    password = os.environ.get('DB_PASSWORD', 'admin123456!')
-    database = os.environ.get('DB_NAME', 'nanyiqiutang')
-    
-    return pymysql.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        database=database,
-        charset='utf8mb4',
-        autocommit=True,
-        cursorclass=pymysql.cursors.DictCursor
-    )
+from backend.utils.db_connection import get_db_connection
 
 def init_database(app):
     """初始化数据库"""
@@ -49,16 +29,22 @@ def create_default_admin():
             return False
         
         # 创建默认管理员
+        import secrets
+        # 生成随机密码，避免使用弱密码
+        default_password = secrets.token_urlsafe(16)
         admin = Admin(
             username='admin',
             email='admin@nanyi.com'
         )
-        admin.set_password('admin123')
+        admin.set_password(default_password)
         
         db.session.add(admin)
         db.session.commit()
         
-        print("默认管理员账户创建成功: admin/admin123")
+        print(f"默认管理员账户创建成功")
+        print(f"用户名: admin")
+        print(f"密码: {default_password}")
+        print(f"⚠️  请立即登录并修改密码！")
         return True
         
     except Exception as e:

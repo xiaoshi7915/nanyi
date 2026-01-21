@@ -6,6 +6,7 @@
 
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+import re
 from . import db
 
 class Admin(db.Model):
@@ -19,10 +20,33 @@ class Admin(db.Model):
     is_active = db.Column(db.Boolean, default=True, comment='是否激活')
     last_login = db.Column(db.DateTime, comment='最后登录时间')
     created_at = db.Column(db.DateTime, default=datetime.utcnow, comment='创建时间')
+    password_changed_at = db.Column(db.DateTime, comment='密码最后修改时间')
+    must_change_password = db.Column(db.Boolean, default=False, comment='首次登录必须修改密码')
     
-    def set_password(self, password):
+    def set_password(self, password, require_change=False):
         """设置密码"""
+        # 验证密码强度
+        if not self._validate_password_strength(password):
+            raise ValueError("密码强度不足：密码必须至少8位，包含大小写字母、数字和特殊字符")
+        
         self.password_hash = generate_password_hash(password)
+        self.password_changed_at = datetime.utcnow()
+        if require_change:
+            self.must_change_password = True
+    
+    def _validate_password_strength(self, password):
+        """验证密码强度"""
+        if len(password) < 8:
+            return False
+        if not re.search(r'[a-z]', password):
+            return False
+        if not re.search(r'[A-Z]', password):
+            return False
+        if not re.search(r'\d', password):
+            return False
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+            return False
+        return True
     
     def check_password(self, password):
         """验证密码"""

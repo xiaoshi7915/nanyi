@@ -1626,9 +1626,27 @@
                     this.showToast('正在生成卡片...');
                     
                     // 调用后端API生成卡片数据
+                    // 智能API路径配置
+                    const currentHost = window.location.hostname;
+                    const protocol = window.location.protocol;
+                    let apiBaseUrl = '';
+                    
+                    if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+                        // 本地开发环境，直接连接后端端口
+                        apiBaseUrl = `${protocol}//${currentHost}:5432`;
+                    } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
+                        // 域名访问，使用相对路径让nginx代理处理（自动使用当前协议）
+                        apiBaseUrl = '';
+                    } else {
+                        // IP访问，使用当前协议
+                        apiBaseUrl = `${protocol}//${currentHost}:5432`;
+                    }
+                    
                     const apiUrl = window.api ? 
                         `${window.api.baseURL}/share/card/${encodeURIComponent(brandName)}` : 
-                        `http://localhost:5001/api/share/card/${encodeURIComponent(brandName)}`;
+                        `${apiBaseUrl}/api/share/card/${encodeURIComponent(brandName)}`;
+                    
+                    console.log('生成卡片API URL:', apiUrl);
                     
                     fetch(apiUrl)
                         .then(response => {
@@ -1728,19 +1746,22 @@
                         
                         const data = await response.json();
                         
+                        // 兼容APIResponse格式：data.data 或 data直接包含字段
+                        const responseData = data.data || data;
+                        
                         if (data.success) {
                             // 更新品牌的点赞状态和数量
-                            brand.user_liked = data.liked;
-                            brand.like_count = data.like_count;
+                            brand.user_liked = responseData.liked;
+                            brand.like_count = responseData.like_count || 0;
                             
                             // 更新brandData中的数据
                             if (this.brandData[brandName]) {
-                                this.brandData[brandName].user_liked = data.liked;
-                                this.brandData[brandName].like_count = data.like_count;
+                                this.brandData[brandName].user_liked = responseData.liked;
+                                this.brandData[brandName].like_count = responseData.like_count || 0;
                             }
                             
                             // 显示成功提示
-                            this.showToast(data.message || (data.liked ? '点赞成功！' : '取消点赞成功！'));
+                            this.showToast(data.message || (responseData.liked ? '点赞成功！' : '取消点赞成功！'));
                         } else {
                             this.showToast(data.message || '操作失败，请稍后重试');
                         }
@@ -1776,20 +1797,23 @@
                         
                         const data = await response.json();
                         
+                        // 兼容APIResponse格式：data.data 或 data直接包含字段
+                        const responseData = data.data || data;
+                        
                         if (data.success) {
-                            this.brandLikeStatus.liked = data.liked;
-                            this.brandLikeStatus.count = data.like_count;
+                            this.brandLikeStatus.liked = responseData.liked;
+                            this.brandLikeStatus.count = responseData.like_count || 0;
                             
                             // 更新品牌列表中的点赞数
                             if (this.brandData[brandName]) {
-                                this.brandData[brandName].like_count = data.like_count;
+                                this.brandData[brandName].like_count = responseData.like_count || 0;
                             }
                             
                             // 更新当前选中品牌的点赞数
-                            this.selectedBrand.like_count = data.like_count;
+                            this.selectedBrand.like_count = responseData.like_count || 0;
                             
                             // 显示成功提示
-                            this.showToast(data.message || (data.liked ? '点赞成功！' : '取消点赞成功！'));
+                            this.showToast(data.message || (responseData.liked ? '点赞成功！' : '取消点赞成功！'));
                         } else {
                             this.showToast(data.message || '操作失败，请稍后重试');
                         }
@@ -1816,9 +1840,11 @@
                         
                         if (response.ok) {
                             const data = await response.json();
+                            // 兼容APIResponse格式：data.data 或 data直接包含字段
+                            const responseData = data.data || data;
                             if (data.success) {
-                                this.brandLikeStatus.liked = data.liked;
-                                this.brandLikeStatus.count = data.like_count;
+                                this.brandLikeStatus.liked = responseData.liked;
+                                this.brandLikeStatus.count = responseData.like_count || 0;
                             }
                         }
                     } catch (error) {
@@ -1915,13 +1941,13 @@
         
         if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
             // 本地开发环境
-            API_BASE_URL = 'http://localhost:5001';
+            API_BASE_URL = 'http://localhost:5432';
         } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
             // 域名访问，使用相对路径让nginx代理处理
             API_BASE_URL = '';
         } else {
             // IP访问，直接连接后端端口
-            API_BASE_URL = 'http://121.36.205.70:5001';
+            API_BASE_URL = 'http://121.36.205.70:5432';
         }
             
         console.log('API Base URL:', API_BASE_URL);

@@ -12,6 +12,7 @@ import threading
 from datetime import datetime, timedelta
 from typing import Any, Optional, Dict, List
 from functools import wraps
+from backend.utils.logger import logger
 
 class MemoryCache:
     """内存缓存类"""
@@ -97,6 +98,16 @@ class CacheService:
             'deletes': 0
         }
         
+        # 尝试使用Redis缓存（如果可用）
+        try:
+            from backend.services.redis_cache import get_redis_cache_service
+            self.redis_cache = get_redis_cache_service()
+            if self.redis_cache:
+                logger.info("✅ 使用Redis缓存")
+        except Exception as e:
+            self.redis_cache = None
+            logger.warning(f"⚠️  Redis缓存不可用，使用内存缓存: {e}")
+        
         # 启动后台清理线程
         self._start_cleanup_thread()
     
@@ -108,7 +119,7 @@ class CacheService:
                     self.memory_cache.cleanup_expired()
                     time.sleep(60)  # 每分钟清理一次
                 except Exception as e:
-                    print(f"缓存清理失败: {e}")
+                    logger.error(f"缓存清理失败: {e}")
                     time.sleep(60)
         
         cleanup_thread = threading.Thread(target=cleanup_worker, daemon=True)
@@ -121,7 +132,19 @@ class CacheService:
     
     def get(self, key: str, default=None) -> Any:
         """获取缓存"""
-        # 先检查内存缓存
+        # 优先使用Redis缓存（如果可用）
+        if self.redis_cache:
+            try:
+                value = self.redis_cache.get(key)
+                if value is not None:
+                    self._cache_stats['hits'] += 1
+                    # 同时更新内存缓存
+                    self.memory_cache.set(key, value, ttl=300)
+                    return value
+            except Exception as e:
+                logger.warning(f"Redis缓存获取失败，回退到内存缓存: {e}")
+        
+        # 检查内存缓存
         if not self.memory_cache.is_expired(key):
             value = self.memory_cache.get(key)
             if value is not None:
@@ -134,22 +157,37 @@ class CacheService:
     def set(self, key: str, value: Any, ttl: int = 300) -> bool:
         """设置缓存"""
         try:
-            # 存储到内存缓存
+            # 优先存储到Redis缓存（如果可用）
+            if self.redis_cache:
+                try:
+                    self.redis_cache.set(key, value, ttl)
+                except Exception as e:
+                    logger.warning(f"Redis缓存设置失败，使用内存缓存: {e}")
+            
+            # 同时存储到内存缓存
             self.memory_cache.set(key, value, ttl)
             self._cache_stats['sets'] += 1
             return True
         except Exception as e:
-            print(f"设置缓存失败: {e}")
+            logger.error(f"设置缓存失败: {e}")
             return False
     
     def delete(self, key: str) -> bool:
         """删除缓存"""
         try:
+            # 从Redis缓存删除（如果可用）
+            if self.redis_cache:
+                try:
+                    self.redis_cache.delete(key)
+                except Exception as e:
+                    logger.warning(f"Redis缓存删除失败: {e}")
+            
+            # 从内存缓存删除
             self.memory_cache.delete(key)
             self._cache_stats['deletes'] += 1
             return True
         except Exception as e:
-            print(f"删除缓存失败: {e}")
+            logger.error(f"删除缓存失败: {e}")
             return False
     
     def get_or_set(self, key: str, callback, ttl: int = 300) -> Any:
@@ -164,13 +202,21 @@ class CacheService:
             self.set(key, value, ttl)
             return value
         except Exception as e:
-            print(f"缓存回调函数执行失败: {e}")
+            logger.error(f"缓存回调函数执行失败: {e}")
             return None
     
     def clear_pattern(self, pattern: str):
         """清理匹配模式的缓存"""
         import re
         try:
+            # 从Redis缓存清理（如果可用）
+            if self.redis_cache:
+                try:
+                    self.redis_cache.clear_pattern(pattern)
+                except Exception as e:
+                    logger.warning(f"Redis缓存模式清理失败: {e}")
+            
+            # 从内存缓存清理
             pattern_re = re.compile(pattern)
             keys_to_delete = []
             
@@ -179,10 +225,10 @@ class CacheService:
                     keys_to_delete.append(key)
             
             for key in keys_to_delete:
-                self.delete(key)
+                self.memory_cache.delete(key)
                 
         except Exception as e:
-            print(f"清理缓存模式失败: {e}")
+            logger.error(f"清理缓存模式失败: {e}")
     
     def stats(self) -> Dict:
         """获取缓存统计信息"""
@@ -191,18 +237,33 @@ class CacheService:
         total_operations = sum(self._cache_stats.values())
         hit_ratio = self._cache_stats['hits'] / max(total_operations, 1) * 100
         
-        return {
+        stats = {
             'memory_cache': memory_stats,
             'operations': self._cache_stats,
             'hit_ratio': round(hit_ratio, 2),
             'total_operations': total_operations
         }
+        
+        # 添加Redis统计信息（如果可用）
+        if self.redis_cache:
+            try:
+                redis_stats = self.redis_cache.get_stats()
+                stats['redis_cache'] = redis_stats
+            except Exception as e:
+                stats['redis_cache'] = {'error': str(e)}
+        
+        return stats
 
 # 全局缓存实例
 cache_service = CacheService()
 
 def cached(ttl: int = 300, key_prefix: str = None):
-    """缓存装饰器"""
+    """缓存装饰器
+    
+    注意：此装饰器会缓存函数的返回值。
+    如果返回值是tuple (Response, status_code)，则只缓存Response对象的JSON数据，
+    并在返回时重新构造Response对象。
+    """
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -211,13 +272,47 @@ def cached(ttl: int = 300, key_prefix: str = None):
             cache_key = cache_service.generate_key(prefix, args=args, kwargs=kwargs)
             
             # 尝试从缓存获取
-            result = cache_service.get(cache_key)
-            if result is not None:
-                return result
+            cached_data = cache_service.get(cache_key)
+            if cached_data is not None:
+                # 如果缓存的是字典（JSON数据），需要重新构造Response对象
+                if isinstance(cached_data, dict) and '_status_code' in cached_data:
+                    from flask import jsonify
+                    status_code = cached_data.pop('_status_code', 200)
+                    return jsonify(cached_data), status_code
+                # 如果缓存的是tuple，直接返回
+                elif isinstance(cached_data, tuple):
+                    return cached_data
+                # 其他情况直接返回
+                return cached_data
             
             # 执行函数并缓存结果
             result = func(*args, **kwargs)
-            cache_service.set(cache_key, result, ttl)
+            
+            # 如果返回值是tuple (Response, status_code)
+            if isinstance(result, tuple) and len(result) == 2:
+                response_obj, status_code = result
+                # 尝试提取JSON数据
+                try:
+                    if hasattr(response_obj, 'get_json'):
+                        json_data = response_obj.get_json(silent=True)
+                        if json_data and isinstance(json_data, dict):
+                            # 保存状态码到数据中（使用副本避免修改原对象）
+                            cache_data = json_data.copy()
+                            cache_data['_status_code'] = status_code
+                            cache_service.set(cache_key, cache_data, ttl)
+                    # 如果无法提取JSON，不缓存（避免缓存不可序列化的对象）
+                except Exception as e:
+                    # 如果提取失败，不缓存
+                    import logging
+                    logging.getLogger(__name__).debug(f"缓存提取失败: {e}")
+            else:
+                # 非tuple返回值，直接缓存（如果可序列化）
+                try:
+                    cache_service.set(cache_key, result, ttl)
+                except Exception:
+                    # 如果无法缓存，忽略错误
+                    pass
+            
             return result
         
         return wrapper
@@ -306,7 +401,7 @@ class CacheWarmer:
     
     def warm_up(self):
         """执行缓存预热"""
-        print("开始缓存预热...")
+        logger.info("开始缓存预热...")
         
         for task in self.warming_tasks:
             try:
@@ -314,11 +409,11 @@ class CacheWarmer:
                 if cache_service.get(key) is None:
                     value = task['callback']()
                     cache_service.set(key, value, task['ttl'])
-                    print(f"预热缓存: {key}")
+                    logger.info(f"预热缓存: {key}")
             except Exception as e:
-                print(f"预热缓存失败 {task['key']}: {e}")
+                logger.error(f"预热缓存失败 {task['key']}: {e}")
         
-        print("缓存预热完成")
+        logger.info("缓存预热完成")
 
 # 全局缓存预热器
 cache_warmer = CacheWarmer()

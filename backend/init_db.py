@@ -17,10 +17,11 @@ from backend.models.product import Product
 from backend.models.access_log import AccessLog
 from backend.models.admin import Admin
 from backend.models.brand_like import BrandLike
+from backend.utils.logger import logger
 
 def init_database():
     """初始化数据库"""
-    print("🔧 开始初始化数据库...")
+    logger.info("🔧 开始初始化数据库...")
     
     # 创建应用实例
     app = create_app()
@@ -28,21 +29,21 @@ def init_database():
     with app.app_context():
         try:
             # 创建所有SQLAlchemy表
-            print("📊 创建SQLAlchemy表...")
+            logger.info("📊 创建SQLAlchemy表...")
             db.create_all()
-            print("✅ SQLAlchemy表创建成功")
+            logger.info("✅ SQLAlchemy表创建成功")
             
             # 创建点赞表（使用原生MySQL）
-            print("❤️ 创建点赞表...")
+            logger.info("❤️ 创建点赞表...")
             if BrandLike.create_table():
-                print("✅ 点赞表创建成功")
+                logger.info("✅ 点赞表创建成功")
             else:
-                print("❌ 点赞表创建失败")
+                logger.error("❌ 点赞表创建失败")
             
-            print("🎉 数据库初始化完成！")
+            logger.info("🎉 数据库初始化完成！")
             
         except Exception as e:
-            print(f"❌ 数据库初始化失败: {e}")
+            logger.error(f"❌ 数据库初始化失败: {e}")
             return False
     
     return True
@@ -57,23 +58,23 @@ def check_tables():
             inspector = db.inspect(db.engine)
             tables = inspector.get_table_names()
             
-            print("📋 当前数据库表:")
+            logger.info("📋 当前数据库表:")
             for table in sorted(tables):
-                print(f"  ✓ {table}")
+                logger.info(f"  ✓ {table}")
             
             # 检查必要表是否存在
             required_tables = ['products', 'access_logs', 'admins', 'brand_likes', 'brand_like_stats']
             missing_tables = [table for table in required_tables if table not in tables]
             
             if missing_tables:
-                print(f"⚠️ 缺少表: {', '.join(missing_tables)}")
+                logger.warning(f"⚠️ 缺少表: {', '.join(missing_tables)}")
                 return False
             else:
-                print("✅ 所有必要表都已存在")
+                logger.info("✅ 所有必要表都已存在")
                 return True
                 
         except Exception as e:
-            print(f"❌ 检查表失败: {e}")
+            logger.error(f"❌ 检查表失败: {e}")
             return False
 
 if __name__ == '__main__':
@@ -90,4 +91,4 @@ if __name__ == '__main__':
     elif args.init:
         init_database()
     else:
-        print("使用 --init 初始化数据库，或 --check 检查表状态") 
+        logger.info("使用 --init 初始化数据库，或 --check 检查表状态") 
