@@ -61,7 +61,7 @@ class Config:
         
         # 文件上传配置
         self.UPLOAD_FOLDER = 'static/images'
-        self.MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB
+        self.MAX_CONTENT_LENGTH = 20 * 1024 * 1024  # 20MB（支持AI试衣功能）
         self.ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
         
         # OSS配置 - 如果使用OSS，则必须配置

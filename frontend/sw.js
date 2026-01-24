@@ -4,19 +4,20 @@
  */
 
 // 版本号：每次更新时修改此版本号，会自动清除旧缓存
-const SW_VERSION = 'v1.0.1';
+const SW_VERSION = 'v1.0.2';
 const CACHE_NAME = `nanyi-products-${SW_VERSION}`;
 const STATIC_CACHE_NAME = `nanyi-static-${SW_VERSION}`;
 const DYNAMIC_CACHE_NAME = `nanyi-dynamic-${SW_VERSION}`;
 
 // 需要预缓存的静态资源
+// 注意：api.js 不预缓存，因为经常更新，使用网络优先策略
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/css/main.css',
     '/css/skeleton.css',
     '/static/css/responsive.css',
-    '/js/api.js',
+    // '/js/api.js', // 不预缓存，使用网络优先
     '/js/performance-config.js',
     '/js/image-preloader.js',
     '/static/lib/vue.global.prod.js',
@@ -56,7 +57,15 @@ self.addEventListener('activate', (event) => {
                 })
             );
         }).then(() => {
-            return self.clients.claim(); // 立即控制所有页面
+            // 强制更新所有客户端
+            return self.clients.claim().then(() => {
+                // 通知所有客户端刷新
+                return self.clients.matchAll().then(clients => {
+                    clients.forEach(client => {
+                        client.postMessage({ type: 'SW_UPDATED', version: SW_VERSION });
+                    });
+                });
+            });
         })
     );
 });
@@ -96,10 +105,14 @@ self.addEventListener('fetch', (event) => {
  * 判断是否为静态资源
  */
 function isStaticAsset(pathname) {
+    // api.js 使用网络优先策略，不缓存
+    if (pathname.includes('api.js')) {
+        return false;
+    }
     return pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot)$/i) ||
            pathname.startsWith('/static/') ||
            pathname.startsWith('/css/') ||
-           pathname.startsWith('/js/');
+           (pathname.startsWith('/js/') && !pathname.includes('api.js'));
 }
 
 /**

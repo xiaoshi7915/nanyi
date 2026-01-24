@@ -18,7 +18,7 @@ ExecStart=/opt/hanfu/products/products_env/bin/gunicorn \
     --bind 0.0.0.0:5432 \
     --workers 2 \
     --worker-class sync \
-    --timeout 30 \
+    --timeout 120 \
     --keep-alive 2 \
     --max-requests 1000 \
     --max-requests-jitter 50 \

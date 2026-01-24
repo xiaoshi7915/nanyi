@@ -24,7 +24,7 @@ class NanyiAPI {
         if (window.PerformanceConfig && window.PerformanceConfig.performanceMonitoring.verboseLogging) {
             // 移除调试日志
         }
-        this.timeout = 30000; // 增加到30秒超时
+        this.timeout = 60000; // 增加到60秒超时（支持AI试衣任务状态查询）
     }
 
     /**
@@ -190,6 +190,81 @@ class NanyiAPI {
                 return null;
             }
         }).filter(Boolean);
+    }
+
+    /**
+     * 获取可用款式列表（品牌+颜色组合）
+     * @param {string} brandName - 可选的基础品牌名，如果提供则只返回该品牌的款式
+     */
+    async getTryOnStyles(brandName = null) {
+        const endpoint = brandName 
+            ? `/try-on/styles?brand_name=${encodeURIComponent(brandName)}`
+            : '/try-on/styles';
+        return this.request(endpoint);
+    }
+
+    /**
+     * 启动AI试衣任务
+     * @param {FormData} formData - 包含brand_name和user_image的表单数据
+     */
+    async startTryOn(formData) {
+        const url = `${this.baseURL}/try-on/start`;
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: formData,
+                timeout: this.timeout
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error(`启动试衣任务失败 ${url}:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * 查询试衣任务状态
+     * @param {string} taskId - 任务ID
+     */
+    async getTryOnStatus(taskId) {
+        // 状态查询使用更长的超时时间（60秒）
+        const url = `${this.baseURL}/try-on/status/${taskId}`;
+        
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000); // 60秒超时
+            
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                signal: controller.signal
+            });
+            
+            clearTimeout(timeoutId);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error(`查询任务状态失败 ${url}:`, error);
+            
+            if (error.name === 'AbortError') {
+                throw new Error('请求超时，请稍后重试');
+            }
+            
+            throw error;
+        }
     }
 }
 
