@@ -22,8 +22,7 @@ class NanyiAPI {
         
         // 只在调试模式下输出API基础URL
         if (window.PerformanceConfig && window.PerformanceConfig.performanceMonitoring.verboseLogging) {
-            console.log('API Base URL:', this.baseURL);
-            console.log('Current Host:', currentHost);
+            // 移除调试日志
         }
         this.timeout = 30000; // 增加到30秒超时
     }
@@ -47,7 +46,7 @@ class NanyiAPI {
         try {
             // 只在调试模式下输出请求日志
             if (window.PerformanceConfig && window.PerformanceConfig.performanceMonitoring.verboseLogging) {
-                console.log(`请求API: ${url}`);
+                // 移除调试日志
             }
             
             const controller = new AbortController();
@@ -68,7 +67,7 @@ class NanyiAPI {
             
             // 只在调试模式下输出响应日志
             if (window.PerformanceConfig && window.PerformanceConfig.performanceMonitoring.verboseLogging) {
-                console.log(`API响应:`, data);
+                // 移除调试日志
             }
             
             return data;

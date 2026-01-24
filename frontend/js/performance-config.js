@@ -117,7 +117,7 @@ class PerformanceMonitor {
                     totalTime: navigation.loadEventEnd - navigation.fetchStart
                 };
                 
-                console.log('页面加载性能:', this.metrics.pageLoad);
+                // 移除调试日志（保留错误日志）
             }
         });
     }
@@ -131,7 +131,7 @@ class PerformanceMonitor {
                                          const lastEntry = entries[entries.length - 1];
                      this.metrics.lcp = lastEntry.startTime;
                      if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                         console.log('LCP (最大内容绘制):', this.metrics.lcp + 'ms');
+                         // 移除调试日志
                      }
                 });
                 lcpObserver.observe({entryTypes: ['largest-contentful-paint']});
@@ -147,7 +147,7 @@ class PerformanceMonitor {
                                          entries.forEach(entry => {
                          this.metrics.fid = entry.processingStart - entry.startTime;
                          if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                             console.log('FID (首次输入延迟):', this.metrics.fid + 'ms');
+                             // 移除调试日志
                          }
                      });
                 });
@@ -169,7 +169,7 @@ class PerformanceMonitor {
                                          });
                      this.metrics.cls = clsValue;
                      if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                         console.log('CLS (累积布局偏移):', this.metrics.cls);
+                         // 移除调试日志
                      }
                 });
                 clsObserver.observe({entryTypes: ['layout-shift']});
@@ -194,7 +194,7 @@ class PerformanceMonitor {
                 slowImages: imageResources.filter(img => img.duration > 1000).length
             };
             
-            console.log('图片加载性能:', this.metrics.imageLoading);
+            // 移除调试日志（保留错误日志）
         });
     }
 
@@ -303,7 +303,7 @@ class OptimizedCacheManager {
         const cachedVersion = localStorage.getItem(this.versionKey);
         
         if (cachedVersion && cachedVersion !== currentVersion) {
-            console.log('检测到应用版本更新，清空缓存');
+            // 移除调试日志
             this.clearAllCache();
         }
         
@@ -345,7 +345,7 @@ class OptimizedCacheManager {
                      localStorage.setItem(key, JSON.stringify(cacheData));
                      // 只在调试模式下输出缓存日志
                      if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                         console.log(`✅ 缓存已设置: ${type} (${identifier}), TTL: ${Math.round(strategy.ttl / 60000)}分钟`);
+                         // 移除调试日志
                      }
                  } catch (e) {
             console.warn('缓存设置失败:', e);
@@ -376,7 +376,7 @@ class OptimizedCacheManager {
             
             // 检查是否过期
             if (now > cacheData.expires) {
-                console.log(`⏰ 缓存已过期: ${type} (${identifier})`);
+                // 移除调试日志
                 localStorage.removeItem(key);
                 return null;
             }
@@ -384,7 +384,7 @@ class OptimizedCacheManager {
                                  const remainingMinutes = Math.round((cacheData.expires - now) / 60000);
                      // 只在调试模式下输出缓存命中日志
                      if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                         console.log(`✅ 缓存命中: ${type} (${identifier}), 剩余: ${remainingMinutes}分钟`);
+                         // 移除调试日志
                      }
                      return cacheData.data;
         } catch (e) {
@@ -461,7 +461,7 @@ class OptimizedCacheManager {
         });
         
         if (keysToRemove.length > 0) {
-            console.log(`🧹 清理了 ${keysToRemove.length} 个过期缓存`);
+            // 移除调试日志
         }
     }
     
@@ -506,7 +506,7 @@ class OptimizedCacheManager {
             localStorage.removeItem(item.key);
         });
         
-        console.log(`🧹 清理了 ${toDelete.length} 个低优先级缓存`);
+        // 移除调试日志
     }
     
     /**
@@ -526,7 +526,7 @@ class OptimizedCacheManager {
             localStorage.removeItem(key);
         });
         
-        console.log(`🧹 清空了所有缓存 (${keysToRemove.length} 项)`);
+        // 移除调试日志
     }
 }
 
@@ -539,7 +539,7 @@ class EnhancedCacheManager extends OptimizedCacheManager {
 
     // 预加载关键资源
     async preloadCriticalResources() {
-        console.log('开始预加载关键资源...');
+        // 移除调试日志
         
         try {
             // 预加载品牌数据
@@ -548,7 +548,7 @@ class EnhancedCacheManager extends OptimizedCacheManager {
                 return response;
             });
             
-            console.log('关键资源预加载完成');
+            // 移除调试日志
         } catch (error) {
             console.warn('关键资源预加载失败:', error);
         }
@@ -584,7 +584,7 @@ class EnhancedCacheManager extends OptimizedCacheManager {
         });
         
         if (cleanedCount > 0) {
-            console.log(`智能缓存清理完成，清理了 ${cleanedCount} 个过期项目`);
+            // 移除调试日志
         }
     }
 
@@ -605,7 +605,7 @@ class EnhancedCacheManager extends OptimizedCacheManager {
 class PerformanceOptimizer {
     constructor() {
         this.config = PerformanceConfig;
-        console.log('🚀 性能优化器已初始化');
+        // 移除调试日志
     }
 }
 

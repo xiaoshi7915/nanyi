@@ -196,12 +196,14 @@ def create_app(config_name='development'):
         from backend.routes.products import products_bp
         from backend.routes.filters import filters_bp
         from backend.routes.share import share_bp
+        from backend.routes.static_cards import static_cards_bp
         
         app.register_blueprint(images_bp)
         app.register_blueprint(brands_bp)
         app.register_blueprint(products_bp)
         app.register_blueprint(filters_bp)
         app.register_blueprint(share_bp)
+        app.register_blueprint(static_cards_bp)
         
         logger.info("✅ API路由注册成功 (支持 /api 和 /api/v1)")
         logger.info("✅ 已注册路由模块: images, brands, products, filters, share")

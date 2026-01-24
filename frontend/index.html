@@ -59,6 +59,94 @@
     <!-- 引入图片预加载管理器 -->
     <script src="js/image-preloader.js"></script>
     
+    <!-- 注册Service Worker (PWA) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // 注册Service Worker（不要添加时间戳，让浏览器自然缓存）
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        // 标记是否已经处理过更新提示
+                        let updatePromptShown = false;
+                        
+                        // 检查是否有更新
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            if (!newWorker) return;
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                // 只在Service Worker安装完成且已有旧版本运行时提示
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller && !updatePromptShown) {
+                                    updatePromptShown = true;
+                                    
+                                    // 检查是否已经提示过（使用sessionStorage避免重复提示）
+                                    const updatePrompted = sessionStorage.getItem('sw_update_prompted');
+                                    if (!updatePrompted) {
+                                        sessionStorage.setItem('sw_update_prompted', 'true');
+                                        
+                                        // 延迟提示，避免干扰用户
+                                        setTimeout(() => {
+                                            if (confirm('发现新版本，是否立即刷新页面？')) {
+                                                // 清除标记，允许刷新后再次检测
+                                                sessionStorage.removeItem('sw_update_prompted');
+                                                window.location.reload();
+                                            } else {
+                                                // 用户取消，5分钟后可以再次提示
+                                                setTimeout(() => {
+                                                    sessionStorage.removeItem('sw_update_prompted');
+                                                }, 5 * 60 * 1000);
+                                            }
+                                        }, 2000);
+                                    }
+                                }
+                            });
+                        });
+                        
+                        // 定期检查更新（每小时，但只在用户活跃时）
+                        let updateCheckInterval = null;
+                        const startUpdateCheck = () => {
+                            if (updateCheckInterval) return;
+                            updateCheckInterval = setInterval(() => {
+                                // 只在页面可见时检查更新
+                                if (!document.hidden) {
+                                    registration.update().catch(() => {
+                                        // 静默失败
+                                    });
+                                }
+                            }, 60 * 60 * 1000);
+                        };
+                        
+                        // 页面可见时开始检查
+                        if (!document.hidden) {
+                            startUpdateCheck();
+                        }
+                        
+                        // 监听页面可见性变化
+                        document.addEventListener('visibilitychange', () => {
+                            if (!document.hidden) {
+                                startUpdateCheck();
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Service Worker注册失败:', error);
+                    });
+                
+                // 监听Service Worker更新（自动刷新，不提示）
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (!refreshing) {
+                        refreshing = true;
+                        // 清除更新提示标记
+                        sessionStorage.removeItem('sw_update_prompted');
+                        // 自动刷新，不提示用户
+                        window.location.reload();
+                    }
+                });
+            });
+        }
+    </script>
+    
     <!-- 引入优化的缓存管理器 -->
     <script>
         /**
@@ -593,7 +681,7 @@
                     window.addEventListener('cacheDataUpdate', (event) => {
                         const { type, data } = event.detail;
                         if (type === 'brands') {
-                            console.log('检测到品牌数据更新，刷新界面');
+                            // 移除调试日志
                             this.allImages = data.images || [];
                             this.brandData = {};
                             if (data.brands) {
@@ -634,7 +722,7 @@
                     
                     try {
                         if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                            console.log(`开始加载数据... 页码: ${page}`);
+                                // 移除调试日志
                         }
                         
                         // 使用智能缓存管理器
@@ -643,7 +731,7 @@
                             cacheKey,
                             async () => {
                                 if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                                    console.log('从API获取数据...');
+                                    // 移除调试日志
                                 }
                                 // 添加重试机制
                                 for (let retry = 0; retry < 3; retry++) {
@@ -704,7 +792,7 @@
                             
                             this.dataLoaded = true;
                             if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                                console.log('数据加载完成');
+                                // 移除调试日志
                             }
                         } else {
                             throw new Error('数据加载失败');
@@ -779,8 +867,7 @@
                     };
                     
                     if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                        console.log('动态生成的筛选选项:', this.filterOptions);
-                        console.log('统计数量:', this.brandCounts);
+                        // 移除调试日志
                     }
                 },
 
@@ -1026,7 +1113,7 @@
 
                 async openBrandDetail(brand) {
                     if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                        console.log('打开品牌详情:', brand);
+                        // 移除调试日志
                     }
                     
                     // 使用智能缓存管理器获取品牌详情
@@ -1034,7 +1121,7 @@
                         'brand_detail',
                         async () => {
                             if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                                console.log('从API获取品牌详情...');
+                                // 移除调试日志
                             }
                             try {
                                 const response = await window.api.getBrandDetail(brand.name);
@@ -1121,7 +1208,7 @@
                         } catch (error) {
                             // 静默失败，不影响用户体验
                             if (PerformanceConfig && PerformanceConfig.performanceMonitoring && PerformanceConfig.performanceMonitoring.verboseLogging) {
-                                console.debug('预加载品牌数据失败:', error);
+                                // 移除调试日志
                             }
                         }
                     }, 300); // 300ms延迟，避免鼠标快速移动时频繁请求
@@ -1275,7 +1362,7 @@
 
                         if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
                             navigator.share(shareData).catch(err => {
-                                console.log('分享失败:', err);
+                                // 移除调试日志
                                 this.fallbackShare();
                             });
                         } else {
@@ -1376,13 +1463,77 @@
                 },
 
                 downloadImage(image) {
-                    const link = document.createElement('a');
-                    link.href = this.getImageURL(image);
-                    link.download = image.filename || 'image.jpg';
-                    link.target = '_blank';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
+                    const imageUrl = this.getImageURL(image);
+                    const filename = image.filename || 'image.jpg';
+                    
+                    // 检测是否为移动端
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+                    
+                    if (isMobile || isWeChat) {
+                        // 移动端：打开图片在新窗口，提示用户长按保存
+                        const newWindow = window.open(imageUrl, '_blank');
+                        if (newWindow) {
+                            setTimeout(() => {
+                                this.showToast('请长按图片保存到相册');
+                            }, 500);
+                        } else {
+                            // 如果弹窗被阻止，创建全屏预览
+                            const preview = document.createElement('div');
+                            preview.style.cssText = `
+                                position: fixed;
+                                top: 0;
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                                background: rgba(0,0,0,0.95);
+                                z-index: 10000;
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                            `;
+                            
+                            const img = document.createElement('img');
+                            img.src = imageUrl;
+                            img.style.cssText = `
+                                max-width: 100%;
+                                max-height: 90%;
+                                object-fit: contain;
+                            `;
+                            
+                            const tip = document.createElement('div');
+                            tip.textContent = '长按图片保存到相册';
+                            tip.style.cssText = `
+                                color: white;
+                                margin-top: 20px;
+                                font-size: 16px;
+                                padding: 10px 20px;
+                                background: rgba(255,255,255,0.2);
+                                border-radius: 20px;
+                            `;
+                            
+                            preview.appendChild(img);
+                            preview.appendChild(tip);
+                            document.body.appendChild(preview);
+                            
+                            preview.addEventListener('click', () => {
+                                document.body.removeChild(preview);
+                            });
+                            
+                            this.showToast('请长按图片保存');
+                        }
+                    } else {
+                        // PC端：直接下载
+                        const link = document.createElement('a');
+                        link.href = imageUrl;
+                        link.download = filename;
+                        link.target = '_blank';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        this.showToast('图片已开始下载');
+                    }
                 },
 
                 openCustomerService() {
@@ -1612,7 +1763,7 @@
 
                 // 通过标签筛选品牌
                 filterByTag(filterType, filterValue) {
-                    console.log(`点击筛选: ${filterType} = ${filterValue}`);
+                    // 移除调试日志
                     
                     // 关闭模态框（如果是从详情页点击的）
                     if (this.showModal) {
@@ -1664,7 +1815,7 @@
 
                 // 清除单个筛选条件
                 clearFilter(filterType) {
-                    console.log(`清除筛选: ${filterType}`);
+                    // 移除调试日志
                     
                     // 清除指定的筛选条件
                     this.activeFilters[filterType] = null;
@@ -1702,7 +1853,7 @@
                 },
 
                 generateShareCard() {
-                    console.log('生成布料卡片', this.selectedBrand);
+                    // 移除调试日志
                     
                     if (!this.selectedBrand) {
                         this.showToast('请先选择一个品牌');
@@ -1735,7 +1886,7 @@
                         `${window.api.baseURL}/share/card/${encodeURIComponent(brandName)}` : 
                         `${apiBaseUrl}/api/share/card/${encodeURIComponent(brandName)}`;
                     
-                    console.log('生成卡片API URL:', apiUrl);
+                    // 移除调试日志
                     
                     fetch(apiUrl)
                         .then(response => {
@@ -1956,7 +2107,7 @@
         // 挂载应用
         try {
             app.mount('#app');
-            console.log('Vue应用挂载成功');
+            // 移除调试日志
             
             // 初始化图片懒加载
             setTimeout(() => {
@@ -2039,7 +2190,7 @@
             API_BASE_URL = 'http://121.36.205.70:5432';
         }
             
-        console.log('API Base URL:', API_BASE_URL);
+        // 移除调试日志
         
         // 确保API调用使用正确的地址
         function getApiUrl(endpoint) {
@@ -2091,7 +2242,7 @@
                 
                 // 即使没有签名，也尝试设置分享内容（有些情况下仍然有效）
                 wx.ready(function() {
-                    console.log('微信JS-SDK已准备就绪');
+                    // 移除调试日志
                     
                     // 分享给朋友
                     wx.updateAppMessageShareData({
@@ -2100,10 +2251,10 @@
                         link: shareConfig.link,
                         imgUrl: shareConfig.imgUrl,
                         success: function () {
-                            console.log('微信分享给朋友配置成功');
+                            // 移除调试日志
                         },
                         fail: function(err) {
-                            console.log('微信分享给朋友配置失败:', err);
+                            // 移除调试日志
                         }
                     });
                     
@@ -2113,16 +2264,16 @@
                         link: shareConfig.link,
                         imgUrl: shareConfig.imgUrl,
                         success: function () {
-                            console.log('微信朋友圈分享配置成功');
+                            // 移除调试日志
                         },
                         fail: function(err) {
-                            console.log('微信朋友圈分享配置失败:', err);
+                            // 移除调试日志
                         }
                     });
                 });
                 
                 wx.error(function(res) {
-                    console.log('微信JS-SDK配置失败:', res);
+                    // 移除调试日志
                     // 如果JS-SDK配置失败，使用传统方法
                     setupTraditionalShare(shareConfig);
                 });
@@ -2134,7 +2285,7 @@
         
         // 传统分享方法（通过meta标签）
         function setupTraditionalShare(shareConfig) {
-            console.log('使用传统分享方法');
+            // 移除调试日志
             
             // 添加额外的meta标签以提高兼容性
             addMetaTag('og:title', shareConfig.title);
@@ -2179,15 +2330,14 @@
         
         // 页面加载完成后设置分享
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('页面加载完成，设置微信分享');
-            console.log('是否在微信浏览器:', isWeChatBrowser());
+            // 移除调试日志
             setupWeChatShare();
         });
         
         // Vue应用加载后再次设置
         if (window.Vue) {
             setTimeout(function() {
-                console.log('Vue应用加载完成，重新设置微信分享');
+                // 移除调试日志
                 setupWeChatShare();
             }, 2000);
         }
