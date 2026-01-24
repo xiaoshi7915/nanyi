@@ -188,7 +188,7 @@ pip install -r requirements-lock.txt
 ```
 
 ### 端口冲突问题
-**问题**: 8500或5001端口被占用
+**问题**: 8500或5432端口被占用
 
 **排查和解决**:
 ```bash
@@ -219,7 +219,7 @@ tail -f logs/backend.log
 ./manage.sh status
 
 # 检查端口监听
-netstat -tlnp | grep -E "(8500|5001)"
+netstat -tlnp | grep -E "(8500|5432)"
 
 # 检查进程状态
 ps aux | grep -E "(app.py|server.py)"

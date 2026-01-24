@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 PROJECT_NAME="南意秋棠汉服展示网站"
 PROJECT_DIR="/opt/hanfu/products"
 VENV_NAME="products_env"
-BACKEND_PORT=5001
+BACKEND_PORT=5432
 FRONTEND_PORT=8500
 
 # 日志函数

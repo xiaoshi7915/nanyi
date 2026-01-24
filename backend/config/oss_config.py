@@ -127,6 +127,8 @@ class OSSConfig:
 # 验证配置
 try:
     OSSConfig.validate_config()
-    print("✅ OSS配置验证成功")
+    import logging
+    logging.getLogger(__name__).info("✅ OSS配置验证成功")
 except ValueError as e:
-    print(f"❌ OSS配置错误: {e}")
+    import logging
+    logging.getLogger(__name__).error(f"❌ OSS配置错误: {e}")

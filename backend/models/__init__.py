@@ -18,7 +18,10 @@ def init_models():
         from .access_log import AccessLog
         return Product, Admin, AccessLog
     except ImportError as e:
-        print(f"警告: 模型导入失败 - {e}")
+        # 延迟导入logger，避免循环导入
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"警告: 模型导入失败 - {e}")
         return None, None, None
 
 # 延迟导入，避免循环依赖

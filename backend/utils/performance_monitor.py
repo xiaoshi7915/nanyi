@@ -10,6 +10,7 @@ import functools
 from datetime import datetime
 from collections import defaultdict
 import threading
+from backend.utils.logger import logger
 
 class PerformanceMonitor:
     """性能监控器"""
@@ -36,7 +37,7 @@ class PerformanceMonitor:
                     
                     # 在调试模式下输出耗时
                     if duration > 100:  # 只记录超过100ms的操作
-                        print(f"⏱️ {name}: {duration:.2f}ms")
+                        logger.debug(f"⏱️ {name}: {duration:.2f}ms")
             return wrapper
         return decorator
     
@@ -65,30 +66,30 @@ class PerformanceMonitor:
     def print_stats(self):
         """打印性能统计"""
         stats = self.get_stats()
-        print("\n" + "="*50)
-        print("📊 性能监控统计")
-        print("="*50)
+        logger.info("="*50)
+        logger.info("📊 性能监控统计")
+        logger.info("="*50)
         
         if not stats:
-            print("暂无性能数据")
+            logger.info("暂无性能数据")
             return
         
         # 按平均耗时排序
         sorted_stats = sorted(stats.items(), key=lambda x: x[1]['average'], reverse=True)
         
         for name, data in sorted_stats:
-            print(f"\n🔍 {name}:")
-            print(f"   调用次数: {data['count']}")
-            print(f"   平均耗时: {data['average']:.2f}ms")
-            print(f"   最大耗时: {data['max']:.2f}ms")
-            print(f"   最小耗时: {data['min']:.2f}ms")
-            print(f"   总耗时: {data['total']:.2f}ms")
+            logger.info(f"\n🔍 {name}:")
+            logger.info(f"   调用次数: {data['count']}")
+            logger.info(f"   平均耗时: {data['average']:.2f}ms")
+            logger.info(f"   最大耗时: {data['max']:.2f}ms")
+            logger.info(f"   最小耗时: {data['min']:.2f}ms")
+            logger.info(f"   总耗时: {data['total']:.2f}ms")
             
             # 性能警告
             if data['average'] > 1000:
-                print(f"   ⚠️ 警告: 平均耗时超过1秒！")
+                logger.warning(f"   ⚠️ 警告: 平均耗时超过1秒！")
             elif data['average'] > 500:
-                print(f"   ⚠️ 注意: 平均耗时较长")
+                logger.warning(f"   ⚠️ 注意: 平均耗时较长")
     
     def clear_stats(self):
         """清空统计数据"""
@@ -120,4 +121,4 @@ class PerformanceTimer:
         duration = (time.time() - self.start_time) * 1000
         performance_monitor.record_time(self.name, duration)
         if duration > 100:
-            print(f"⏱️ {self.name}: {duration:.2f}ms") 
+            logger.debug(f"⏱️ {self.name}: {duration:.2f}ms") 

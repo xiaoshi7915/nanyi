@@ -1,0 +1,41 @@
+[Unit]
+Description=南意秋棠前端服务
+After=network.target nanyi-backend.service
+Wants=nanyi-backend.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/opt/hanfu/products/frontend
+Environment="PATH=/opt/hanfu/products/products_env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONPATH=/opt/hanfu/products"
+Environment="FRONTEND_PORT=8500"
+Environment="HOST=0.0.0.0"
+
+# 激活虚拟环境并启动Flask开发服务器
+# 注意：生产环境建议使用gunicorn，但当前gunicorn worker不稳定，暂时使用Flask开发服务器
+ExecStart=/opt/hanfu/products/products_env/bin/python /opt/hanfu/products/frontend/server.py
+
+# 重启策略
+Restart=always
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# 资源限制
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# 日志
+StandardOutput=append:/opt/hanfu/products/logs/frontend_systemd.log
+StandardError=append:/opt/hanfu/products/logs/frontend_systemd_error.log
+
+# 安全设置
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/hanfu/products/logs /opt/hanfu/products/frontend
+
+[Install]
+WantedBy=multi-user.target

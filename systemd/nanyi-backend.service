@@ -1,0 +1,52 @@
+[Unit]
+Description=南意秋棠后端服务
+After=network.target mysql.service
+Wants=mysql.service
+
+[Service]
+Type=notify
+User=root
+Group=root
+WorkingDirectory=/opt/hanfu/products
+Environment="PATH=/opt/hanfu/products/products_env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONPATH=/opt/hanfu/products"
+Environment="FLASK_ENV=production"
+
+# 激活虚拟环境并启动服务
+ExecStart=/opt/hanfu/products/products_env/bin/gunicorn \
+    --chdir /opt/hanfu/products \
+    --bind 0.0.0.0:5432 \
+    --workers 2 \
+    --worker-class sync \
+    --timeout 120 \
+    --keep-alive 2 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --preload \
+    --log-level info \
+    --access-logfile /opt/hanfu/products/logs/backend_access.log \
+    --error-logfile /opt/hanfu/products/logs/backend.log \
+    backend.wsgi:application
+
+# 重启策略
+Restart=always
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# 资源限制
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# 日志
+StandardOutput=append:/opt/hanfu/products/logs/backend_systemd.log
+StandardError=append:/opt/hanfu/products/logs/backend_systemd_error.log
+
+# 安全设置
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/hanfu/products/logs /opt/hanfu/products
+
+[Install]
+WantedBy=multi-user.target

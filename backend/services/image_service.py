@@ -8,14 +8,17 @@ import os
 import re
 from typing import List, Dict, Optional
 
-class ImageService:
+from backend.services.base_service import BaseService
+
+class ImageService(BaseService):
     """图片处理服务类 - 专注本地图片处理，性能优化版"""
     
     def __init__(self, images_dir: str = None):
         """初始化图片服务"""
+        super().__init__(service_name='ImageService')
+        
         if images_dir is None:
             # 获取项目根目录
-            import os
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.dirname(os.path.dirname(current_dir))
             images_dir = os.path.join(project_root, 'frontend', 'static', 'images')
@@ -23,7 +26,7 @@ class ImageService:
         self.images_dir = images_dir
         self.allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'}
         
-        print(f"📁 本地图片服务初始化: {self.images_dir}")
+        self.log_info(f"本地图片服务初始化: {self.images_dir}")
     
     def parse_filename(self, filename: str) -> Dict[str, str]:
         """解析文件名获取品牌信息"""
@@ -69,20 +72,19 @@ class ImageService:
     
     def get_all_images(self) -> List[Dict]:
         """获取所有图片信息 - 带缓存的本地版本"""
-        # 使用缓存避免重复扫描
-        from backend.services.cache_service import cache_service
+        # 使用基础服务的缓存方法
         cache_key = "all_images_local"
-        cached_images = cache_service.get(cache_key)
+        cached_images = self.get_cache(cache_key)
         if cached_images:
-            print(f"✅ 从缓存获取所有图片: {len(cached_images)}张")
+            self.log_debug(f"从缓存获取所有图片: {len(cached_images)}张")
             return cached_images
         
-        print("📁 扫描本地图片目录...")
+        self.log_debug("扫描本地图片目录...")
         images = self._scan_local_images()
         
         # 缓存结果（15分钟）
-        cache_service.set(cache_key, images, ttl=900)
-        print(f"✅ 图片数据已缓存: {len(images)}张图片")
+        self.set_cache(cache_key, images, ttl=900)
+        self.log_debug(f"图片数据已缓存: {len(images)}张图片")
         
         return images
     
@@ -91,7 +93,7 @@ class ImageService:
         images = []
         
         if not os.path.exists(self.images_dir):
-            print(f"⚠️ 本地图片目录不存在: {self.images_dir}")
+            self.log_warning(f"本地图片目录不存在: {self.images_dir}")
             return images
         
         # 定义需要排除的社交图标文件
@@ -147,32 +149,31 @@ class ImageService:
                                 'original': f"/static/images/{relative_path}"
                             })
         
-        print(f"📁 本地图片扫描完成: 共{len(images)}张图片")
+        self.log_info(f"本地图片扫描完成: 共{len(images)}张图片")
         return sorted(images, key=lambda x: x['brand_name'] or '')
     
     def get_brand_images(self, brand_name: str) -> List[Dict]:
         """获取指定品牌的所有图片 - 带缓存的本地版本"""
-        # 使用缓存避免重复查询
-        from backend.services.cache_service import cache_service
+        # 使用基础服务的缓存方法
         cache_key = f"brand_images_{brand_name}"
-        cached_images = cache_service.get(cache_key)
+        cached_images = self.get_cache(cache_key)
         if cached_images:
-            print(f"✅ 从缓存获取品牌图片: {brand_name} ({len(cached_images)}张)")
+            self.log_debug(f"从缓存获取品牌图片: {brand_name} ({len(cached_images)}张)")
             return cached_images
         
-        print(f"📁 查找品牌图片: {brand_name}")
+        self.log_debug(f"查找品牌图片: {brand_name}")
         all_images = self.get_all_images()
         
         # 首先尝试精确匹配
         exact_matches = [img for img in all_images if img['brand_name'] == brand_name]
         if exact_matches:
-            print(f"📁 精确匹配找到: {len(exact_matches)}张图片")
+            self.log_debug(f"精确匹配找到: {len(exact_matches)}张图片")
             # 缓存结果（2小时，图片很少变化）
-            cache_service.set(cache_key, exact_matches, ttl=7200)
+            self.set_cache(cache_key, exact_matches, ttl=7200)
             return self.sort_images_by_priority(exact_matches)
         
         # 如果精确匹配失败，尝试模糊匹配
-        print(f"📁 精确匹配失败，尝试模糊匹配: {brand_name}")
+        self.log_debug(f"精确匹配失败，尝试模糊匹配: {brand_name}")
         fuzzy_matches = []
         
         # 去除括号内容进行匹配
@@ -190,14 +191,14 @@ class ImageService:
                 fuzzy_matches.append(img)
         
         if fuzzy_matches:
-            print(f"📁 模糊匹配找到: {len(fuzzy_matches)}张图片")
+            self.log_debug(f"模糊匹配找到: {len(fuzzy_matches)}张图片")
             # 缓存结果（10分钟）
-            cache_service.set(cache_key, fuzzy_matches, ttl=600)
+            self.set_cache(cache_key, fuzzy_matches, ttl=600)
             return self.sort_images_by_priority(fuzzy_matches)
         
-        print(f"📁 未找到品牌图片: {brand_name}")
+        self.log_debug(f"未找到品牌图片: {brand_name}")
         # 缓存空结果（5分钟）
-        cache_service.set(cache_key, [], ttl=300)
+        self.set_cache(cache_key, [], ttl=300)
         return []
     
     def sort_images_by_priority(self, images: List[Dict]) -> List[Dict]:
@@ -226,9 +227,9 @@ class ImageService:
     
     def get_statistics(self) -> Dict[str, int]:
         """获取图片统计信息 - 带缓存"""
-        from backend.services.cache_service import cache_service
+        # 使用基础服务的缓存方法
         cache_key = "image_statistics"
-        cached_stats = cache_service.get(cache_key)
+        cached_stats = self.get_cache(cache_key)
         if cached_stats:
             return cached_stats
         
@@ -247,14 +248,14 @@ class ImageService:
             stats['image_types'][img_type] = stats['image_types'].get(img_type, 0) + 1
         
         # 缓存统计结果（10分钟）
-        cache_service.set(cache_key, stats, ttl=600)
+        self.set_cache(cache_key, stats, ttl=600)
         return stats
     
     def get_filter_options(self) -> Dict:
         """获取筛选选项 - 带缓存"""
-        from backend.services.cache_service import cache_service
+        # 使用基础服务的缓存方法
         cache_key = "image_filter_options"
-        cached_options = cache_service.get(cache_key)
+        cached_options = self.get_cache(cache_key)
         if cached_options:
             return cached_options
         
@@ -272,5 +273,5 @@ class ImageService:
         }
         
         # 缓存筛选选项（10分钟）
-        cache_service.set(cache_key, options, ttl=600)
+        self.set_cache(cache_key, options, ttl=600)
         return options

@@ -8,6 +8,7 @@ import mysql.connector
 import sys
 import os
 from datetime import datetime, timedelta
+from backend.utils.logger import logger
 
 def get_db_config():
     """获取数据库配置"""
@@ -25,34 +26,34 @@ def check_access_logs():
         conn = mysql.connector.connect(**get_db_config())
         cursor = conn.cursor()
         
-        print("🔍 访问日志监控报告")
-        print("=" * 50)
+        logger.info("🔍 访问日志监控报告")
+        logger.info("=" * 50)
         
         # 总记录数
         cursor.execute('SELECT COUNT(*) FROM access_logs')
         total_count = cursor.fetchone()[0]
-        print(f"📊 总记录数: {total_count}")
+        logger.info(f"📊 总记录数: {total_count}")
         
         # 今天的记录
         today = datetime.now().date()
         cursor.execute('SELECT COUNT(*) FROM access_logs WHERE DATE(timestamp) = %s', (today,))
         today_count = cursor.fetchone()[0]
-        print(f"📅 今日记录: {today_count}")
+        logger.info(f"📅 今日记录: {today_count}")
         
         # 最近1小时的记录
         one_hour_ago = datetime.now() - timedelta(hours=1)
         cursor.execute('SELECT COUNT(*) FROM access_logs WHERE timestamp >= %s', (one_hour_ago,))
         hour_count = cursor.fetchone()[0]
-        print(f"⏰ 最近1小时: {hour_count}")
+        logger.info(f"⏰ 最近1小时: {hour_count}")
         
         # 最近10分钟的记录
         ten_minutes_ago = datetime.now() - timedelta(minutes=10)
         cursor.execute('SELECT COUNT(*) FROM access_logs WHERE timestamp >= %s', (ten_minutes_ago,))
         recent_count = cursor.fetchone()[0]
-        print(f"🕐 最近10分钟: {recent_count}")
+        logger.info(f"🕐 最近10分钟: {recent_count}")
         
         # 最新的5条记录
-        print("\\n📋 最新访问记录:")
+        logger.info("📋 最新访问记录:")
         cursor.execute('''
             SELECT timestamp, client_ip, method, path, status_code, response_time_ms 
             FROM access_logs 
@@ -64,10 +65,10 @@ def check_access_logs():
         for i, record in enumerate(records, 1):
             timestamp, ip, method, path, status, response_time = record
             response_time_str = f"{response_time:.2f}ms" if response_time else "N/A"
-            print(f"  {i}. {timestamp} | {ip} | {method} {path} | {status} | {response_time_str}")
+            logger.info(f"  {i}. {timestamp} | {ip} | {method} {path} | {status} | {response_time_str}")
         
         # 热门路径统计（今日）
-        print("\\n🔥 今日热门API路径:")
+        logger.info("🔥 今日热门API路径:")
         cursor.execute('''
             SELECT path, COUNT(*) as count 
             FROM access_logs 
@@ -79,10 +80,10 @@ def check_access_logs():
         paths = cursor.fetchall()
         
         for i, (path, count) in enumerate(paths, 1):
-            print(f"  {i}. {path} ({count} 次)")
+            logger.info(f"  {i}. {path} ({count} 次)")
         
         # IP统计（今日）
-        print("\\n🌐 今日访问IP统计:")
+        logger.info("🌐 今日访问IP统计:")
         cursor.execute('''
             SELECT client_ip, COUNT(*) as count 
             FROM access_logs 
@@ -94,28 +95,28 @@ def check_access_logs():
         ips = cursor.fetchall()
         
         for i, (ip, count) in enumerate(ips, 1):
-            print(f"  {i}. {ip} ({count} 次)")
+            logger.info(f"  {i}. {ip} ({count} 次)")
         
         cursor.close()
         conn.close()
         
-        print("\\n✅ 访问日志监控完成")
+        logger.info("✅ 访问日志监控完成")
         return True
         
     except Exception as e:
-        print(f"❌ 监控失败: {e}")
+        logger.error(f"❌ 监控失败: {e}")
         return False
 
 def test_log_functionality():
     """测试日志功能"""
     import requests
     
-    print("\\n🧪 测试访问日志功能...")
+    logger.info("🧪 测试访问日志功能...")
     
     try:
         # 发送测试请求
-        response = requests.get('http://localhost:5001/api/health', timeout=5)
-        print(f"✅ 测试请求发送成功: {response.status_code}")
+        response = requests.get('http://localhost:/api/health', timeout=5)
+        logger.info(f"✅ 测试请求发送成功: {response.status_code}")
         
         # 等待一下让日志写入
         import time
@@ -135,15 +136,15 @@ def test_log_functionality():
         
         record = cursor.fetchone()
         if record:
-            print(f"✅ 最新日志记录: {record[0]} | {record[1]} | {record[2]} {record[3]} | {record[4]}")
+            logger.info(f"✅ 最新日志记录: {record[0]} | {record[1]} | {record[2]} {record[3]} | {record[4]}")
         else:
-            print("⚠️  没有找到最新的日志记录")
+            logger.warning("⚠️  没有找到最新的日志记录")
         
         cursor.close()
         conn.close()
         
     except Exception as e:
-        print(f"❌ 测试失败: {e}")
+        logger.error(f"❌ 测试失败: {e}")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "test":

@@ -6,6 +6,9 @@ from functools import wraps
 from flask import request, g
 import os
 
+# 创建模块级别的logger
+logger = logging.getLogger(__name__)
+
 class LoggerConfig:
     """日志配置类"""
     
@@ -19,33 +22,50 @@ class LoggerConfig:
         log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
         os.makedirs(log_dir, exist_ok=True)
         
-        # 访问日志配置
+        # 访问日志配置 - 使用结构化JSON格式
         access_handler = logging.FileHandler(os.path.join(log_dir, 'access.log'))
         access_handler.setLevel(logging.INFO)
         access_formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(message)s'
+            '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
         )
         access_handler.setFormatter(access_formatter)
         
-        # 错误日志配置
+        # 错误日志配置 - 使用结构化JSON格式
         error_handler = logging.FileHandler(os.path.join(log_dir, 'error.log'))
         error_handler.setLevel(logging.ERROR)
         error_formatter = logging.Formatter(
-            '%(asctime)s - %(levelname)s - %(pathname)s:%(lineno)d - %(message)s'
+            '%(asctime)s - %(levelname)s - %(name)s - %(pathname)s:%(lineno)d - %(funcName)s - %(message)s'
         )
         error_handler.setFormatter(error_formatter)
+        
+        # 应用日志配置 - 支持不同日志级别
+        app_log_handler = logging.FileHandler(os.path.join(log_dir, 'app.log'))
+        log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
+        app_log_handler.setLevel(getattr(logging, log_level, logging.INFO))
+        app_formatter = logging.Formatter(
+            '%(asctime)s - %(levelname)s - %(name)s - %(pathname)s:%(lineno)d - %(message)s'
+        )
+        app_log_handler.setFormatter(app_formatter)
         
         # 创建日志记录器
         self.access_logger = logging.getLogger('access')
         self.access_logger.setLevel(logging.INFO)
         self.access_logger.addHandler(access_handler)
+        self.access_logger.propagate = False  # 避免重复日志
         
         self.error_logger = logging.getLogger('error')
         self.error_logger.setLevel(logging.ERROR)
         self.error_logger.addHandler(error_handler)
+        self.error_logger.propagate = False  # 避免重复日志
         
-        app.logger.addHandler(access_handler)
-        app.logger.addHandler(error_handler)
+        # 配置应用主日志记录器
+        app.logger.setLevel(getattr(logging, log_level, logging.INFO))
+        app.logger.addHandler(app_log_handler)
+        app.logger.addHandler(error_handler)  # 错误也记录到主日志
+        
+        # 配置根日志记录器
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.WARNING)  # 只记录警告及以上级别
 
 class IPService:
     """IP归属地查询服务"""
@@ -67,7 +87,7 @@ class IPService:
                     'timezone': data.get('timezone', '未知')
                 }
         except Exception as e:
-            print(f"获取IP信息失败: {e}")
+            logger.warning(f"获取IP信息失败: {e}", exc_info=True)
         
         return {
             'country': '未知',
@@ -170,7 +190,11 @@ def save_access_log_to_db(log_data):
         
         # 检查是否在应用上下文中
         if not current_app:
-            print(f"访问日志(无应用上下文): {log_data.get('client_ip')} {log_data.get('method')} {log_data.get('path')} - {log_data.get('status_code')}")
+            logger.debug(
+                f"访问日志(无应用上下文): {log_data.get('client_ip')} "
+                f"{log_data.get('method')} {log_data.get('path')} - "
+                f"{log_data.get('status_code')}"
+            )
             return
         
         # 创建访问日志记录
@@ -180,10 +204,14 @@ def save_access_log_to_db(log_data):
         db.session.add(access_log)
         db.session.commit()
         
-        print(f"✅ 访问日志已存储到数据库: {log_data.get('client_ip')} {log_data.get('method')} {log_data.get('path')} - {log_data.get('status_code')}")
+        logger.debug(
+            f"访问日志已存储到数据库: {log_data.get('client_ip')} "
+            f"{log_data.get('method')} {log_data.get('path')} - "
+            f"{log_data.get('status_code')}"
+        )
         
     except Exception as e:
-        print(f"❌ 保存访问日志到数据库失败: {e}")
+        logger.error(f"保存访问日志到数据库失败: {e}", exc_info=True)
         # 回滚事务
         try:
             from backend.models import db
@@ -191,8 +219,12 @@ def save_access_log_to_db(log_data):
         except:
             pass
         
-        # 不影响主请求处理，仅记录到控制台
-        print(f"访问日志(数据库失败): {log_data.get('client_ip')} {log_data.get('method')} {log_data.get('path')} - {log_data.get('status_code')}")
+        # 不影响主请求处理，仅记录日志
+        logger.warning(
+            f"访问日志(数据库失败): {log_data.get('client_ip')} "
+            f"{log_data.get('method')} {log_data.get('path')} - "
+            f"{log_data.get('status_code')}"
+        )
 
 def setup_logging(app):
     """设置应用日志"""
