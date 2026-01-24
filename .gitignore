@@ -255,4 +255,6 @@ node_modules/
 
 # 系统文件
 .Trash-*
-ehthumbs.db 
+ehthumbs.db
+
+cards/
