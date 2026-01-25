@@ -110,6 +110,13 @@ def create_app(config_name='development'):
     # 初始化缓存控制
     init_cache_control_helpers(app)
     
+    # 初始化API性能监控
+    try:
+        from backend.utils.api_monitor import init_api_monitoring
+        init_api_monitoring(app)
+    except Exception as e:
+        logger.warning(f"API性能监控初始化失败: {e}")
+    
     # 启用响应压缩（gzip）
     @app.after_request
     def compress_response(response):
@@ -267,8 +274,14 @@ def create_app(config_name='development'):
         try:
             from backend.services.cache_service import cache_service
             cache_service.get('health_check')
+            
+            # 获取缓存统计信息
+            cache_stats = cache_service.stats()
             health_status['checks']['cache'] = {
-                'status': 'ok'
+                'status': 'ok',
+                'type': 'redis' if cache_service.redis_cache else 'memory',
+                'hit_ratio': f"{cache_stats.get('hit_ratio', 0):.2f}%",
+                'total_operations': cache_stats.get('total_operations', 0)
             }
         except Exception as e:
             health_status['checks']['cache'] = {

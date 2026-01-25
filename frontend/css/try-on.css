@@ -459,6 +459,21 @@
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     margin-bottom: 1.5rem;
+    height: auto;
+    object-fit: contain;
+}
+
+.result-error {
+    color: #ef4444;
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+}
+
+.result-link {
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: #4a90e2;
+    text-decoration: underline;
 }
 
 .result-actions {
@@ -645,6 +660,11 @@
     .result-btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .result-image {
+        max-width: 100%;
+        max-height: 60vh;
     }
 
     .try-on-modal-footer {

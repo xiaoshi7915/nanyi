@@ -81,42 +81,64 @@ class ProductController:
     
     def get_filter_options(self) -> Dict:
         """
-        获取筛选选项
+        获取筛选选项 - 优化版本：使用数据库聚合查询 + 缓存
         
         Returns:
             dict: 筛选选项数据
         """
+        # 使用缓存键（统一命名空间）
+        cache_key = "product:filter:options"
+        
+        # 尝试从缓存获取
         try:
-            # 从数据库获取所有产品信息
-            products = Product.query.all()
-            logger.debug(f"筛选API: 查询到 {len(products)} 个产品")
+            from backend.services.cache_service import cache_service
+            cached_result = cache_service.get(cache_key)
+            if cached_result:
+                logger.debug("筛选选项从缓存获取")
+                return cached_result
+        except Exception as e:
+            logger.warning(f"获取缓存失败: {e}")
+        
+        try:
+            # 使用数据库聚合查询替代Python循环统计，大幅提升性能
+            from backend.models import db
             
-            # 统计各个属性的数量
-            years = {}
+            # 年份统计 - 使用数据库GROUP BY
+            year_stats = db.session.query(
+                Product.year,
+                db.func.count(Product.id).label('count')
+            ).filter(Product.year.isnot(None)).group_by(Product.year).order_by(Product.year.desc()).all()
+            years = {str(year): count for year, count in year_stats}
+            
+            # 主题系列统计 - 使用数据库GROUP BY
+            theme_stats = db.session.query(
+                Product.theme_series,
+                db.func.count(Product.id).label('count')
+            ).filter(Product.theme_series.isnot(None)).group_by(Product.theme_series).all()
+            theme_series = {theme: count for theme, count in theme_stats}
+            
+            # 印制尺寸统计 - 使用数据库GROUP BY
+            print_size_stats = db.session.query(
+                Product.print_size,
+                db.func.count(Product.id).label('count')
+            ).filter(Product.print_size.isnot(None)).group_by(Product.print_size).all()
+            print_sizes = {size: count for size, count in print_size_stats}
+            
+            # 材质统计 - 由于材质可能包含/分隔符，需要特殊处理
+            # 先获取所有材质，然后在应用层处理分隔符
+            material_stats = db.session.query(
+                Product.material,
+                db.func.count(Product.id).label('count')
+            ).filter(Product.material.isnot(None)).group_by(Product.material).all()
+            
+            # 处理材质分隔符（支持/分隔的材质）
             materials = {}
-            theme_series = {}
-            print_sizes = {}
-            
-            for product in products:
-                # 年份统计
-                if product.year:
-                    year_str = str(product.year)
-                    years[year_str] = years.get(year_str, 0) + 1
-                
-                # 材质统计 - 支持/分隔的材质
-                if product.material:
+            for material, count in material_stats:
+                if material:
                     # 按/分隔符拆分材质，每个拆分后的材质都算作一种分类
-                    material_list = [m.strip() for m in product.material.split('/') if m.strip()]
-                    for material in material_list:
-                        materials[material] = materials.get(material, 0) + 1
-                
-                # 主题系列统计
-                if product.theme_series:
-                    theme_series[product.theme_series] = theme_series.get(product.theme_series, 0) + 1
-                
-                # 印制尺寸统计
-                if product.print_size:
-                    print_sizes[product.print_size] = print_sizes.get(product.print_size, 0) + 1
+                    material_list = [m.strip() for m in material.split('/') if m.strip()]
+                    for m in material_list:
+                        materials[m] = materials.get(m, 0) + count
             
             # 按数量排序并添加"全部"选项
             def sort_and_add_all(data_dict):
@@ -139,11 +161,21 @@ class ProductController:
             
             logger.debug(f"筛选API: 返回真实数据 - 年份:{len(years)}, 材质:{len(materials)}, 主题:{len(theme_series)}")
             
-            return {
+            result = {
                 'success': True,
                 'filters': filter_data,
                 **filter_data
             }
+            
+            # 缓存结果（1小时，筛选选项变化不频繁）
+            try:
+                from backend.services.cache_service import cache_service
+                cache_service.set(cache_key, result, ttl=3600)
+                logger.debug("筛选选项已缓存")
+            except Exception as e:
+                logger.warning(f"设置缓存失败: {e}")
+            
+            return result
             
         except Exception as e:
             logger.error(f"获取筛选选项错误: {e}", exc_info=True)

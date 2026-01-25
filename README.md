@@ -77,6 +77,12 @@ vi .env
 - `DB_NAME` - 数据库名称
 - `CORS_ORIGINS` - CORS允许的域名（HTTPS）
 
+可选的环境变量（Redis缓存）：
+- `REDIS_HOST` - Redis主机地址（默认：localhost）
+- `REDIS_PORT` - Redis端口（默认：6379）
+- `REDIS_DB` - Redis数据库编号（默认：0）
+- `REDIS_PASSWORD` - Redis密码（可选）
+
 ### 3. 数据库迁移
 
 ```bash
@@ -174,9 +180,13 @@ sudo journalctl -u nanyi-frontend.service -f
 ## 性能优化
 
 1. **数据库索引**: 为常用查询字段添加索引
-2. **查询优化**: 避免N+1查询问题
-3. **缓存策略**: 内存缓存（建议升级到Redis）
-4. **API版本控制**: 支持 `/api` 和 `/api/v1`
+2. **查询优化**: 避免N+1查询问题，使用数据库聚合查询
+3. **缓存策略**: 多层缓存（Redis + 内存缓存）
+   - Redis缓存：持久化缓存，支持分布式
+   - 内存缓存：本地快速缓存，作为Redis的备用
+4. **API性能监控**: 自动记录API响应时间，慢查询告警
+5. **响应压缩**: Gzip压缩减少传输大小
+6. **API版本控制**: 支持 `/api` 和 `/api/v1`
 
 ## 日志
 

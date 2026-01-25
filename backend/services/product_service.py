@@ -81,8 +81,8 @@ class ProductService(BaseService):
     def get_brand_detail(self, brand_name):
         """获取品牌详细信息 - 优化版本，移除全表扫描，使用基础服务缓存"""
         try:
-            # 使用基础服务的缓存方法
-            cache_key = f"brand_detail_{brand_name}"
+            # 使用基础服务的缓存方法（统一命名空间）
+            cache_key = f"brand:detail:{brand_name}"
             cached_result = self.get_cache(cache_key)
             if cached_result:
                 self.log_debug(f"从缓存获取品牌详情: {brand_name}")
@@ -319,11 +319,30 @@ class ProductService(BaseService):
             }
     
     def get_statistics(self):
-        """获取统计信息"""
+        """获取统计信息 - 优化版本：合并多个COUNT查询为单个聚合查询"""
+        # 使用缓存键（统一命名空间）
+        cache_key = "product:statistics"
+        
+        # 尝试从缓存获取
+        cached_result = self.get_cache(cache_key)
+        if cached_result:
+            self.log_debug("统计信息从缓存获取")
+            return cached_result
+        
         try:
-            total_products = Product.query.count()
-            featured_products = Product.query.filter_by(is_featured=True).count()
-            active_products = Product.query.filter_by(state='active').count()
+            # 优化：使用单个查询获取所有统计信息，减少数据库查询次数
+            # 使用条件聚合替代多次COUNT查询
+            from sqlalchemy import case
+            
+            stats_query = db.session.query(
+                db.func.count(Product.id).label('total_products'),
+                db.func.sum(case((Product.is_featured == True, 1), else_=0)).label('featured_products'),
+                db.func.sum(case((Product.state == 'active', 1), else_=0)).label('active_products')
+            ).first()
+            
+            total_products = stats_query.total_products or 0
+            featured_products = int(stats_query.featured_products or 0)
+            active_products = int(stats_query.active_products or 0)
             
             # 按年份统计
             year_stats = db.session.query(
@@ -337,13 +356,19 @@ class ProductService(BaseService):
                 db.func.count(Product.id).label('count')
             ).filter(Product.theme_series.isnot(None)).group_by(Product.theme_series).all()
             
-            return {
+            result = {
                 'total_products': total_products,
                 'featured_products': featured_products,
                 'active_products': active_products,
                 'year_stats': {year: count for year, count in year_stats},
                 'theme_stats': {theme: count for theme, count in theme_stats}
             }
+            
+            # 缓存结果（30分钟）
+            self.set_cache(cache_key, result, ttl=1800)
+            self.log_debug("统计信息已缓存")
+            
+            return result
             
         except Exception as e:
             self.log_error("获取统计信息失败", error=e)

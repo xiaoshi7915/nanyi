@@ -758,7 +758,27 @@
                     <div v-if="tryOnStatus === 'completed' && tryOnResultUrl" class="try-on-step">
                         <h3 class="step-title">试衣效果</h3>
                         <div class="result-container">
-                            <img :src="tryOnResultUrl" alt="试衣效果" class="result-image">
+                            <img 
+                                :src="tryOnResultUrl" 
+                                alt="试衣效果" 
+                                class="result-image"
+                                referrerpolicy="no-referrer"
+                                crossorigin="anonymous"
+                                @load="handleTryOnResultImageLoad"
+                                @error="handleTryOnResultImageError"
+                            >
+                            <div v-if="tryOnResultImageError" class="result-error">
+                                图片加载失败，请点击下方按钮查看原图
+                            </div>
+                            <a 
+                                v-if="tryOnResultImageError" 
+                                :href="tryOnResultUrl" 
+                                target="_blank" 
+                                rel="noopener"
+                                class="result-link"
+                            >
+                                打开原图
+                            </a>
                             <div class="result-actions">
                                 <button @click="saveTryOnResult" class="result-btn save-btn">
                                     <i class="fas fa-download"></i>
@@ -875,6 +895,8 @@
                     tryOnPollingStartTime: null, // 轮询开始时间（用于超时检测）
                     tryOnPollingTimeout: 300000, // 轮询超时时间（5分钟，AI生成可能需要更长时间）
                     pollingErrorCount: 0, // 轮询错误计数
+                    tryOnResultImageError: false, // 结果图片加载失败
+                    tryOnResultImageLoaded: false, // 结果图片加载成功
                     brandLikeStatus: {
                         liked: false,
                         count: 0,
@@ -2422,6 +2444,8 @@
                         this.tryOnResultUrl = null;
                         this.tryOnProgress = 0;
                         this.tryOnError = null;
+                        this.tryOnResultImageError = false;
+                        this.tryOnResultImageLoaded = false;
                     }, 300);
                 },
 
@@ -2669,6 +2693,8 @@
                             if (this.tryOnStatus === 'completed') {
                                 // 任务完成
                                 this.tryOnResultUrl = responseData.result_image_url;
+                                this.tryOnResultImageError = false;
+                                this.tryOnResultImageLoaded = false;
                                 this.stopPolling();
                                 this.showToast('试衣效果生成成功！');
                             } else if (this.tryOnStatus === 'failed') {
@@ -2770,6 +2796,8 @@
                                 if (status === 'completed') {
                                     this.tryOnStatus = 'completed';
                                     this.tryOnResultUrl = responseData.result_image_url;
+                                    this.tryOnResultImageError = false;
+                                    this.tryOnResultImageLoaded = false;
                                     this.stopPolling();
                                     this.showToast('试衣效果生成成功！');
                                     console.log('任务已完成，结果URL:', this.tryOnResultUrl);
@@ -2795,6 +2823,23 @@
                     this.tryOnError = '任务处理超时，请稍后重试';
                     this.tryOnStatus = 'failed';
                     this.showToast('任务处理超时，请稍后重试');
+                },
+
+                /**
+                 * 试衣结果图片加载成功
+                 */
+                handleTryOnResultImageLoad() {
+                    this.tryOnResultImageLoaded = true;
+                    this.tryOnResultImageError = false;
+                },
+
+                /**
+                 * 试衣结果图片加载失败
+                 */
+                handleTryOnResultImageError() {
+                    this.tryOnResultImageLoaded = false;
+                    this.tryOnResultImageError = true;
+                    this.showToast('试衣结果图片加载失败，请点击打开原图');
                 },
 
                 /**
@@ -2917,6 +2962,8 @@
                                 // 任务已完成，显示结果
                                 this.tryOnStatus = 'completed';
                                 this.tryOnResultUrl = responseData.result_image_url;
+                                this.tryOnResultImageError = false;
+                                this.tryOnResultImageLoaded = false;
                                 this.tryOnError = null;
                                 this.showToast('试衣效果生成成功！');
                                 console.log('任务已完成，结果URL:', this.tryOnResultUrl);
@@ -2954,6 +3001,8 @@
                     this.tryOnResultUrl = null;
                     this.tryOnProgress = 0;
                     this.tryOnError = null;
+                    this.tryOnResultImageError = false;
+                    this.tryOnResultImageLoaded = false;
                     
                     // 停止轮询
                     this.stopPolling();

@@ -72,8 +72,8 @@ class ImageService(BaseService):
     
     def get_all_images(self) -> List[Dict]:
         """获取所有图片信息 - 带缓存的本地版本"""
-        # 使用基础服务的缓存方法
-        cache_key = "all_images_local"
+        # 使用基础服务的缓存方法（统一命名空间）
+        cache_key = "image:list:all"
         cached_images = self.get_cache(cache_key)
         if cached_images:
             self.log_debug(f"从缓存获取所有图片: {len(cached_images)}张")
@@ -154,8 +154,8 @@ class ImageService(BaseService):
     
     def get_brand_images(self, brand_name: str) -> List[Dict]:
         """获取指定品牌的所有图片 - 带缓存的本地版本"""
-        # 使用基础服务的缓存方法
-        cache_key = f"brand_images_{brand_name}"
+        # 使用基础服务的缓存方法（统一命名空间）
+        cache_key = f"image:brand:{brand_name}"
         cached_images = self.get_cache(cache_key)
         if cached_images:
             self.log_debug(f"从缓存获取品牌图片: {brand_name} ({len(cached_images)}张)")
@@ -227,8 +227,8 @@ class ImageService(BaseService):
     
     def get_statistics(self) -> Dict[str, int]:
         """获取图片统计信息 - 带缓存"""
-        # 使用基础服务的缓存方法
-        cache_key = "image_statistics"
+        # 使用基础服务的缓存方法（统一命名空间）
+        cache_key = "image:statistics"
         cached_stats = self.get_cache(cache_key)
         if cached_stats:
             return cached_stats
@@ -253,8 +253,8 @@ class ImageService(BaseService):
     
     def get_filter_options(self) -> Dict:
         """获取筛选选项 - 带缓存"""
-        # 使用基础服务的缓存方法
-        cache_key = "image_filter_options"
+        # 使用基础服务的缓存方法（统一命名空间）
+        cache_key = "image:filter:options"
         cached_options = self.get_cache(cache_key)
         if cached_options:
             return cached_options
