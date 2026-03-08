@@ -297,6 +297,39 @@ def create_app(config_name='development'):
         
         return health_status
     
+    # 初始化 TryOn 图片处理服务（集成模式）
+    # 在应用上下文中初始化，确保数据库连接可用
+    try_on_image_service = None
+    try:
+        from backend.services.try_on_image_service import TryOnImageService
+        from backend.config.config import Config
+        
+        # 获取配置实例
+        config_instance = Config(config_name=config_name)
+        
+        # 初始化 TryOnImageService（会自动启动后台工作器线程）
+        # 传递 Flask 应用实例，以便在后台线程中使用应用上下文
+        try_on_image_service = TryOnImageService(config_instance, app=app)
+        
+        # 将服务实例存储在 app 对象上，以便在应用关闭时能够调用 shutdown
+        app.try_on_image_service = try_on_image_service
+        
+        logger.info("✅ TryOn图片处理服务已初始化（集成模式，后台工作器已启动）")
+    except Exception as e:
+        logger.warning(f"⚠️  TryOn图片处理服务初始化失败: {e}", exc_info=True)
+        # 不中断服务启动，但记录警告
+        app.try_on_image_service = None
+    
+    # 注册应用关闭时的清理函数
+    @app.teardown_appcontext
+    def close_try_on_service(error):
+        """
+        应用上下文关闭时的清理函数
+        注意：这个函数在每个请求结束时调用，不是应用关闭时
+        """
+        # 这里不做任何操作，因为工作器需要在应用关闭时统一关闭
+        pass
+    
     # 错误处理
     @app.errorhandler(404)
     def not_found(error):
@@ -310,6 +343,9 @@ def create_app(config_name='development'):
 
 def main():
     """主函数"""
+    import atexit
+    import signal
+    
     # 获取环境变量
     config_name = os.environ.get('FLASK_ENV', 'development')
     port = int(os.environ.get('BACKEND_PORT', 5432))
@@ -325,13 +361,42 @@ def main():
     logger.info(f"🔧 环境: {config_name}")
     logger.info(f"💾 数据库: {app.config['SQLALCHEMY_DATABASE_URI'].split('@')[1] if '@' in app.config['SQLALCHEMY_DATABASE_URI'] else 'N/A'}")
     
-    # 启动应用
-    app.run(
-        host=host,
-        port=port,
-        debug=app.config['DEBUG'],
-        threaded=True
-    )
+    # 定义优雅关闭函数
+    def shutdown_try_on_service():
+        """关闭 TryOn 图片处理服务"""
+        if hasattr(app, 'try_on_image_service') and app.try_on_image_service:
+            try:
+                logger.info("正在关闭 TryOn 图片处理服务...")
+                app.try_on_image_service.shutdown()
+                logger.info("✅ TryOn 图片处理服务已关闭")
+            except Exception as e:
+                logger.error(f"关闭 TryOn 图片处理服务时出错: {e}", exc_info=True)
+    
+    # 注册信号处理器（用于优雅关闭）
+    def signal_handler(signum, frame):
+        """信号处理器"""
+        logger.info(f"收到信号 {signum}，正在关闭服务...")
+        shutdown_try_on_service()
+        # 注意：这里不直接退出，让 Flask 的 run() 方法正常退出
+    
+    # 注册退出时的清理函数
+    atexit.register(shutdown_try_on_service)
+    
+    # 注册信号处理器（SIGTERM 和 SIGINT）
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    try:
+        # 启动应用
+        app.run(
+            host=host,
+            port=port,
+            debug=app.config['DEBUG'],
+            threaded=True
+        )
+    finally:
+        # 确保在应用退出时关闭服务
+        shutdown_try_on_service()
 
 if __name__ == '__main__':
     main() 

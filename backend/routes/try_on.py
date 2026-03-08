@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 from backend.controllers.try_on_controller import TryOnController
 from backend.utils.decorators import handle_errors
 from backend.utils.response import APIResponse
-from backend.exceptions import ValidationError
+from backend.exceptions import ValidationError, ServiceError, NotFoundError
 
 # 创建蓝图
 try_on_bp = Blueprint('try_on', __name__, url_prefix='/api/try-on')
@@ -146,6 +146,10 @@ def start_try_on():
         user_image_data = user_image_file.read()
         user_image_filename = secure_filename(user_image_file.filename)
         
+        # 记录请求信息（用于调试）
+        from backend.utils.logger import logger
+        logger.info(f"收到试衣任务请求: brand_name={brand_name}, filename={user_image_filename}, size={len(user_image_data)} bytes")
+        
         # 调用控制器处理业务逻辑
         result = try_on_controller.start_try_on_task(
             brand_name=brand_name,
@@ -155,6 +159,7 @@ def start_try_on():
         
         # 使用APIResponse统一响应格式
         if result.get('success'):
+            logger.info(f"试衣任务创建成功: task_id={result.get('task_id')}")
             return APIResponse.success(
                 data={
                     'task_id': result.get('task_id'),
@@ -164,18 +169,23 @@ def start_try_on():
                 message='试衣任务已启动'
             )
         else:
+            logger.error(f"试衣任务创建失败: {result.get('error')}")
             return APIResponse.error(
                 message=result.get('error', '启动试衣任务失败'),
                 status_code=500
             )
             
     except ValidationError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"试衣任务参数验证失败: {e.message}")
         return APIResponse.validation_error(
             message=e.message,
             field=e.details.get('field'),
             value=e.details.get('value')
         )
     except Exception as e:
+        from backend.utils.logger import logger
+        logger.error(f"试衣任务启动异常: {str(e)}", exc_info=True)
         return APIResponse.error(
             message=f'启动试衣任务失败: {str(e)}',
             status_code=500
@@ -197,11 +207,15 @@ def get_task_status(task_id: str):
         JSON响应，包含任务状态和结果信息
     """
     try:
+        from backend.utils.logger import logger
+        logger.debug(f"收到任务状态查询请求: task_id={task_id}")
+        
         # 调用控制器处理业务逻辑
         result = try_on_controller.get_task_status(task_id)
         
         # 使用APIResponse统一响应格式
         if result.get('success'):
+            logger.debug(f"任务状态查询成功: task_id={task_id}, status={result.get('status')}")
             return APIResponse.success(
                 data={
                     'status': result.get('status'),
@@ -212,21 +226,32 @@ def get_task_status(task_id: str):
                 message='查询任务状态成功'
             )
         else:
+            logger.warning(f"任务状态查询失败: task_id={task_id}, error={result.get('error')}")
             return APIResponse.error(
                 message=result.get('error', '查询任务状态失败'),
                 status_code=500
             )
             
     except ValidationError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"任务状态查询参数验证失败: task_id={task_id}, error={e.message}")
         return APIResponse.validation_error(
             message=e.message,
             field=e.details.get('field'),
             value=e.details.get('value')
         )
+    except NotFoundError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"任务不存在: task_id={task_id}, error={e.message}")
+        return APIResponse.error(
+            message=e.message,
+            status_code=404,
+            details=e.details
+        )
     except ServiceError as e:
         # ServiceError是预期的业务异常，返回友好的错误信息
         from backend.utils.logger import logger
-        logger.warning(f"查询任务状态业务异常: {e.message}", exc_info=True)
+        logger.warning(f"查询任务状态业务异常: task_id={task_id}, error={e.message}", exc_info=True)
         return APIResponse.error(
             message=e.message,
             status_code=503,  # 使用503表示服务暂时不可用
@@ -235,7 +260,7 @@ def get_task_status(task_id: str):
     except Exception as e:
         # 未预期的异常，记录详细日志
         from backend.utils.logger import logger
-        logger.error(f"查询任务状态异常: {task_id}", exc_info=True)
+        logger.error(f"查询任务状态异常: task_id={task_id}, error={str(e)}", exc_info=True)
         return APIResponse.error(
             message='查询任务状态失败，请稍后重试',
             status_code=500

@@ -11,23 +11,26 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# 配置
+# 配置（优先使用 Python 3.12，与后端服务一致）
 VENV_NAME="products_env"
-PYTHON_VERSION="3.8"
+PYTHON_VERSION="3.12"
 
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  南意秋棠虚拟环境设置脚本${NC}"
 echo -e "${BLUE}========================================${NC}"
 
-# 检查Python版本
+# 检查Python版本（优先 3.12）
 echo -e "${BLUE}[1/4]${NC} 检查Python环境..."
-if ! command -v python3 &> /dev/null; then
-    echo "❌ Python3 未安装"
+PYTHON_CMD=""
+command -v python3.12 &> /dev/null && PYTHON_CMD="python3.12" || true
+[ -z "$PYTHON_CMD" ] && command -v python3 &> /dev/null && PYTHON_CMD="python3" || true
+if [ -z "$PYTHON_CMD" ]; then
+    echo "❌ Python3 未安装（建议安装 Python 3.12）"
     exit 1
 fi
 
-python_version=$(python3 -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")
-echo "✅ Python版本: $python_version"
+python_version=$($PYTHON_CMD -c "import sys; print('.'.join(map(str, sys.version_info[:2])))")
+echo "✅ Python版本: $python_version (使用: $PYTHON_CMD)"
 
 # 创建虚拟环境
 echo -e "${BLUE}[2/4]${NC} 设置虚拟环境..."
@@ -35,7 +38,7 @@ if [ -d "$VENV_NAME" ]; then
     echo "📁 虚拟环境已存在: $VENV_NAME"
 else
     echo "🔨 创建虚拟环境: $VENV_NAME"
-    python3 -m venv $VENV_NAME
+    $PYTHON_CMD -m venv $VENV_NAME
 fi
 
 # 激活虚拟环境

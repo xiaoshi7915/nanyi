@@ -120,6 +120,40 @@ class Config:
         # CSRF保护配置
         self.WTF_CSRF_ENABLED = True
         self.WTF_CSRF_TIME_LIMIT = 3600  # CSRF token有效期1小时
+        
+        # ========== try_on 服务配置 ==========
+        # 火山引擎方舟API配置（Seedream 4.5）
+        self.ARK_API_KEY = os.environ.get('ARK_API_KEY', '')  # 火山引擎API Key（sk-开头）
+        self.ARK_BASE_URL = os.environ.get('ARK_BASE_URL', 'https://ark.cn-beijing.volces.com/api/v3')  # 火山引擎API地址
+        self.ARK_MODEL_NAME = os.environ.get('ARK_MODEL_NAME', 'doubao-seedream-4-5-251128')  # 模型名称
+        
+        # 任务配置
+        self.TASK_TIMEOUT_SECONDS = int(os.environ.get('TASK_TIMEOUT_SECONDS', '300'))  # 任务超时时间（秒）
+        self.TASK_MAX_RETRIES = int(os.environ.get('TASK_MAX_RETRIES', '3'))  # 任务最大重试次数
+        self.MAX_CONCURRENT_TASKS = int(os.environ.get('MAX_CONCURRENT_TASKS', '5'))  # 最大并发任务数
+        self.TASK_CLEANUP_INTERVAL_SECONDS = int(os.environ.get('TASK_CLEANUP_INTERVAL_SECONDS', '3600'))  # 任务清理间隔（秒），默认1小时
+        self.TASK_RETENTION_HOURS = int(os.environ.get('TASK_RETENTION_HOURS', '24'))  # 已完成/失败任务保留时间（小时）
+        self.WORKER_HEALTH_CHECK_INTERVAL_SECONDS = int(os.environ.get('WORKER_HEALTH_CHECK_INTERVAL_SECONDS', '60'))  # 工作器健康检查间隔（秒）
+        self.WORKER_RESTART_ON_FAILURE = os.environ.get('WORKER_RESTART_ON_FAILURE', 'true').lower() == 'true'  # 工作器异常时是否自动重启
+        self.WORKER_MAX_RESTART_ATTEMPTS = int(os.environ.get('WORKER_MAX_RESTART_ATTEMPTS', '10'))  # 工作器最大重启尝试次数（0表示无限）
+        
+        # 存储配置
+        self.STORAGE_LOCAL_PATH = os.environ.get('STORAGE_LOCAL_PATH', './backend/try_on/storage')  # 本地存储根路径
+        self.STORAGE_UPLOAD_DIR = os.environ.get('STORAGE_UPLOAD_DIR', 'uploads')  # 通用上传目录
+        self.STORAGE_FABRIC_DIR = os.environ.get('STORAGE_FABRIC_DIR', 'uploads/fabric')  # 成衣图/布料图存储目录
+        self.STORAGE_REAL_PERSON_DIR = os.environ.get('STORAGE_REAL_PERSON_DIR', 'uploads/real_person')  # 真人图存储目录
+        self.STORAGE_GENERATED_DIR = os.environ.get('STORAGE_GENERATED_DIR', 'generated')  # 生成图片存储目录
+        
+        # 限流配置（可选，如果不需要可以注释掉）
+        self.RATE_LIMIT_PER_MINUTE = int(os.environ.get('RATE_LIMIT_PER_MINUTE', '60'))  # 每分钟请求限制
+        self.RATE_LIMIT_PER_HOUR = int(os.environ.get('RATE_LIMIT_PER_HOUR', '1000'))  # 每小时请求限制
+        self.RATE_LIMIT_CLEANUP_INTERVAL_SECONDS = int(os.environ.get('RATE_LIMIT_CLEANUP_INTERVAL_SECONDS', '3600'))  # IP令牌桶清理间隔（秒）
+        self.RATE_LIMIT_IP_RETENTION_HOURS = int(os.environ.get('RATE_LIMIT_IP_RETENTION_HOURS', '24'))  # IP令牌桶保留时间（小时）
+        
+        # 图片配置
+        self.MAX_IMAGE_SIZE_MB = int(os.environ.get('MAX_IMAGE_SIZE_MB', '10'))  # 最大图片大小（MB）
+        self.ALLOWED_IMAGE_FORMATS = os.environ.get('ALLOWED_IMAGE_FORMATS', 'jpeg,jpg,png')  # 允许的图片格式（逗号分隔）
+        self.MAX_IMAGES_PER_REQUEST = int(os.environ.get('MAX_IMAGES_PER_REQUEST', '5'))  # 每个请求最大图片数
 
 class DevelopmentConfig(Config):
     """开发环境配置"""

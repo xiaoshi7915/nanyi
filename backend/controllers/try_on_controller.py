@@ -8,9 +8,10 @@
 import os
 import re
 from typing import Dict, List, Optional
-from flask import request
+from flask import request, current_app
+from werkzeug.datastructures import FileStorage
 
-from backend.services.try_on_service import TryOnService
+from backend.services.try_on_image_service import TryOnImageService
 from backend.services.image_service import ImageService
 from backend.utils.logger import logger
 from backend.exceptions import ValidationError, NotFoundError, ServiceError
@@ -21,13 +22,41 @@ class TryOnController:
     
     def __init__(self):
         """初始化试衣控制器"""
-        self.try_on_service = TryOnService()
+        # 使用集成的 TryOnImageService（不再使用 HTTP 调用的 TryOnService）
+        # 注意：TryOnImageService 需要在应用上下文中初始化，这里延迟初始化
+        self._try_on_image_service: Optional[TryOnImageService] = None
         self.image_service = ImageService()
         
         # 获取图片目录路径
         current_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(os.path.dirname(current_dir))
         self.images_dir = os.path.join(project_root, 'frontend', 'static', 'images')
+    
+    def _get_try_on_service(self) -> TryOnImageService:
+        """
+        获取 TryOnImageService 实例（从应用对象获取已初始化的实例）
+        
+        Returns:
+            TryOnImageService 实例
+        
+        Raises:
+            ServiceError: 如果服务未初始化
+        """
+        if self._try_on_image_service is None:
+            # 从应用对象获取已初始化的服务实例（在 app.py 中初始化）
+            if hasattr(current_app, 'try_on_image_service') and current_app.try_on_image_service is not None:
+                self._try_on_image_service = current_app.try_on_image_service
+                logger.debug("使用应用已初始化的 TryOnImageService 实例")
+            else:
+                # 如果应用中没有初始化，抛出异常
+                error_msg = "TryOnImageService 未在应用启动时初始化，请检查应用启动日志"
+                logger.error(error_msg)
+                raise ServiceError(
+                    message=error_msg,
+                    service_name='TryOnController',
+                    details={'hint': 'TryOnImageService 应该在 app.py 的 create_app 函数中初始化'}
+                )
+        return self._try_on_image_service
     
     def get_available_styles(self, base_brand_name: Optional[str] = None) -> Dict:
         """
@@ -192,7 +221,7 @@ class TryOnController:
         user_image_filename: str
     ) -> Dict:
         """
-        启动AI试衣任务
+        启动AI试衣任务（使用集成的服务，不再使用 HTTP 调用）
         
         Args:
             brand_name: 选定的款式名称（品牌+颜色，如"丹若(玉绿)"）
@@ -239,14 +268,46 @@ class TryOnController:
             
             logger.info(f"启动AI试衣任务: brand_name={brand_name}, fabric_image={fabric_image_path}")
             
-            # 调用试衣服务
-            result = self.try_on_service.generate_try_on(
-                fabric_image_path=fabric_image_path,
-                user_image_file=user_image_file,
-                user_image_filename=user_image_filename
+            # 获取集成的试衣服务实例
+            try_on_service = self._get_try_on_service()
+            
+            # 读取布料图文件
+            with open(fabric_image_path, 'rb') as f:
+                fabric_image_data = f.read()
+            
+            # 创建 FileStorage 对象（模拟 Flask 上传文件对象）
+            from io import BytesIO
+            fabric_file = FileStorage(
+                stream=BytesIO(fabric_image_data),
+                filename=os.path.basename(fabric_image_path),
+                content_type='image/jpeg'
+            )
+            user_image_file_obj = FileStorage(
+                stream=BytesIO(user_image_file),
+                filename=user_image_filename,
+                content_type='image/jpeg'
             )
             
-            return result
+            # 调用集成的试衣服务创建任务
+            # 使用固定参数（与原来的 TryOnService 保持一致）
+            task_id = try_on_service.create_task(
+                fabric_images=[fabric_file],  # 布料图列表
+                model_type='real',  # 使用真人照片
+                shot_type='half_body',  # 注意：真人图模式会强制生成全身照，但API需要这个参数
+                aspect_ratio='9:16',  # 竖屏，适合手机
+                style='portrait_photography',  # 人像摄影风格
+                real_person_image=user_image_file_obj,  # 用户上传的真人照片
+                model_provider='seedream'  # 模型提供商
+            )
+            
+            logger.info(f"AI试衣任务创建成功: task_id={task_id}")
+            
+            return {
+                'success': True,
+                'task_id': task_id,
+                'status': 'pending',  # 任务初始状态为 pending
+                'estimated_time': 10  # 预计处理时间（秒）
+            }
             
         except (ValidationError, NotFoundError, ServiceError):
             # 重新抛出这些异常，让路由层处理
@@ -343,7 +404,7 @@ class TryOnController:
     
     def get_task_status(self, task_id: str) -> Dict:
         """
-        查询AI试衣任务状态
+        查询AI试衣任务状态（使用集成的服务，从本地数据库查询）
         
         Args:
             task_id: 任务ID
@@ -363,16 +424,59 @@ class TryOnController:
             )
         
         try:
-            # 调用试衣服务查询状态
-            result = self.try_on_service.get_task_status(task_id)
+            # 获取集成的试衣服务实例
+            logger.debug(f"查询任务状态: task_id={task_id}")
+            try_on_service = self._get_try_on_service()
             
-            return result
+            # 从本地数据库查询任务状态（不再调用外部 HTTP 服务）
+            task_dict = try_on_service.get_task_status(task_id)
             
-        except (ValidationError, ServiceError):
-            # 重新抛出这些异常，让路由层处理
+            # 转换状态格式以兼容原有 API 响应格式
+            status = task_dict.get('status', 'pending')
+            result_image_url = task_dict.get('result_image_url')
+            error_message = task_dict.get('error_message')
+            
+            # 计算进度（根据状态估算）
+            if status == 'completed':
+                progress = 100
+            elif status == 'processing':
+                progress = 50  # 处理中，估算为50%
+            elif status == 'failed':
+                progress = 0
+            else:
+                progress = 0  # pending 状态
+            
+            logger.debug(f"任务状态查询成功: task_id={task_id}, status={status}")
+            return {
+                'success': True,
+                'status': status,
+                'result_image_url': result_image_url,
+                'progress': progress,
+                'error': error_message
+            }
+            
+        except NotFoundError:
+            # NotFoundError 直接重新抛出
+            raise
+        except ValidationError:
+            # ValidationError 直接重新抛出
+            raise
+        except ServiceError:
+            # ServiceError 直接重新抛出
             raise
         except Exception as e:
-            logger.error(f"查询任务状态失败: {e}", exc_info=True)
+            # 检查是否是任务不存在的异常
+            error_msg = str(e).lower()
+            error_type = type(e).__name__
+            if 'not found' in error_msg or '不存在' in error_msg or 'TaskNotFoundError' in error_type or 'NotFoundError' in error_type:
+                logger.warning(f"任务不存在: task_id={task_id}, error={str(e)}")
+                raise NotFoundError(
+                    message=f'任务不存在: {task_id}',
+                    resource_type='task',
+                    resource_id=task_id
+                )
+            # 其他未知异常
+            logger.error(f"查询任务状态失败: task_id={task_id}, error={str(e)}", exc_info=True)
             raise ServiceError(
                 message=f'查询任务状态失败: {str(e)}',
                 service_name='TryOnController',
