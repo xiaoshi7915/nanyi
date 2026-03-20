@@ -183,30 +183,38 @@ class TryOnController:
             if not brand_images:
                 return None
             
-            # 优先查找布料图
-            fabric_image = next(
-                (img for img in brand_images if img.get('image_type') == '布料图'),
+            # 按优先级选择：设计图 -> 布料图 -> 成衣图
+            # 这样可以保证模态框里预览图与实际试穿输入的参考图类型一致。
+            preview_image = next(
+                (img for img in brand_images if img.get('image_type') == '设计图'),
                 None
             )
             
+            # 如果没有设计图，使用布料图
+            if not preview_image:
+                preview_image = next(
+                    (img for img in brand_images if img.get('image_type') == '布料图'),
+                    None
+                )
+            
             # 如果没有布料图，使用成衣图
-            if not fabric_image:
-                fabric_image = next(
+            if not preview_image:
+                preview_image = next(
                     (img for img in brand_images if img.get('image_type') == '成衣图'),
                     None
                 )
             
             # 如果还没有，使用第一张图片
-            if not fabric_image:
-                fabric_image = brand_images[0]
+            if not preview_image:
+                preview_image = brand_images[0]
             
             # 返回图片URL
-            if fabric_image.get('url'):
-                return fabric_image['url']
-            elif fabric_image.get('relative_path'):
-                return f"/static/images/{fabric_image['relative_path']}"
-            elif fabric_image.get('filename'):
-                return f"/static/images/{fabric_image['filename']}"
+            if preview_image.get('url'):
+                return preview_image['url']
+            elif preview_image.get('relative_path'):
+                return f"/static/images/{preview_image['relative_path']}"
+            elif preview_image.get('filename'):
+                return f"/static/images/{preview_image['filename']}"
             
             return None
             
@@ -290,6 +298,8 @@ class TryOnController:
             
             # 调用集成的试衣服务创建任务
             # 使用固定参数（与原来的 TryOnService 保持一致）
+            fixed_prompt = (os.getenv("TRY_ON_FIXED_PROMPT") or "").strip()
+            # 固定图生图 prompt：若环境变量未配置，则传空字符串，后端会回退到原有模板逻辑。
             task_id = try_on_service.create_task(
                 fabric_images=[fabric_file],  # 布料图列表
                 model_type='real',  # 使用真人照片
@@ -297,6 +307,7 @@ class TryOnController:
                 aspect_ratio='9:16',  # 竖屏，适合手机
                 style='portrait_photography',  # 人像摄影风格
                 real_person_image=user_image_file_obj,  # 用户上传的真人照片
+                prompt=fixed_prompt,  # 图生图固定 prompt（来自环境变量）
                 model_provider='seedream'  # 模型提供商
             )
             
@@ -305,7 +316,7 @@ class TryOnController:
             return {
                 'success': True,
                 'task_id': task_id,
-                'status': 'pending',  # 任务初始状态为 pending
+                'status': 'processing',  # 任务初始回传为 processing，避免前端只显示 processing 的情况
                 'estimated_time': 10  # 预计处理时间（秒）
             }
             
@@ -340,44 +351,36 @@ class TryOnController:
             
             logger.debug(f"找到 {len(brand_images)} 张品牌图片: {brand_name}")
             
-            # 优先查找布料图
-            fabric_images = [img for img in brand_images if img.get('image_type') == '布料图']
+            # 按优先级选择参考图：设计图 -> 布料图 -> 成衣图
+            # 注意：函数名仍保留为 _get_fabric_image_path，但实际返回的是“参考图”的本地路径。
+            fabric_image = None
+            type_priority = ['设计图', '布料图', '成衣图']
             
-            # 如果找到多个布料图，优先选择与品牌名匹配的（如果品牌名包含颜色）
-            if fabric_images:
-                # 如果品牌名包含颜色信息，尝试精确匹配
+            for image_type in type_priority:
+                images_of_type = [img for img in brand_images if img.get('image_type') == image_type]
+                if not images_of_type:
+                    continue
+                
+                # 如果品牌名包含颜色信息，尝试精确匹配到同一颜色变体
                 if '(' in brand_name:
                     exact_match = next(
-                        (img for img in fabric_images if img.get('brand_name') == brand_name),
+                        (img for img in images_of_type if img.get('brand_name') == brand_name),
                         None
                     )
                     if exact_match:
                         fabric_image = exact_match
                     else:
-                        # 使用第一张布料图
-                        fabric_image = fabric_images[0]
+                        # 精确匹配失败时，使用该类型下的第一张作为兜底
+                        fabric_image = images_of_type[0]
                 else:
-                    # 品牌名没有颜色信息，使用第一张布料图
-                    fabric_image = fabric_images[0]
-            else:
-                fabric_image = None
-            
-            # 如果没有布料图，使用成衣图作为备选
-            if not fabric_image:
-                garment_images = [img for img in brand_images if img.get('image_type') == '成衣图']
-                if garment_images:
-                    # 同样优先匹配颜色
-                    if '(' in brand_name:
-                        exact_match = next(
-                            (img for img in garment_images if img.get('brand_name') == brand_name),
-                            None
-                        )
-                        fabric_image = exact_match if exact_match else garment_images[0]
-                    else:
-                        fabric_image = garment_images[0]
+                    # 品牌名不含颜色信息时，直接取该类型下第一张
+                    fabric_image = images_of_type[0]
+                
+                # 找到就跳出循环，保证优先级生效
+                break
             
             if not fabric_image:
-                logger.warning(f"未找到布料图或成衣图: {brand_name} (共找到{len(brand_images)}张图片)")
+                logger.warning(f"未找到参考图（设计图/布料图/成衣图）: {brand_name} (共找到{len(brand_images)}张图片)")
                 return None
             
             # 获取图片的相对路径

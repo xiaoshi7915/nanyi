@@ -7,8 +7,16 @@
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 import time
+from contextlib import nullcontext
 from sqlalchemy import text
 from sqlalchemy import exc
+from flask import has_app_context
+
+try:
+    # 复用主程序通过 wsgi 创建的 application，避免在后台线程缺少 app context
+    from backend.wsgi import application as flask_app
+except Exception:
+    flask_app = None
 
 from backend.config.config import Config
 from backend.utils.logger import logger
@@ -49,60 +57,63 @@ class TryOnDatabaseService:
             f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"try_on_db_service.py:35","message":"save_task调用-BEFORE执行","data":{"task_id":task_dict.get("task_id"),"status":task_dict.get("status"),"result_image_url":task_dict.get("result_image_url"),"local_path":task_dict.get("local_path")},"timestamp":int(time.time()*1000)}) + '\n')
         # #endregion
         
+        # 如果当前没有 Flask application context，则补一个，避免 Flask-SQLAlchemy 抛出 No application found
+        ctx = flask_app.app_context() if (flask_app is not None and not has_app_context()) else nullcontext()
         try:
-            # 使用主项目的数据库连接（Flask-SQLAlchemy 的 db）
-            # 使用 db.session 确保事务一致性，并立即提交
-            # 构建 SQL 语句（MySQL 使用 ON DUPLICATE KEY UPDATE）
-            sql = text("""
-            INSERT INTO tasks (
-                id, status, model_type, shot_type, aspect_ratio, style,
-                resolution, ai_model_id, prompt, result_image_url, local_path,
-                error_message, created_at, updated_at
-            ) VALUES (
-                :task_id, :status, :model_type, :shot_type, :aspect_ratio, :style,
-                :resolution, :ai_model_id, :prompt, :result_image_url, :local_path,
-                :error_message, :created_at, :updated_at
-            ) ON DUPLICATE KEY UPDATE
-                status = VALUES(status),
-                result_image_url = VALUES(result_image_url),
-                local_path = VALUES(local_path),
-                error_message = VALUES(error_message),
-                updated_at = VALUES(updated_at)
-            """)
-            
-            sql_params = {
-                "task_id": task_dict.get("task_id"),
-                "status": task_dict.get("status"),
-                "model_type": task_dict.get("model_type"),
-                "shot_type": task_dict.get("shot_type"),
-                "aspect_ratio": task_dict.get("aspect_ratio"),
-                "style": task_dict.get("style"),
-                "resolution": task_dict.get("resolution"),
-                "ai_model_id": task_dict.get("ai_model_id"),
-                "prompt": task_dict.get("prompt"),
-                "result_image_url": task_dict.get("result_image_url"),
-                "local_path": task_dict.get("local_path"),
-                "error_message": task_dict.get("error_message"),
-                "created_at": task_dict.get("created_at", datetime.now()),
-                "updated_at": task_dict.get("updated_at", datetime.now())
-            }
-            
-            # #region agent log
-            with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"try_on_db_service.py:68","message":"SQL参数-BEFORE执行","data":{"task_id":sql_params.get("task_id"),"status":sql_params.get("status"),"result_image_url":sql_params.get("result_image_url"),"local_path":sql_params.get("local_path")},"timestamp":int(time.time()*1000)}) + '\n')
-            # #endregion
-            
-            # 执行 SQL 并立即提交，确保其他查询能立即看到最新数据
-            result = db.session.execute(sql, sql_params)
-            db.session.commit()  # 立即提交，确保数据立即可见
-            
-            # #region agent log
-            with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"try_on_db_service.py:85","message":"SQL执行成功并已提交","data":{"task_id":task_dict.get("task_id"),"rowcount":result.rowcount if hasattr(result, 'rowcount') else 'N/A'},"timestamp":int(time.time()*1000)}) + '\n')
-            # #endregion
-            
-            logger.debug(f"任务保存到数据库成功: task_id={task_dict.get('task_id')}")
-            return True
+            with ctx:
+                # 使用主项目的数据库连接（Flask-SQLAlchemy 的 db）
+                # 使用 db.session 确保事务一致性，并立即提交
+                # 构建 SQL 语句（MySQL 使用 ON DUPLICATE KEY UPDATE）
+                sql = text("""
+                INSERT INTO tasks (
+                    id, status, model_type, shot_type, aspect_ratio, style,
+                    resolution, ai_model_id, prompt, result_image_url, local_path,
+                    error_message, created_at, updated_at
+                ) VALUES (
+                    :task_id, :status, :model_type, :shot_type, :aspect_ratio, :style,
+                    :resolution, :ai_model_id, :prompt, :result_image_url, :local_path,
+                    :error_message, :created_at, :updated_at
+                ) ON DUPLICATE KEY UPDATE
+                    status = VALUES(status),
+                    result_image_url = VALUES(result_image_url),
+                    local_path = VALUES(local_path),
+                    error_message = VALUES(error_message),
+                    updated_at = VALUES(updated_at)
+                """)
+                
+                sql_params = {
+                    "task_id": task_dict.get("task_id"),
+                    "status": task_dict.get("status"),
+                    "model_type": task_dict.get("model_type"),
+                    "shot_type": task_dict.get("shot_type"),
+                    "aspect_ratio": task_dict.get("aspect_ratio"),
+                    "style": task_dict.get("style"),
+                    "resolution": task_dict.get("resolution"),
+                    "ai_model_id": task_dict.get("ai_model_id"),
+                    "prompt": task_dict.get("prompt"),
+                    "result_image_url": task_dict.get("result_image_url"),
+                    "local_path": task_dict.get("local_path"),
+                    "error_message": task_dict.get("error_message"),
+                    "created_at": task_dict.get("created_at", datetime.now()),
+                    "updated_at": task_dict.get("updated_at", datetime.now())
+                }
+                
+                # #region agent log
+                with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"try_on_db_service.py:68","message":"SQL参数-BEFORE执行","data":{"task_id":sql_params.get("task_id"),"status":sql_params.get("status"),"result_image_url":sql_params.get("result_image_url"),"local_path":sql_params.get("local_path")},"timestamp":int(time.time()*1000)}) + '\n')
+                # #endregion
+                
+                # 执行 SQL 并立即提交，确保其他查询能立即看到最新数据
+                result = db.session.execute(sql, sql_params)
+                db.session.commit()  # 立即提交，确保数据立即可见
+                
+                # #region agent log
+                with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
+                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"try_on_db_service.py:85","message":"SQL执行成功并已提交","data":{"task_id":task_dict.get("task_id"),"rowcount":result.rowcount if hasattr(result, 'rowcount') else 'N/A'},"timestamp":int(time.time()*1000)}) + '\n')
+                # #endregion
+                
+                logger.debug(f"任务保存到数据库成功: task_id={task_dict.get('task_id')}")
+                return True
                 
         except exc.SQLAlchemyError as e:
             # 回滚事务
@@ -144,32 +155,35 @@ class TryOnDatabaseService:
             f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"G","location":"try_on_db_service.py:129","message":"get_task调用-BEFORE查询","data":{"task_id":task_id},"timestamp":int(time.time()*1000)}) + '\n')
         # #endregion
         
+        # 如果当前没有 Flask application context，则补一个，避免 Flask-SQLAlchemy 抛出 No application found
+        ctx = flask_app.app_context() if (flask_app is not None and not has_app_context()) else nullcontext()
         try:
-            # 关键修复：使用独立的数据库连接，设置 READ COMMITTED 隔离级别
-            # 这样可以避免 MySQL 的 REPEATABLE READ 隔离级别导致的读取旧数据问题
-            # 使用 db.engine.connect() 创建新连接，确保读取最新已提交的数据
-            with db.engine.connect() as conn:
-                # 设置隔离级别为 READ COMMITTED，确保读取最新已提交的数据
-                # 注意：必须在每个连接上单独设置，使用 autocommit 模式
-                conn.execute(text("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED"))
-                # 对于只读查询，不需要 commit，直接执行查询
+            with ctx:
+                # 关键修复：使用独立的数据库连接，设置 READ COMMITTED 隔离级别
+                # 这样可以避免 MySQL 的 REPEATABLE READ 隔离级别导致的读取旧数据问题
+                # 使用 db.engine.connect() 创建新连接，确保读取最新已提交的数据
+                with db.engine.connect() as conn:
+                    # 设置隔离级别为 READ COMMITTED，确保读取最新已提交的数据
+                    # 注意：必须在每个连接上单独设置，使用 autocommit 模式
+                    conn.execute(text("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED"))
+                    # 对于只读查询，不需要 commit，直接执行查询
+                    
+                    sql = text("""
+                    SELECT id, status, model_type, shot_type, aspect_ratio, style,
+                           resolution, ai_model_id, prompt, result_image_url, local_path,
+                           error_message, created_at, updated_at
+                    FROM tasks
+                    WHERE id = :task_id
+                    """)
+                    result = conn.execute(sql, {"task_id": task_id})
+                    row = result.fetchone()
                 
-                sql = text("""
-                SELECT id, status, model_type, shot_type, aspect_ratio, style,
-                       resolution, ai_model_id, prompt, result_image_url, local_path,
-                       error_message, created_at, updated_at
-                FROM tasks
-                WHERE id = :task_id
-                """)
-                result = conn.execute(sql, {"task_id": task_id})
-                row = result.fetchone()
-                
-                # #region agent log
-                with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                    import json
-                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"H","location":"try_on_db_service.py:156","message":"get_task-查询执行后(READ_COMMITTED)","data":{"task_id":task_id,"row_exists":row is not None,"status":row[1] if row else None},"timestamp":int(time.time()*1000)}) + '\n')
-                # #endregion
-                
+                    # #region agent log
+                    with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
+                        import json
+                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"H","location":"try_on_db_service.py:156","message":"get_task-查询执行后(READ_COMMITTED)","data":{"task_id":task_id,"row_exists":row is not None,"status":row[1] if row else None},"timestamp":int(time.time()*1000)}) + '\n')
+                    # #endregion
+                    
                     task_dict = {
                         "task_id": row[0],
                         "status": row[1],

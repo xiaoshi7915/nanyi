@@ -122,10 +122,11 @@ class Config:
         self.WTF_CSRF_TIME_LIMIT = 3600  # CSRF token有效期1小时
         
         # ========== try_on 服务配置 ==========
-        # 火山引擎方舟API配置（Seedream 4.5）
+        # 火山引擎方舟API配置（Seedream 5.0 lite）
         self.ARK_API_KEY = os.environ.get('ARK_API_KEY', '')  # 火山引擎API Key（sk-开头）
         self.ARK_BASE_URL = os.environ.get('ARK_BASE_URL', 'https://ark.cn-beijing.volces.com/api/v3')  # 火山引擎API地址
-        self.ARK_MODEL_NAME = os.environ.get('ARK_MODEL_NAME', 'doubao-seedream-4-5-251128')  # 模型名称
+        # 默认使用你提供的可用模型标识（如需切换可通过环境变量覆盖）
+        self.ARK_MODEL_NAME = os.environ.get('ARK_MODEL_NAME', 'doubao-seedream-4-5-251128')
         
         # 任务配置
         self.TASK_TIMEOUT_SECONDS = int(os.environ.get('TASK_TIMEOUT_SECONDS', '300'))  # 任务超时时间（秒）

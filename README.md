@@ -4,6 +4,8 @@
 
 南意秋棠是一个传统美学设计产品展示系统，用于展示和管理汉服面料设计产品。
 
+**首页布料卡片**：每张卡片底部提供「试穿」与「分享」；「分享」与品牌详情内「生成布料卡片」相同，均调用 `/api/share/card/{品牌名}` 后打开 `card.html` 分享页。
+
 ## 技术栈
 
 - **前端**: Flask (静态文件服务)
@@ -76,6 +78,17 @@ vi .env
 - `DB_PASSWORD` - 数据库密码
 - `DB_NAME` - 数据库名称
 - `CORS_ORIGINS` - CORS允许的域名（HTTPS）
+
+AI试穿（Try-On / Seedream）环境变量：
+- `ARK_API_KEY` - 火山引擎方舟 API Key
+- `ARK_BASE_URL` - 火山引擎方舟 Base URL（默认 `https://ark.cn-beijing.volces.com/api/v3`）
+- `ARK_MODEL_NAME` - 默认 `doubao-seedream-4-5-251128`；如需更换模型，修改此项为对应的 Ark model 名称并重启后端服务
+- `TRY_ON_WATERMARK` - 是否给生成结果加水印（默认 `false`）
+
+**AI 试衣前端交互说明（便于排查体验问题）**：
+- 点击「退出」仅关闭弹窗并回到首页浏览，**不会**再打开「试衣结果准备中」空白标签页；后台任务仍通过 SSE/轮询继续追踪。
+- 进行中的 `task_id` 会写入浏览器 `localStorage`，再次从首页入口打开试衣时会自动拉回任务并显示生成进度。
+- 页面切回前台时的状态补查为**静默**模式，不再连环弹出「任务仍在处理中」类 Toast，避免闪屏感。
 
 可选的环境变量（Redis缓存）：
 - `REDIS_HOST` - Redis主机地址（默认：localhost）

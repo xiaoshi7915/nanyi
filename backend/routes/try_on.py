@@ -5,7 +5,9 @@
 定义AI试衣相关的RESTful API接口
 """
 
-from flask import Blueprint, request
+from flask import Blueprint, request, Response, stream_with_context
+import json
+import time
 from werkzeug.utils import secure_filename
 
 from backend.controllers.try_on_controller import TryOnController
@@ -22,8 +24,8 @@ try_on_controller = TryOnController()
 # 允许的图片文件扩展名
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'}
 
-# 最大文件大小（20MB，支持AI试衣功能）
-MAX_FILE_SIZE = 20 * 1024 * 1024
+# 最大文件大小（10MB，与 Ark 输入图片限制一致）
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 
 def allowed_file(filename: str) -> bool:
@@ -121,18 +123,6 @@ def start_try_on():
             value=user_image_file.filename
         )
     
-    # 检查文件大小
-    user_image_file.seek(0, 2)  # 移动到文件末尾
-    file_size = user_image_file.tell()
-    user_image_file.seek(0)  # 重置文件指针
-    
-    if file_size > MAX_FILE_SIZE:
-        return APIResponse.validation_error(
-            message=f'文件大小超过限制（最大{MAX_FILE_SIZE // 1024 // 1024}MB）',
-            field='user_image',
-            value=f'{file_size} bytes'
-        )
-    
     # 获取品牌名称
     brand_name = request.form.get('brand_name')
     if not brand_name:
@@ -141,10 +131,20 @@ def start_try_on():
             field='brand_name'
         )
     
-    # 读取文件内容
+    # 读取文件内容并校验大小
+    # 注意：不要先 seek/tell 再 read（部分浏览器/中间件会导致上传临时文件在 seek 后不可用）。
     try:
         user_image_data = user_image_file.read()
         user_image_filename = secure_filename(user_image_file.filename)
+
+        # 使用已读入的字节长度校验大小，避免额外 seek 造成临时文件失效
+        file_size = len(user_image_data) if user_image_data else 0
+        if file_size > MAX_FILE_SIZE:
+            return APIResponse.validation_error(
+                message=f'文件大小超过限制（最大{MAX_FILE_SIZE // 1024 // 1024}MB）',
+                field='user_image',
+                value=f'{file_size} bytes'
+            )
         
         # 记录请求信息（用于调试）
         from backend.utils.logger import logger
@@ -265,3 +265,61 @@ def get_task_status(task_id: str):
             message='查询任务状态失败，请稍后重试',
             status_code=500
         )
+
+
+@try_on_bp.route('/stream/<task_id>', methods=['GET'])
+def stream_task_status(task_id: str):
+    """
+    SSE：实时推送任务状态
+    GET /api/try-on/stream/<task_id>
+    """
+    @stream_with_context
+    def generate():
+        from backend.utils.logger import logger
+        start_time = time.time()
+        timeout_seconds = 600  # 最长保持10分钟
+
+        while True:
+            try:
+                result = try_on_controller.get_task_status(task_id)
+                payload = {
+                    "success": bool(result.get("success")),
+                    "status": result.get("status"),
+                    "result_image_url": result.get("result_image_url"),
+                    "progress": result.get("progress", 0),
+                    "error": result.get("error")
+                }
+                yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+                status = payload.get("status")
+                if status in {"completed", "failed"}:
+                    break
+
+                if (time.time() - start_time) > timeout_seconds:
+                    timeout_payload = {
+                        "success": False,
+                        "status": "failed",
+                        "result_image_url": None,
+                        "progress": 0,
+                        "error": "任务状态推送超时，请重试"
+                    }
+                    yield f"data: {json.dumps(timeout_payload, ensure_ascii=False)}\n\n"
+                    break
+
+                time.sleep(1)
+            except Exception as e:
+                logger.warning(f"SSE推送任务状态异常: task_id={task_id}, error={str(e)}")
+                err_payload = {
+                    "success": False,
+                    "status": "failed",
+                    "result_image_url": None,
+                    "progress": 0,
+                    "error": f"状态推送异常: {str(e)}"
+                }
+                yield f"data: {json.dumps(err_payload, ensure_ascii=False)}\n\n"
+                break
+
+    response = Response(generate(), mimetype='text/event-stream')
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['X-Accel-Buffering'] = 'no'
+    return response

@@ -266,6 +266,39 @@ class NanyiAPI {
             throw error;
         }
     }
+
+    /**
+     * 订阅试衣任务状态（SSE）
+     * @param {string} taskId - 任务ID
+     * @param {function} onMessage - 收到消息回调
+     * @param {function} onError - 错误回调
+     * @returns {EventSource}
+     */
+    subscribeTryOnStatus(taskId, onMessage, onError) {
+        const url = `${this.baseURL}/try-on/stream/${taskId}`;
+        const eventSource = new EventSource(url);
+
+        eventSource.onmessage = (event) => {
+            try {
+                const payload = JSON.parse(event.data);
+                if (typeof onMessage === 'function') {
+                    onMessage(payload);
+                }
+            } catch (e) {
+                if (typeof onError === 'function') {
+                    onError(e);
+                }
+            }
+        };
+
+        eventSource.onerror = (event) => {
+            if (typeof onError === 'function') {
+                onError(event);
+            }
+        };
+
+        return eventSource;
+    }
 }
 
 // 创建全局API实例

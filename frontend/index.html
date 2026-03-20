@@ -474,6 +474,28 @@
                                     <i class="fas fa-thumbs-up"></i>
                                     <span>{{ brand.like_count || 0 }}</span>
                                 </div>
+
+                                <!-- 卡片底部：试穿 + 分享（分享逻辑与详情页「生成布料卡片」一致） -->
+                                <div class="brand-card-actions" @click.stop>
+                                    <button
+                                        type="button"
+                                        class="try-on-card-btn"
+                                        @click="openTryOnModalFromCard(brand)"
+                                        title="试穿"
+                                    >
+                                        <i class="fas fa-tshirt"></i>
+                                        <span>试穿</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="share-card-btn"
+                                        @click="openShareCardForBrand(brand)"
+                                        title="生成布料卡片并分享"
+                                    >
+                                        <i class="fas fa-share-alt"></i>
+                                        <span>分享</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -727,7 +749,7 @@
                             <div v-else class="upload-placeholder">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <p>拖拽照片到此处或点击选择</p>
-                                <p class="upload-hint">支持 JPG、PNG、WEBP 格式，最大 20MB</p>
+                                <p class="upload-hint">支持 JPG、PNG、WEBP 格式，最大 10MB</p>
                                 <input 
                                     type="file" 
                                     accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp"
@@ -743,11 +765,11 @@
                     </div>
 
                     <!-- 步骤3: 生成中 -->
-                    <div v-if="tryOnTaskId && tryOnStatus === 'processing'" class="try-on-step">
+                    <div v-if="tryOnTaskId && tryOnStatus !== 'completed' && tryOnStatus !== 'failed'" class="try-on-step">
                         <h3 class="step-title">正在生成试衣效果...</h3>
                         <div class="processing-container">
                             <div class="loading-spinner-large"></div>
-                            <p>AI正在处理中，请稍候（约10秒）</p>
+                            <p>生成中，请耐心等待（通常 1-3 分钟）</p>
                             <div v-if="tryOnProgress > 0" class="progress-bar">
                                 <div class="progress-fill" :style="{ width: tryOnProgress + '%' }"></div>
                             </div>
@@ -780,17 +802,13 @@
                                 打开原图
                             </a>
                             <div class="result-actions">
-                                <button @click="saveTryOnResult" class="result-btn save-btn">
-                                    <i class="fas fa-download"></i>
-                                    保存图片
+                                <button @click="openTryOnOriginal" class="result-btn share-btn">
+                                    <i class="fas fa-external-link-alt"></i>
+                                    打开原图
                                 </button>
                                 <button @click="shareTryOnResult" class="result-btn share-btn">
                                     <i class="fas fa-share-alt"></i>
                                     分享
-                                </button>
-                                <button @click="resetTryOn" class="result-btn retry-btn">
-                                    <i class="fas fa-redo"></i>
-                                    重新生成
                                 </button>
                             </div>
                         </div>
@@ -814,6 +832,19 @@
 
                 <!-- 模态框底部 -->
                 <div class="try-on-modal-footer">
+                    <button
+                        v-if="tryOnTaskId && tryOnStatus !== 'completed' && tryOnStatus !== 'failed'"
+                        @click="exitTryOnModalAndContinue"
+                        class="cancel-btn"
+                    >
+                        退出
+                    </button>
+                    <span
+                        v-if="tryOnTaskId && tryOnStatus !== 'completed' && tryOnStatus !== 'failed'"
+                        style="margin-left: 8px; font-size: 12px; color: #666;"
+                    >
+                        点击退出按钮后，生成任务会在后台执行
+                    </span>
                     <button 
                         v-if="selectedStyle && uploadedImage && !tryOnTaskId"
                         @click="startTryOn"
@@ -822,9 +853,6 @@
                     >
                         <i class="fas fa-magic"></i>
                         {{ isTryOnProcessing ? '正在启动...' : '开始试衣' }}
-                    </button>
-                    <button @click="closeTryOnModal" class="cancel-btn">
-                        关闭
                     </button>
                 </div>
             </div>
@@ -896,8 +924,17 @@
                     tryOnPollingTimeout: 300000, // 轮询超时时间（5分钟，AI生成可能需要更长时间）
                     tryOnEstimatedTime: 10 * 1000, // 预计处理时间（毫秒），默认10秒
                     pollingErrorCount: 0, // 轮询错误计数
+                    tryOnEventSource: null, // SSE连接
                     tryOnResultImageError: false, // 结果图片加载失败
                     tryOnResultImageLoaded: false, // 结果图片加载成功
+                    tryOnAutoDownloadAfterExit: false, // 退出弹窗后任务完成时自动保存/下载结果
+                    tryOnSaveHelperWindow: null, // 退出时由用户手势打开的保存辅助窗口（规避移动端自动下载拦截）
+                    tryOnTaskStorageKey: 'nanyi_try_on_task_state_v1', // 本地持久化 key（用于刷新/重开恢复）
+                    tryOnBackgroundMode: false, // 退出后后台执行模式（前台补查但不强制弹窗）
+                    tryOnLastVisibilityCheckAt: 0, // visibility 补查节流
+                    tryOnTrackingStartedTaskId: null, // 当前任务是否已经建立了状态追踪连接（避免重复 SSE/轮询）
+                    tryOnCheckTaskInFlight: false, // checkTaskResult 是否正在进行中（避免并发补查造成闪屏/重复连接）
+                    tryOnCheckTaskInFlightTaskId: null,
                     brandLikeStatus: {
                         liked: false,
                         count: 0,
@@ -924,9 +961,14 @@
                     }
                     
                     await this.loadData();
+
+                    // 恢复未完成的试衣任务（页面刷新/重开后继续追踪）
+                    this.restoreTryOnTaskState();
                     
                     // 添加滚动监听用于自动加载更多
                     window.addEventListener('scroll', this.checkAutoLoad);
+                    // 回到前台时立即补查任务状态
+                    document.addEventListener('visibilitychange', this.handleTryOnVisibilityChange);
                     
                     // 监听缓存更新事件
                     window.addEventListener('cacheDataUpdate', (event) => {
@@ -1022,23 +1064,21 @@
                                 // 第一页或重新加载：替换数据
                                 this.allImages = cachedData.images || [];
                                 this.brandData = {};
-                                this.filteredBrands = [];
                                 
-                                if (cachedData.brands && cachedData.brands.length > 0) {
-                                    cachedData.brands.forEach(brand => {
-                                        this.brandData[brand.name] = brand;
-                                    });
-                                    this.filteredBrands = cachedData.brands;
-                                    this.generateFilterOptions();
-                                }
+                                const filteredBrands = this.filterBrandsToExcludeGenerated(cachedData.brands || []);
+                                this.filteredBrands = filteredBrands;
+                                
+                                filteredBrands.forEach(brand => {
+                                    this.brandData[brand.name] = brand;
+                                });
+                                this.generateFilterOptions();
                             } else {
                                 // 后续页面：追加数据
-                                if (cachedData.brands && cachedData.brands.length > 0) {
-                                    cachedData.brands.forEach(brand => {
-                                        this.brandData[brand.name] = brand;
-                                    });
-                                    this.filteredBrands = [...this.filteredBrands, ...cachedData.brands];
-                                }
+                                const nextBrands = this.filterBrandsToExcludeGenerated(cachedData.brands || []);
+                                nextBrands.forEach(brand => {
+                                    this.brandData[brand.name] = brand;
+                                });
+                                this.filteredBrands = [...this.filteredBrands, ...nextBrands];
                             }
                             
                             this.dataLoaded = true;
@@ -1126,6 +1166,10 @@
                     const brands = {};
                     
                     this.allImages.forEach(image => {
+                        // 过滤掉 AI 试穿生成目录图片，避免出现在首页/卡片封面里
+                        if (this.isGeneratedImageSource(image)) {
+                            return;
+                        }
                         const brandName = image.brand_name;
                         
 
@@ -1344,22 +1388,22 @@
                 },
 
                 getBrandCoverImage(brand) {
-                                    // 定义图片类型优先级顺序：概念图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他
-                const priorityOrder = ['概念图', '设计图', '成衣图', '布料图', '模特图', '买家秀图', '其他'];
-                    
-                    // 按优先级查找图片
+                    // 定义图片类型优先级顺序：概念图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他
+                    const priorityOrder = ['概念图', '设计图', '成衣图', '布料图', '模特图', '买家秀图', '其他'];
+
+                    // 按优先级查找非 AI 生成目录图片
                     for (const imageType of priorityOrder) {
-                        const foundImage = brand.images.find(img => img.image_type === imageType);
-                        if (foundImage) {
-                            return this.getImageURL(foundImage);
+                        const candidates = (brand.images || [])
+                            .filter(img => img && img.image_type === imageType)
+                            .filter(img => !this.isGeneratedImageSource(img));
+                        if (candidates.length > 0) {
+                            return this.getImageURL(candidates[0]);
                         }
                     }
-                    
-                    // 如果没有匹配的类型，使用第一张图片
-                    if (brand.images.length > 0) {
-                        return this.getImageURL(brand.images[0]);
-                    }
-                    return null;
+
+                    // 如果没有匹配的类型，使用第一张非生成图片
+                    const fallback = (brand.images || []).filter(img => img && !this.isGeneratedImageSource(img))[0];
+                    return fallback ? this.getImageURL(fallback) : null;
                 },
 
                 async openBrandDetail(brand) {
@@ -1397,7 +1441,8 @@
                     
                     // 设置品牌详情数据
                     this.selectedBrand = brandDetail.brand_info;
-                    this.brandImages = brandDetail.images;
+                    // 过滤掉 AI 试穿生成目录图片，避免出现在详情/封面里
+                    this.brandImages = (brandDetail.images || []).filter(img => !this.isGeneratedImageSource(img));
                     
                     // 预加载品牌详情中的所有图片
                     if (window.imagePreloader && this.brandImages.length > 0) {
@@ -1446,6 +1491,7 @@
                                 if (window.imagePreloader && response.images.length > 0) {
                                     const priorityImages = response.images
                                         .filter(img => img.image_type === '概念图' || img.image_type === '设计图')
+                                        .filter(img => !this.isGeneratedImageSource(img))
                                         .slice(0, 3); // 只预加载前3张优先级图片
                                     
                                     priorityImages.forEach(img => {
@@ -1488,6 +1534,9 @@
                     const categories = {};
                     
                     this.selectedBrand.images.forEach(img => {
+                        // 不展示 AI 试穿生成目录的图片（该目录用于生成结果/内部用途）
+                        if (this.isGeneratedImageSource(img)) return;
+
                         // 优先检查image_type字段，如果没有则从文件名中提取图片类型
                         let type = '其他';
                         
@@ -1600,6 +1649,69 @@
                         // 降级处理：直接使用原始路径
                         return `/static/images/${image.relative_path || image.filename || 'placeholder.jpg'}`;
                     }
+                },
+
+                /**
+                 * 判断一张图片/一个URL是否来自 AI 试穿生成目录
+                 * 用于首页封面图、brandImages 列表过滤，避免把生成结果当作素材展示
+                 */
+                isGeneratedImageSource(value) {
+                    const candidates = [];
+                    if (!value) return false;
+
+                    // 支持传入 object（image 数据结构）或直接传入 string（url/relative_path）
+                    if (typeof value === 'string') {
+                        candidates.push(value);
+                    } else if (typeof value === 'object') {
+                        if (typeof value.relative_path === 'string') candidates.push(value.relative_path);
+                        if (typeof value.medium_url === 'string') candidates.push(value.medium_url);
+                        if (typeof value.url === 'string') candidates.push(value.url);
+                        if (typeof value.filename === 'string') candidates.push(value.filename);
+                    }
+
+                    const isGenerated = (s) => {
+                        if (!s || typeof s !== 'string') return false;
+                        let decoded = s;
+                        try {
+                            // 尝试解码，避免 generated 被编码成 generated%2F
+                            decoded = decodeURIComponent(s);
+                        } catch (e) {
+                            // ignore
+                        }
+                        const lower = decoded.toLowerCase();
+                        return (
+                            lower.includes('/generated/') ||
+                            lower.includes('images/generated') ||
+                            lower.includes('generated/') ||
+                            lower.includes('generated%2f') ||
+                            lower.split('/').includes('generated')
+                        );
+                    };
+
+                    return candidates.some(c => isGenerated(c));
+                },
+
+                /**
+                 * 过滤品牌列表中的 AI 试穿生成目录图片，确保不会把 generated 结果当作品牌卡片素材展示
+                 * 规则：brand.images 去重后为空的品牌整卡移除
+                 */
+                filterBrandsToExcludeGenerated(brands) {
+                    if (!Array.isArray(brands)) return [];
+
+                    const filtered = brands
+                        .map(brand => {
+                            const name = brand && (brand.name || brand.brand_name) ? (brand.name || brand.brand_name) : '';
+                            const images = Array.isArray(brand && brand.images) ? brand.images : [];
+                            const safeImages = images.filter(img => !this.isGeneratedImageSource(img));
+                            return {
+                                ...brand,
+                                name,
+                                images: safeImages
+                            };
+                        })
+                        .filter(brand => brand && brand.name && Array.isArray(brand.images) && brand.images.length > 0);
+
+                    return filtered;
                 },
 
                 /**
@@ -2154,52 +2266,59 @@
                         .replace(/^(.+)$/, '<p>$1</p>');
                 },
 
+                /**
+                 * 详情页「生成布料卡片」：委托给通用方法，与首页卡片分享一致
+                 */
                 generateShareCard() {
-                    // 移除调试日志
-                    
                     if (!this.selectedBrand) {
                         this.showToast('请先选择一个品牌');
                         return;
                     }
-                    
-                    const brandName = this.selectedBrand.name || this.selectedBrand.brand_name;
-                    
-                    // 显示生成中提示
+                    this.openShareCardForBrand(this.selectedBrand);
+                },
+
+                /**
+                 * 为指定品牌生成分享卡片数据并打开 card.html（与详情页 generateShareCard 完全相同流程）
+                 * @param {object} brand - 列表项品牌对象，需含 name 或 brand_name
+                 */
+                openShareCardForBrand(brand) {
+                    if (!brand) {
+                        this.showToast('无法识别品牌信息');
+                        return;
+                    }
+                    const brandName = brand.name || brand.brand_name;
+                    if (!brandName || typeof brandName !== 'string') {
+                        this.showToast('无法识别品牌信息');
+                        return;
+                    }
+
                     this.showToast('正在生成卡片...');
-                    
-                    // 调用后端API生成卡片数据
-                    // 智能API路径配置
+
                     const currentHost = window.location.hostname;
                     const protocol = window.location.protocol;
                     let apiBaseUrl = '';
-                    
+
                     if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-                        // 本地开发环境，直接连接后端端口
                         apiBaseUrl = `${protocol}//${currentHost}:5432`;
                     } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
-                        // 域名访问，使用相对路径让nginx代理处理（自动使用当前协议）
                         apiBaseUrl = '';
                     } else {
-                        // IP访问，使用当前协议
                         apiBaseUrl = `${protocol}//${currentHost}:5432`;
                     }
-                    
-                    const apiUrl = window.api ? 
-                        `${window.api.baseURL}/share/card/${encodeURIComponent(brandName)}` : 
-                        `${apiBaseUrl}/api/share/card/${encodeURIComponent(brandName)}`;
-                    
-                    // 移除调试日志
-                    
+
+                    const apiUrl = window.api
+                        ? `${window.api.baseURL}/share/card/${encodeURIComponent(brandName)}`
+                        : `${apiBaseUrl}/api/share/card/${encodeURIComponent(brandName)}`;
+
                     fetch(apiUrl)
-                        .then(response => {
+                        .then((response) => {
                             if (!response.ok) {
                                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                             }
                             return response.json();
                         })
-                        .then(data => {
+                        .then((data) => {
                             if (data.success) {
-                                // 跳转到卡片页面
                                 const cardUrl = `card.html?brand=${encodeURIComponent(brandName)}`;
                                 window.open(cardUrl, '_blank');
                                 this.showToast('卡片生成成功！');
@@ -2207,9 +2326,8 @@
                                 this.showToast('生成卡片失败: ' + (data.error || '未知错误'));
                             }
                         })
-                        .catch(error => {
+                        .catch((error) => {
                             console.error('生成卡片失败:', error);
-                            // 提供更详细的错误信息
                             if (error.message.includes('Failed to fetch')) {
                                 this.showToast('网络连接失败，请检查网络后重试');
                             } else if (error.message.includes('HTTP')) {
@@ -2400,6 +2518,81 @@
                 // ========== AI试衣相关方法 ==========
                 
                 /**
+                 * 从首页品牌卡片直接打开 AI 试穿模态框，并默认选中该卡片对应的款式
+                 * @param {object} brand - 首页品牌卡片对象
+                 */
+                async openTryOnModalFromCard(brand) {
+                    // 检查API是否可用
+                    if (!window.api) {
+                        this.showToast('API服务未初始化，请刷新页面重试');
+                        console.error('window.api 未定义');
+                        return;
+                    }
+
+                    if (typeof window.api.getTryOnStyles !== 'function') {
+                        this.showToast('API方法未找到，请刷新页面重试');
+                        console.error('window.api.getTryOnStyles 不是函数，可用方法:', Object.keys(window.api));
+                        return;
+                    }
+
+                    // 从本地拉回后台未完成的任务，避免内存为空时误走“新建流程”
+                    this.hydrateTryOnTaskFromStorageIfNeeded();
+
+                    // 打开模态框并禁止页面滚动
+                    this.showTryOnModal = true;
+                    document.body.style.overflow = 'hidden';
+
+                    // 若存在进行中的任务，优先恢复任务视图，不重置任务上下文
+                    if (this.tryOnTaskId && this.tryOnStatus !== 'completed' && this.tryOnStatus !== 'failed') {
+                        this.tryOnBackgroundMode = false;
+                        // 不额外补查，避免重新触发状态切换导致闪屏（后台追踪继续进行）
+                        this.startTaskStatusTracking();
+                        return;
+                    }
+
+                    // 若已是终态（completed/failed），直接展示结果/失败提示，不重置状态
+                    if (this.tryOnTaskId && (this.tryOnStatus === 'completed' || this.tryOnStatus === 'failed')) {
+                        this.tryOnBackgroundMode = false;
+                        this.tryOnAutoDownloadAfterExit = false;
+                        this.tryOnResultImageError = false;
+                        this.tryOnResultImageLoaded = false;
+                        return;
+                    }
+
+                    // 重置状态（与 openTryOnModal 保持一致）
+                    this.selectedStyle = null;
+                    this.uploadedImage = null;
+                    this.uploadedImagePreview = null;
+                    this.tryOnTaskId = null;
+                    this.tryOnStatus = null;
+                    this.tryOnResultUrl = null;
+                    this.tryOnProgress = 0;
+                    this.tryOnError = null;
+
+                    // 提取首页卡片显示的“完整品牌名”（通常包含颜色信息）
+                    const fullBrandName = brand && (brand.name || brand.brand_name) ? (brand.name || brand.brand_name) : null;
+                    if (!fullBrandName || typeof fullBrandName !== 'string') {
+                        this.showToast('无法识别该卡片的品牌信息');
+                        return;
+                    }
+
+                    // 提取基础品牌名用于筛选款式（去掉颜色/括号后缀）
+                    let baseBrandName = fullBrandName.trim();
+                    if (baseBrandName.includes('(')) {
+                        baseBrandName = baseBrandName.split('(')[0].trim();
+                    } else if (baseBrandName.includes('（')) {
+                        baseBrandName = baseBrandName.split('（')[0].trim();
+                    }
+
+                    // 加载款式列表（只加载当前基础品牌的款式）
+                    await this.loadTryOnStyles(baseBrandName);
+
+                    // 强制匹配选中：让 UI 高亮与卡片完全一致的 selectedStyle
+                    const matchedStyle = this.tryOnStyles.find(s => s.brand_name === fullBrandName);
+                    this.selectedStyle = matchedStyle || { brand_name: fullBrandName };
+                },
+                
+                /**
                  * 打开AI试衣模态框
                  */
                 async openTryOnModal() {
@@ -2415,10 +2608,29 @@
                         console.error('window.api.getTryOnStyles 不是函数，可用方法:', Object.keys(window.api));
                         return;
                     }
-                    
+
+                    this.hydrateTryOnTaskFromStorageIfNeeded();
+
                     this.showTryOnModal = true;
                     document.body.style.overflow = 'hidden';
-                    
+
+                    // 若存在进行中的任务，直接展示当前任务状态，不重置
+                    if (this.tryOnTaskId && this.tryOnStatus !== 'completed' && this.tryOnStatus !== 'failed') {
+                        this.tryOnBackgroundMode = false;
+                        // 不额外补查，避免重复状态更新导致闪屏
+                        this.startTaskStatusTracking();
+                        return;
+                    }
+
+                    // 若已是终态（completed/failed），直接展示结果/失败提示，不重置状态
+                    if (this.tryOnTaskId && (this.tryOnStatus === 'completed' || this.tryOnStatus === 'failed')) {
+                        this.tryOnBackgroundMode = false;
+                        this.tryOnAutoDownloadAfterExit = false;
+                        this.tryOnResultImageError = false;
+                        this.tryOnResultImageLoaded = false;
+                        return;
+                    }
+
                     // 重置状态
                     this.selectedStyle = null;
                     this.uploadedImage = null;
@@ -2480,11 +2692,21 @@
                  * 关闭AI试衣模态框
                  */
                 closeTryOnModal() {
+                    // 任务进行中时，“关闭”按“退出并继续生成”处理，避免误触导致轮询停止
+                    if (this.tryOnTaskId && this.tryOnStatus !== 'completed' && this.tryOnStatus !== 'failed') {
+                        this.exitTryOnModalAndContinue();
+                        return;
+                    }
+
                     this.showTryOnModal = false;
                     document.body.style.overflow = 'auto';
                     
                     // 停止轮询
                     this.stopPolling();
+                    this.stopSSEStatusTracking();
+                    // 关闭弹窗时不再自动下载（只有“退出”按钮才会自动保存）
+                    this.tryOnAutoDownloadAfterExit = false;
+                    this.clearTryOnTaskState();
                     
                     // 清理状态
                     setTimeout(() => {
@@ -2500,6 +2722,111 @@
                         this.tryOnResultImageLoaded = false;
                     }, 300);
                 },
+
+                /**
+                 * 退出弹窗但继续后台生成
+                 * - 不停止轮询
+                 * - 任务 completed 后自动触发下载/保存
+                 */
+                exitTryOnModalAndContinue() {
+                    if (!this.tryOnTaskId) return;
+                    this.tryOnAutoDownloadAfterExit = true;
+                    this.tryOnBackgroundMode = true;
+
+                    // 不再在用户点击退出时打开新标签页写“试衣结果准备中”页面（会打断回首页体验）
+                    // 任务完成后仍可通过微信 SDK / <a download> / window.open 等方式尝试保存（见 autoDownloadTryOnResult）
+
+                    this.showTryOnModal = false;
+                    document.body.style.overflow = 'auto';
+                    this.showToast('已回到首页，试衣在后台生成中');
+                    // 注意：不要调用 stopPolling()，也不要清理 tryOnTaskId/tryOnStatus
+                },
+
+                /**
+                 * completed 后自动保存/下载结果图
+                 * - 优先尝试微信内保存到相册
+                 * - 失败则回退到浏览器下载（触发系统默认下载目录/桌面）
+                 */
+                autoDownloadTryOnResult() {
+                    const url = this.tryOnResultUrl;
+                    if (!url) return;
+                    
+                    // 只在退出流程触发
+                    if (!this.tryOnAutoDownloadAfterExit) return;
+
+                    // 计算绝对地址（wx 接口通常需要绝对 URL）
+                    const absUrl = url.startsWith('http://') || url.startsWith('https://')
+                        ? url
+                        : `${window.location.origin}${url}`;
+
+                    const filename = (url.split('/').pop() || 'tryon.jpg').replace(/\\?.*$/, '');
+                    const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+
+                    const fallbackDownload = () => {
+                        // 优先使用退出时已打开的辅助窗口，避免异步下载被浏览器拦截
+                        if (this.tryOnSaveHelperWindow && !this.tryOnSaveHelperWindow.closed) {
+                            this.tryOnSaveHelperWindow.location.href = absUrl;
+                            this.showToast('结果已打开，请长按图片保存到相册');
+                            return;
+                        }
+
+                        try {
+                            const link = document.createElement('a');
+                            link.href = absUrl;
+                            link.download = filename;
+                            link.target = '_blank';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            this.showToast('图片已开始下载');
+                        } catch (e) {
+                            // 最兜底：打开图片让系统提供保存入口
+                            window.open(absUrl, '_blank');
+                            this.showToast('请长按图片保存到相册');
+                        }
+                    };
+
+                    // 微信内保存到相册（尽量符合“默认保存到相册”诉求）
+                    if (isWeChat && window.wx && typeof window.wx.downloadImage === 'function' && typeof window.wx.saveImageToPhotosAlbum === 'function') {
+                        try {
+                            const call = () => {
+                                window.wx.downloadImage({
+                                    url: absUrl,
+                                    isShowProgressTips: 0,
+                                    success: (res) => {
+                                        window.wx.saveImageToPhotosAlbum({
+                                            localId: res.localId,
+                                            success: () => {
+                                                this.showToast('已保存到相册');
+                                            },
+                                            fail: () => {
+                                                fallbackDownload();
+                                            }
+                                        });
+                                    },
+                                    fail: () => {
+                                        fallbackDownload();
+                                    }
+                                });
+                            };
+
+                            if (typeof window.wx.ready === 'function') {
+                                window.wx.ready(call);
+                            } else {
+                                call();
+                            }
+                            return;
+                        } catch (e) {
+                            // 微信保存失败则回退
+                            fallbackDownload();
+                            return;
+                        }
+                    }
+
+                    // 其他环境：走浏览器下载
+                    fallbackDownload();
+                },
+
 
                 /**
                  * 加载可用款式列表
@@ -2614,10 +2941,10 @@
                         return;
                     }
                     
-                    // 验证文件大小（20MB）
-                    const maxSize = 20 * 1024 * 1024;
+                    // 验证文件大小（10MB，Ark 输入图片上限）
+                    const maxSize = 10 * 1024 * 1024;
                     if (file.size > maxSize) {
-                        this.showToast('文件大小超过限制（最大20MB）');
+                        this.showToast('文件过大，最大支持10MB，请压缩后重试');
                         return;
                     }
                     
@@ -2672,14 +2999,15 @@
                         
                         if (response.success && responseData.task_id) {
                             this.tryOnTaskId = responseData.task_id;
-                            this.tryOnStatus = responseData.status || 'processing';
+                            this.tryOnStatus = this.normalizeTryOnStatus(responseData.status);
                             this.tryOnProgress = 0;
+                            this.persistTryOnTaskState();
                             
                             // 保存预计处理时间（秒），用于动态调整轮询间隔
                             this.tryOnEstimatedTime = (responseData.estimated_time || 10) * 1000; // 转换为毫秒
                             
-                            // 开始轮询任务状态
-                            this.startPollingTaskStatus();
+                            // 开始任务状态追踪（优先SSE，失败回退轮询）
+                            this.startTaskStatusTracking();
                         } else {
                             throw new Error(response.message || '启动试衣任务失败');
                         }
@@ -2744,6 +3072,170 @@
                 },
 
                 /**
+                 * 启动任务状态追踪（优先SSE，失败回退轮询）
+                 */
+                startTaskStatusTracking() {
+                    if (!this.tryOnTaskId) return;
+
+                    // 若已对同一任务建立追踪（SSE/轮询），重复 start 会造成闪动/重复连接
+                    if (this.tryOnTrackingStartedTaskId === this.tryOnTaskId && this.tryOnStatus !== 'completed' && this.tryOnStatus !== 'failed') {
+                        const esActive = this.tryOnEventSource &&
+                            typeof EventSource !== 'undefined' &&
+                            this.tryOnEventSource.readyState !== EventSource.CLOSED;
+                        const pollingActive = !!this.tryOnPollingInterval;
+                        if (esActive || pollingActive) {
+                            return;
+                        }
+                    }
+
+                    // 若已有处于连接中/已打开的 SSE，避免重复 stop/start 造成闪动
+                    const es = this.tryOnEventSource;
+                    if (
+                        es &&
+                        typeof EventSource !== 'undefined' &&
+                        es.readyState !== EventSource.CLOSED &&
+                        this.tryOnTaskId &&
+                        this.tryOnStatus !== 'completed' &&
+                        this.tryOnStatus !== 'failed'
+                    ) {
+                        return;
+                    }
+                    this.stopSSEStatusTracking();
+                    this.stopPolling();
+                    this.tryOnTrackingStartedTaskId = this.tryOnTaskId;
+
+                    // 优先使用SSE实时推送
+                    if (window.api && typeof window.api.subscribeTryOnStatus === 'function' && typeof EventSource !== 'undefined') {
+                        try {
+                            this.tryOnEventSource = window.api.subscribeTryOnStatus(
+                                this.tryOnTaskId,
+                                (payload) => {
+                                    if (!payload) return;
+                                    if (!payload.success) {
+                                        return;
+                                    }
+                                    const prevStatus = this.tryOnStatus;
+                                    const s = this.normalizeTryOnStatus(payload.status);
+
+                                    // 单调保护：如果已经进入终态（completed/failed），则忽略所有非同一终态的滞后消息
+                                    if ((prevStatus === 'completed' || prevStatus === 'failed') && s !== prevStatus) {
+                                        return;
+                                    }
+
+                                    this.tryOnStatus = s;
+                                    this.tryOnProgress = payload.progress || this.tryOnProgress || 0;
+                                    if (payload.result_image_url) {
+                                        this.tryOnResultUrl = payload.result_image_url;
+                                    }
+                                    this.persistTryOnTaskState();
+
+                                    // SSE 收到终态后：直接收敛展示，不再二次请求 checkTaskResult（避免乱序覆盖导致闪屏）
+                                    if (s === 'completed') {
+                                        if (prevStatus === 'completed') {
+                                            // 已经处理过 completed：避免重复强制重载图片导致闪动
+                                            this.stopSSEStatusTracking();
+                                            return;
+                                        }
+                                        const wasInBackground = !!this.tryOnBackgroundMode; // 记录当前是否后台模式
+                                        this.tryOnBackgroundMode = false; // 终态退出后台模式
+                                        this.tryOnStatus = 'completed'; // 确保状态为 completed
+                                        this.tryOnError = null; // 清空错误
+                                        this.tryOnResultImageError = false; // 结果图加载错误清空
+                                        this.tryOnResultImageLoaded = false; // 结果图加载状态重置
+
+                                        // 如果 SSE payload 没带 result_image_url，保底沿用已有 URL
+                                        if (payload.result_image_url) {
+                                            this.tryOnResultUrl = payload.result_image_url;
+                                        }
+
+                                        // 前台展示完毕后清理；如果用户处于“退出后台模式”，保留本地任务态用于重进失败/成功提醒
+                                        if (!wasInBackground) {
+                                            this.clearTryOnTaskState();
+                                        }
+                                        this.stopSSEStatusTracking(); // 停止 SSE 追踪
+
+                                        if (!wasInBackground) {
+                                            this.showToast('试衣效果生成成功！'); // 前台弹窗内给用户反馈
+                                        }
+
+                                        if (this.tryOnAutoDownloadAfterExit) {
+                                            this.autoDownloadTryOnResult(); // 根据退出后的标记自动保存/下载
+                                            this.tryOnAutoDownloadAfterExit = false;
+                                        }
+
+                                        // 强制触发图片加载
+                                        this.$nextTick(() => {
+                                            const imgElement = document.querySelector('.result-image');
+                                            if (imgElement && this.tryOnResultUrl) {
+                                                imgElement.src = '';
+                                                this.$nextTick(() => {
+                                                    imgElement.src = this.encodeImageURL(this.tryOnResultUrl);
+                                                });
+                                            }
+                                        });
+                                        return;
+                                    }
+
+                                    if (s === 'failed') {
+                                        if (prevStatus === 'failed') {
+                                            this.stopSSEStatusTracking();
+                                            return;
+                                        }
+                                        const wasInBackground = !!this.tryOnBackgroundMode; // 记录当前是否后台模式
+                                        this.tryOnBackgroundMode = false;
+                                        this.tryOnStatus = 'failed';
+                                        this.tryOnError = payload.error || '试衣任务失败';
+                                        this.tryOnResultImageError = true;
+                                        this.tryOnResultImageLoaded = false;
+
+                                        // 失败时需要把错误信息持久化，保证退出/重进后仍能给用户明确提醒
+                                        this.persistTryOnTaskState();
+                                        if (!wasInBackground) {
+                                            this.clearTryOnTaskState();
+                                        }
+                                        this.stopSSEStatusTracking();
+                                        if (!wasInBackground) {
+                                            this.showToast('试衣任务失败: ' + (payload.error || '未知错误'));
+                                        }
+                                        return;
+                                    }
+
+                                    // 非终态：继续维持追踪并持久化状态
+                                    this.persistTryOnTaskState();
+                                },
+                                () => {
+                                    // SSE异常时回退轮询
+                                    this.stopSSEStatusTracking();
+                                    this.startPollingTaskStatus();
+                                }
+                            );
+                            return;
+                        } catch (e) {
+                            // 失败则回退轮询
+                            this.stopSSEStatusTracking();
+                        }
+                    }
+
+                    // 兜底：轮询
+                    this.startPollingTaskStatus();
+                },
+
+                /**
+                 * 停止SSE追踪
+                 */
+                stopSSEStatusTracking() {
+                    if (this.tryOnEventSource) {
+                        try {
+                            this.tryOnEventSource.close();
+                        } catch (e) {
+                            // ignore
+                        }
+                        this.tryOnEventSource = null;
+                    }
+                    this.tryOnTrackingStartedTaskId = null;
+                },
+
+                /**
                  * 轮询任务状态
                  */
                 async pollTaskStatus() {
@@ -2771,7 +3263,7 @@
                         // #endregion
                         
                         if (response.success) {
-                            const newStatus = responseData.status || 'processing';
+                            const newStatus = this.normalizeTryOnStatus(responseData.status);
                             const newProgress = responseData.progress || 0;
                             
                             // #region agent log
@@ -2780,6 +3272,7 @@
                             
                             this.tryOnStatus = newStatus;
                             this.tryOnProgress = newProgress;
+                            this.persistTryOnTaskState();
                             
                             if (this.tryOnStatus === 'completed') {
                                 // 任务完成
@@ -2812,6 +3305,11 @@
                                 
                                 this.stopPolling();
                                 this.showToast('试衣效果生成成功！');
+                                this.clearTryOnTaskState();
+                                if (this.tryOnAutoDownloadAfterExit) {
+                                    this.autoDownloadTryOnResult();
+                                    this.tryOnAutoDownloadAfterExit = false;
+                                }
                                 
                                 // #region agent log
                                 fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2762','message':'轮询已停止-AFTER设置状态','data':{taskId:this.tryOnTaskId,tryOnStatus:this.tryOnStatus,tryOnResultUrl:this.tryOnResultUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
@@ -2911,7 +3409,7 @@
                                 const lastResponseData = lastResponse.data || lastResponse;
                                 
                                 if (lastResponse.success) {
-                                    const lastStatus = lastResponseData.status || 'processing';
+                                    const lastStatus = (lastResponseData.status === 'pending' ? 'processing' : (lastResponseData.status || 'processing'));
                                     
                                     // 如果任务已经完成，显示结果
                                     if (lastStatus === 'completed') {
@@ -2928,6 +3426,11 @@
                                         this.tryOnResultImageLoaded = false;
                                         this.stopPolling();
                                         this.showToast('试衣效果生成成功！');
+                                        this.clearTryOnTaskState();
+                                        if (this.tryOnAutoDownloadAfterExit) {
+                                            this.autoDownloadTryOnResult();
+                                            this.tryOnAutoDownloadAfterExit = false;
+                                        }
                                         // 强制触发图片加载
                                         this.$nextTick(() => {
                                             const imgElement = document.querySelector('.result-image');
@@ -2944,6 +3447,7 @@
                                         this.tryOnError = lastResponseData.error || '试衣任务失败';
                                         this.tryOnStatus = 'failed';
                                         this.stopPolling();
+                                        this.clearTryOnTaskState();
                                         this.showToast('试衣任务失败: ' + (lastResponseData.error || '未知错误'));
                                         return;
                                     }
@@ -2977,6 +3481,118 @@
                 },
 
                 /**
+                 * 状态标准化：pending 统一映射为 processing
+                 */
+                normalizeTryOnStatus(status) {
+                    return status === 'pending' ? 'processing' : (status || 'processing');
+                },
+
+                /**
+                 * 持久化当前试衣任务状态到 localStorage（便于刷新/重开恢复）
+                 */
+                persistTryOnTaskState() {
+                    try {
+                        if (!this.tryOnTaskId) return;
+                        const payload = {
+                            task_id: this.tryOnTaskId,
+                            status: this.tryOnStatus,
+                            result_image_url: this.tryOnResultUrl,
+                            error_message: this.tryOnError,
+                            progress: this.tryOnProgress || 0,
+                            updated_at: Date.now()
+                        };
+                        localStorage.setItem(this.tryOnTaskStorageKey, JSON.stringify(payload));
+                    } catch (e) {
+                        // localStorage 异常不阻塞主流程
+                    }
+                },
+
+                /**
+                 * 清理本地任务状态
+                 */
+                clearTryOnTaskState() {
+                    try {
+                        localStorage.removeItem(this.tryOnTaskStorageKey);
+                    } catch (e) {
+                        // ignore
+                    }
+                },
+
+                /**
+                 * 若内存中尚无任务 ID，则从 localStorage 拉回进行中的试衣任务（避免退出后从卡片再进被误清空）
+                 */
+                hydrateTryOnTaskFromStorageIfNeeded() {
+                    try {
+                        if (this.tryOnTaskId) {
+                            return;
+                        }
+                        const raw = localStorage.getItem(this.tryOnTaskStorageKey);
+                        if (!raw) {
+                            return;
+                        }
+                        const state = JSON.parse(raw);
+                        if (!state || !state.task_id) {
+                            return;
+                        }
+                        const st = this.normalizeTryOnStatus(state.status);
+                        this.tryOnTaskId = state.task_id;
+                        this.tryOnStatus = st;
+                        this.tryOnProgress = state.progress || 0;
+                        this.tryOnResultUrl = state.result_image_url || null;
+                        this.tryOnError = state.error_message || null;
+                    } catch (e) {
+                        this.clearTryOnTaskState();
+                    }
+                },
+
+                /**
+                 * 页面刷新/重开时恢复任务并继续轮询
+                 */
+                restoreTryOnTaskState() {
+                    try {
+                        const raw = localStorage.getItem(this.tryOnTaskStorageKey);
+                        if (!raw) return;
+                        const state = JSON.parse(raw);
+                        if (!state || !state.task_id) return;
+
+                        const restoredStatus = this.normalizeTryOnStatus(state.status);
+
+                        this.tryOnTaskId = state.task_id;
+                        this.tryOnStatus = restoredStatus;
+                        this.tryOnProgress = state.progress || 0;
+                        this.tryOnResultUrl = state.result_image_url || null;
+                        this.tryOnError = state.error_message || null;
+
+                        // 恢复任务状态时不强制弹窗，避免页面闪烁
+                        // 用户可主动进入试衣弹窗查看进度
+
+                        // 刷新后立即静默补查并继续追踪（仅非终态）
+                        if (restoredStatus !== 'completed' && restoredStatus !== 'failed') {
+                            this.checkTaskResult(true);
+                        }
+                    } catch (e) {
+                        this.clearTryOnTaskState();
+                    }
+                },
+
+                /**
+                 * 页面回到前台时立即补查任务状态
+                 */
+                handleTryOnVisibilityChange() {
+                    if (!document.hidden && this.tryOnTaskId && this.tryOnStatus !== 'completed' && this.tryOnStatus !== 'failed') {
+                        // 节流：避免微信切前后台触发过于频繁造成页面闪烁
+                        const now = Date.now();
+                        if (now - (this.tryOnLastVisibilityCheckAt || 0) < 1500) {
+                            return;
+                        }
+                        this.tryOnLastVisibilityCheckAt = now;
+
+                        // 回前台仅静默补查状态，不弹 Toast、不自动反复弹窗
+                        this.checkTaskResult(true);
+                    }
+                },
+
+                /**
                  * 处理轮询超时
                  * 在超时前，先尝试最后一次查询状态，看看任务是否已经完成
                  */
@@ -2990,7 +3606,7 @@
                             const responseData = response.data || response;
                             
                             if (response.success) {
-                                const status = responseData.status || 'processing';
+                                const status = this.normalizeTryOnStatus(responseData.status);
                                 
                                 // 如果任务已经完成，显示结果
                                 if (status === 'completed') {
@@ -3007,6 +3623,11 @@
                                     this.tryOnResultImageLoaded = false;
                                     this.stopPolling();
                                     this.showToast('试衣效果生成成功！');
+                                    this.clearTryOnTaskState();
+                                    if (this.tryOnAutoDownloadAfterExit) {
+                                        this.autoDownloadTryOnResult();
+                                        this.tryOnAutoDownloadAfterExit = false;
+                                    }
                                     // 强制触发图片加载
                                     this.$nextTick(() => {
                                         const imgElement = document.querySelector('.result-image');
@@ -3023,6 +3644,7 @@
                                     this.tryOnError = responseData.error || '试衣任务失败';
                                     this.tryOnStatus = 'failed';
                                     this.stopPolling();
+                                    this.clearTryOnTaskState();
                                     this.showToast('试衣任务失败: ' + (responseData.error || '未知错误'));
                                     return;
                                 }
@@ -3113,14 +3735,58 @@
                  * 保存试衣结果
                  */
                 saveTryOnResult() {
-                    if (this.tryOnResultUrl) {
-                        // 创建下载链接
+                    try {
+                        if (!this.tryOnResultUrl) {
+                            this.showToast('当前没有可保存的结果图');
+                            return;
+                        }
+                        const safeBrandName = (this.selectedStyle && this.selectedStyle.brand_name) ? this.selectedStyle.brand_name : '试衣结果';
                         const link = document.createElement('a');
                         link.href = this.encodeImageURL(this.tryOnResultUrl);
-                        link.download = `试衣效果_${this.selectedStyle.brand_name}_${Date.now()}.jpg`;
+                        link.download = `试衣效果_${safeBrandName}_${Date.now()}.jpg`;
+                        link.target = '_blank';
+                        document.body.appendChild(link);
                         link.click();
-                        this.showToast('图片已保存');
+                        document.body.removeChild(link);
+                        this.showToast('图片已开始保存/下载');
+                    } catch (e) {
+                        console.error('保存图片失败:', e);
+                        this.showToast('保存失败，请点击打开原图后长按保存');
                     }
+                },
+
+                /**
+                 * 打开结果原图（兜底入口）
+                 */
+                openTryOnOriginal() {
+                    if (!this.tryOnResultUrl) {
+                        this.showToast('暂无可查看的结果图');
+                        return;
+                    }
+                    const url = this.encodeImageURL(this.tryOnResultUrl);
+                    window.open(url, '_blank');
+                },
+
+                /**
+                 * 重新加载结果图
+                 */
+                reloadTryOnResultImage() {
+                    if (!this.tryOnResultUrl) {
+                        this.showToast('暂无可重新加载的结果图');
+                        return;
+                    }
+                    this.tryOnResultImageError = false;
+                    this.tryOnResultImageLoaded = false;
+                    this.$nextTick(() => {
+                        const imgElement = document.querySelector('.result-image');
+                        if (imgElement) {
+                            const encodedUrl = this.encodeImageURL(this.tryOnResultUrl);
+                            imgElement.src = '';
+                            this.$nextTick(() => {
+                                imgElement.src = encodedUrl;
+                            });
+                        }
+                    });
                 },
 
                 /**
@@ -3131,6 +3797,7 @@
                         this.showToast('没有可分享的结果');
                         return;
                     }
+                    const safeBrandName = (this.selectedStyle && this.selectedStyle.brand_name) ? this.selectedStyle.brand_name : '试衣效果';
 
                     try {
                         // 尝试使用Web Share API（移动端）
@@ -3138,8 +3805,8 @@
                             // 检查是否可以分享文件
                             const canShareFile = navigator.canShare({
                                 files: [new File([], 'try-on-result.jpg', { type: 'image/jpeg' })],
-                                title: `AI试衣效果 - ${this.selectedStyle.brand_name}`,
-                                text: `看看我的AI试衣效果：${this.selectedStyle.brand_name}`
+                                title: `AI试衣效果 - ${safeBrandName}`,
+                                text: `看看我的AI试衣效果：${safeBrandName}`
                             });
 
                             if (canShareFile) {
@@ -3151,12 +3818,21 @@
 
                                 await navigator.share({
                                     files: [file],
-                                    title: `AI试衣效果 - ${this.selectedStyle.brand_name}`,
-                                    text: `看看我的AI试衣效果：${this.selectedStyle.brand_name}`
+                                    title: `AI试衣效果 - ${safeBrandName}`,
+                                    text: `看看我的AI试衣效果：${safeBrandName}`
                                 });
                                 this.showToast('分享成功');
                                 return;
                             }
+
+                            // 若不支持文件分享，尝试直接分享链接
+                            await navigator.share({
+                                title: `AI试衣效果 - ${safeBrandName}`,
+                                text: `看看我的AI试衣效果：${safeBrandName}`,
+                                url: this.encodeImageURL(this.tryOnResultUrl)
+                            });
+                            this.showToast('分享成功');
+                            return;
                         }
 
                         // 降级方案：复制图片到剪贴板或显示分享选项
@@ -3191,7 +3867,8 @@
                  * 显示分享选项（降级方案）
                  */
                 showShareOptions() {
-                    const shareText = `AI试衣效果 - ${this.selectedStyle.brand_name}\n${window.location.href}`;
+                    const safeBrandName = (this.selectedStyle && this.selectedStyle.brand_name) ? this.selectedStyle.brand_name : '试衣效果';
+                    const shareText = `AI试衣效果 - ${safeBrandName}\n${window.location.href}`;
                     
                     // 尝试复制链接到剪贴板
                     if (navigator.clipboard && window.isSecureContext) {
@@ -3208,32 +3885,54 @@
                 },
 
                 /**
-                 * 检查任务结果（手动查询已完成的任务）
+                 * 检查任务结果（手动查询或静默补查）
+                 * @param {boolean} silent - 为 true 时不弹 Toast、不占“开始试衣”按钮 loading（用于前后台自动补查）
                  */
-                async checkTaskResult() {
+                async checkTaskResult(silent = false) {
                     if (!this.tryOnTaskId) {
-                        this.showToast('没有任务ID，无法查询');
+                        if (!silent) {
+                            this.showToast('没有任务ID，无法查询');
+                        }
                         return;
                     }
-                    
-                    this.isTryOnProcessing = true;
+
+                    // 并发保护：避免同一任务在多个触发点同时补查，导致重复追踪连接/状态闪动
+                    if (this.tryOnCheckTaskInFlight && this.tryOnCheckTaskInFlightTaskId === this.tryOnTaskId) {
+                        return;
+                    }
+                    this.tryOnCheckTaskInFlight = true;
+                    this.tryOnCheckTaskInFlightTaskId = this.tryOnTaskId;
+
+                    if (!silent) {
+                        this.isTryOnProcessing = true;
+                    }
                     this.tryOnError = null;
-                    
+
                     try {
-                        console.log('手动查询任务状态:', this.tryOnTaskId);
+                        console.log('查询任务状态:', this.tryOnTaskId, silent ? '(静默)' : '');
                         const response = await window.api.getTryOnStatus(this.tryOnTaskId);
                         const responseData = response.data || response;
-                        
+
                         if (response.success) {
-                            const status = responseData.status || 'processing';
-                            
+                            const status = this.normalizeTryOnStatus(responseData.status);
+
+                            // 单调保护：如果已经进入终态（completed/failed），则忽略滞后非同一终态响应
+                            if ((this.tryOnStatus === 'completed' || this.tryOnStatus === 'failed') && status !== this.tryOnStatus) {
+                                return;
+                            }
+
                             if (status === 'completed') {
                                 // 任务已完成，显示结果
+                                const wasInBackground = !!this.tryOnBackgroundMode;
                                 this.tryOnStatus = 'completed';
-                                const originalUrl = responseData.result_image_url;
-                                this.tryOnResultUrl = originalUrl;
-                                const encodedUrl = this.encodeImageURL(originalUrl);
-                                console.log('任务已完成（手动检查），设置图片URL:', {
+                                this.tryOnBackgroundMode = false;
+                                // 如果响应里没有返回结果图 URL，则保留已有 URL，避免置空导致闪回
+                                const originalUrl = responseData.result_image_url || this.tryOnResultUrl;
+                                if (originalUrl) {
+                                    this.tryOnResultUrl = originalUrl;
+                                }
+                                const encodedUrl = originalUrl ? this.encodeImageURL(originalUrl) : '';
+                                console.log('任务已完成（检查），设置图片URL:', {
                                     original: originalUrl,
                                     encoded: encodedUrl,
                                     taskId: this.tryOnTaskId
@@ -3241,29 +3940,54 @@
                                 this.tryOnResultImageError = false;
                                 this.tryOnResultImageLoaded = false;
                                 this.tryOnError = null;
-                                this.showToast('试衣效果生成成功！');
+                                if (!silent) {
+                                    this.showToast('试衣效果生成成功！');
+                                }
+                                // 结果写入本地态：保证退出后台后重进能继续展示/下载
+                                this.persistTryOnTaskState();
+                                if (!wasInBackground) {
+                                    this.clearTryOnTaskState();
+                                }
+                                if (this.tryOnAutoDownloadAfterExit) {
+                                    this.autoDownloadTryOnResult();
+                                    this.tryOnAutoDownloadAfterExit = false;
+                                }
                                 // 强制触发图片加载
                                 this.$nextTick(() => {
                                     const imgElement = document.querySelector('.result-image');
-                                    if (imgElement) {
+                                    if (imgElement && encodedUrl) {
                                         imgElement.src = '';
                                         this.$nextTick(() => {
-                                            imgElement.src = encodedUrl;
+                                            if (encodedUrl) {
+                                                imgElement.src = encodedUrl;
+                                            }
                                         });
                                     }
                                 });
                             } else if (status === 'failed') {
                                 // 任务失败
+                                const wasInBackground = !!this.tryOnBackgroundMode;
                                 this.tryOnError = responseData.error || '试衣任务失败';
                                 this.tryOnStatus = 'failed';
-                                this.showToast('试衣任务失败: ' + (responseData.error || '未知错误'));
+                                this.tryOnBackgroundMode = false;
+                                // 失败写入本地态：保证限流/其它失败退出后台后重进能提醒用户
+                                this.persistTryOnTaskState();
+                                if (!wasInBackground) {
+                                    this.clearTryOnTaskState();
+                                }
+                                if (!silent) {
+                                    this.showToast('试衣任务失败: ' + (responseData.error || '未知错误'));
+                                }
                             } else {
-                                // 任务仍在处理中，重新开始轮询
+                                // 任务仍在处理中，继续追踪（静默补查不弹 Toast，避免页面“闪提示”）
                                 this.tryOnStatus = status;
                                 this.tryOnProgress = responseData.progress || 0;
                                 this.tryOnError = null;
-                                this.startPollingTaskStatus();
-                                this.showToast('任务仍在处理中，已重新开始查询...');
+                                this.persistTryOnTaskState();
+                                this.startTaskStatusTracking();
+                                if (!silent) {
+                                    this.showToast('任务仍在处理中，已重新开始查询...');
+                                }
                             }
                         } else {
                             throw new Error(response.message || '查询任务状态失败');
@@ -3271,9 +3995,15 @@
                     } catch (error) {
                         console.error('检查任务结果失败:', error);
                         this.tryOnError = error.message || '查询任务状态失败，请稍后重试';
-                        this.showToast('查询失败: ' + error.message);
+                        if (!silent) {
+                            this.showToast('查询失败: ' + error.message);
+                        }
                     } finally {
-                        this.isTryOnProcessing = false;
+                        if (!silent) {
+                            this.isTryOnProcessing = false;
+                        }
+                        this.tryOnCheckTaskInFlight = false;
+                        this.tryOnCheckTaskInFlightTaskId = null;
                     }
                 },
 
@@ -3291,6 +4021,9 @@
                     
                     // 停止轮询
                     this.stopPolling();
+                    this.stopSSEStatusTracking();
+                    this.tryOnBackgroundMode = false;
+                    this.clearTryOnTaskState();
                 }
             }
         });

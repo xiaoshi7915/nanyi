@@ -5,6 +5,7 @@ Seedream 4.5模型服务实现（适配版）
 基于火山引擎方舟官方SDK，使用主项目的配置
 """
 import base64
+import os
 import io
 from typing import Dict, Any, Optional
 import httpx
@@ -105,6 +106,12 @@ class TryOnPromptService:
             构建的提示词字符串
         """
         prompt_parts = []
+
+        # 如果调用方已提供“整段固定中文提示词”，则直接使用该 prompt 作为最终输出，
+        # 避免与当前模板拼接导致提示词不一致。
+        if params.prompt and params.prompt.strip():
+            logger.debug("检测到自定义固定prompt：直接返回该prompt（跳过模板拼接）")
+            return params.prompt.strip()
         
         # AI模式：优先添加图片和服装相关的描述（放在最前面，最重要）
         if params.model_type == "ai" and params.fabric_images:
@@ -184,10 +191,6 @@ class TryOnPromptService:
                 # AI模式：补充描述（主要描述已在前面添加）
                 prompt_parts.append("服装匹配，成衣转移，试衣效果，穿着完全相同的成衣")
                 logger.debug("AI模式：已添加补充的试衣效果描述")
-        
-        # 添加自定义提示词（如果提供）
-        if params.prompt:
-            prompt_parts.append(params.prompt)
         
         # 添加质量描述
         prompt_parts.append("高质量，细节丰富，清晰对焦")
@@ -449,6 +452,13 @@ class TryOnSeedreamModel:
             has_images = image is not None
             image_count = len(image) if isinstance(image, list) else (1 if image else 0)
             logger.debug(f"提示词: {prompt}, 尺寸: {size}, 输入图片数量: {image_count}")
+
+            # 对齐你提供的 Ark 示例：显式关闭 sequential_image_generation，确保一次生成单张图
+            sequential_image_generation = "disabled"
+            # 是否加水印：默认保持当前行为不加水印，可通过环境变量切换
+            # 兼容 "true/false/1/0" 等常见写法
+            try_on_watermark_raw = os.getenv("TRY_ON_WATERMARK", "false").strip().lower()
+            try_on_watermark = try_on_watermark_raw in {"1", "true", "yes", "y", "on"}
             
             # 构建请求参数
             request_params = {
@@ -456,7 +466,8 @@ class TryOnSeedreamModel:
                 "prompt": prompt,
                 "size": size,
                 "response_format": "url",  # 返回URL，然后下载
-                "watermark": False
+                "sequential_image_generation": sequential_image_generation,
+                "watermark": try_on_watermark
             }
             
             # 如果有输入图片，添加到请求参数中（图生图模式，支持多图）
@@ -505,6 +516,10 @@ class TryOnSeedreamModel:
                 await asyncio.sleep(2 ** retry_count)
                 return await self._call_api(prompt, size, image, retry_count + 1)
             else:
+                error_text = str(e)
+                # Ark 典型错误：InvalidParameter.OversizeImage（输入图片超过 10MiB）
+                if "InvalidParameter.OversizeImage" in error_text or "exceeds the limit (10 MiB)" in error_text:
+                    raise AIModelError("上传图片过大（Ark 单张输入上限 10MB），请压缩后重试")
                 logger.error(f"火山引擎API调用异常: {str(e)}", exc_info=True)
                 raise AIModelError(f"AI模型调用失败: {str(e)}")
     

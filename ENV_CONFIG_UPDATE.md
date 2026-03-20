@@ -44,6 +44,8 @@ MAX_IMAGES_PER_REQUEST=5
 
 #### 5. Try-On 服务AI模型配置
 ```env
+ARK_MODEL_NAME=doubao-seedream-4-5-251128
+# 如需更换 Ark 模型，请修改此项为对应的 doubao-seedream-* 模型名称（重启后端服务生效）
 USE_MOCK_AI=false
 ```
 
