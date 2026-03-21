@@ -9,10 +9,45 @@ from functools import wraps
 from flask import request, jsonify
 from typing import Dict, Any, Optional, Tuple, List
 import logging
+import re
 
 from backend.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
+
+# 缓存清理 pattern：仅允许线性安全的字面量子集（避免复杂正则 ReDoS）
+_CACHE_CLEAR_PATTERN_SAFE = re.compile(r'^[a-zA-Z0-9_.\-\/]{1,200}$')
+
+
+def validate_cache_clear_pattern(pattern) -> str:
+    """
+    校验 /api/cache/clear 的 pattern。
+    缺省或显式 ``.*`` 时由服务端使用全量匹配；自定义 pattern 仅允许安全字符集且长度 <= 200。
+    """
+    if pattern is None:
+        return '.*'
+    if not isinstance(pattern, str):
+        raise ValidationError(
+            message='pattern 必须为字符串',
+            field='pattern',
+            value=pattern,
+        )
+    p = pattern.strip()
+    if not p or p == '.*':
+        return '.*'
+    if len(p) > 200:
+        raise ValidationError(
+            message='pattern 长度不能超过 200',
+            field='pattern',
+            value=pattern,
+        )
+    if not _CACHE_CLEAR_PATTERN_SAFE.match(p):
+        raise ValidationError(
+            message='pattern 仅允许字母、数字、下划线、点、横线、斜杠',
+            field='pattern',
+            value=pattern,
+        )
+    return p
 
 
 def validate_pagination(page: int = None, per_page: int = None, max_per_page: int = 100) -> Tuple[int, int]:

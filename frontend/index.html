@@ -913,6 +913,7 @@
                     uploadedImage: null, // 上传的照片
                     uploadedImagePreview: null, // 上传照片的预览URL
                     tryOnTaskId: null, // 试衣任务ID
+                    tryOnAccessToken: null, // 试衣任务访问令牌（与 task_id 成对使用）
                     tryOnStatus: null, // 试衣任务状态: processing, completed, failed
                     tryOnResultUrl: null, // 试衣结果图片URL
                     tryOnProgress: 0, // 试衣进度
@@ -929,7 +930,7 @@
                     tryOnResultImageLoaded: false, // 结果图片加载成功
                     tryOnAutoDownloadAfterExit: false, // 退出弹窗后任务完成时自动保存/下载结果
                     tryOnSaveHelperWindow: null, // 退出时由用户手势打开的保存辅助窗口（规避移动端自动下载拦截）
-                    tryOnTaskStorageKey: 'nanyi_try_on_task_state_v1', // 本地持久化 key（用于刷新/重开恢复）
+                    tryOnTaskStorageKey: 'nanyi_try_on_task_state_v2', // 含 access_token，与后端鉴权一致
                     tryOnBackgroundMode: false, // 退出后后台执行模式（前台补查但不强制弹窗）
                     tryOnLastVisibilityCheckAt: 0, // visibility 补查节流
                     tryOnTrackingStartedTaskId: null, // 当前任务是否已经建立了状态追踪连接（避免重复 SSE/轮询）
@@ -2247,23 +2248,25 @@
                     );
                 },
 
-                // 简单的Markdown格式化
+                /** 将用户文本转为可安全用于 v-html 的有限 HTML（先转义再允许粗体/斜体/换行） */
+                escapeHtml(str) {
+                    if (str == null) return '';
+                    return String(str)
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
+                },
                 formatMarkdown(text) {
                     if (!text) return '';
-                    
-                    return text
-                        // 粗体 **text** 或 __text__
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/__(.*?)__/g, '<strong>$1</strong>')
-                        // 斜体 *text* 或 _text_
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                        .replace(/_(.*?)_/g, '<em>$1</em>')
-                        // 换行
-                        .replace(/\n/g, '<br>')
-                        // 段落分隔
-                        .replace(/\n\n/g, '</p><p>')
-                        // 包装在段落中
-                        .replace(/^(.+)$/, '<p>$1</p>');
+                    let s = this.escapeHtml(String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n'));
+                    s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+                    s = s.replace(/__(.+?)__/g, '<strong>$1</strong>');
+                    s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>');
+                    s = s.replace(/_([^_\n]+)_/g, '<em>$1</em>');
+                    const parts = s.split(/\n\n+/);
+                    return parts.map((p) => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
                 },
 
                 /**
@@ -2564,6 +2567,7 @@
                     this.uploadedImage = null;
                     this.uploadedImagePreview = null;
                     this.tryOnTaskId = null;
+                    this.tryOnAccessToken = null;
                     this.tryOnStatus = null;
                     this.tryOnResultUrl = null;
                     this.tryOnProgress = 0;
@@ -2636,6 +2640,7 @@
                     this.uploadedImage = null;
                     this.uploadedImagePreview = null;
                     this.tryOnTaskId = null;
+                    this.tryOnAccessToken = null;
                     this.tryOnStatus = null;
                     this.tryOnResultUrl = null;
                     this.tryOnProgress = 0;
@@ -2714,6 +2719,7 @@
                         this.uploadedImage = null;
                         this.uploadedImagePreview = null;
                         this.tryOnTaskId = null;
+                        this.tryOnAccessToken = null;
                         this.tryOnStatus = null;
                         this.tryOnResultUrl = null;
                         this.tryOnProgress = 0;
@@ -2997,8 +3003,9 @@
                         const response = await window.api.startTryOn(formData);
                         const responseData = response.data || response;
                         
-                        if (response.success && responseData.task_id) {
+                        if (response.success && responseData.task_id && responseData.access_token) {
                             this.tryOnTaskId = responseData.task_id;
+                            this.tryOnAccessToken = responseData.access_token;
                             this.tryOnStatus = this.normalizeTryOnStatus(responseData.status);
                             this.tryOnProgress = 0;
                             this.persistTryOnTaskState();
@@ -3076,6 +3083,11 @@
                  */
                 startTaskStatusTracking() {
                     if (!this.tryOnTaskId) return;
+                    if (!this.tryOnAccessToken) {
+                        this.tryOnError = '缺少试衣访问凭证，请重新发起试衣';
+                        this.tryOnStatus = 'failed';
+                        return;
+                    }
 
                     // 若已对同一任务建立追踪（SSE/轮询），重复 start 会造成闪动/重复连接
                     if (this.tryOnTrackingStartedTaskId === this.tryOnTaskId && this.tryOnStatus !== 'completed' && this.tryOnStatus !== 'failed') {
@@ -3109,6 +3121,7 @@
                         try {
                             this.tryOnEventSource = window.api.subscribeTryOnStatus(
                                 this.tryOnTaskId,
+                                this.tryOnAccessToken,
                                 (payload) => {
                                     if (!payload) return;
                                     if (!payload.success) {
@@ -3251,24 +3264,15 @@
                     }
                     
                     try {
-                        // #region agent log
-                        fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2737','message':'轮询任务状态-BEFORE请求','data':{taskId:this.tryOnTaskId,currentStatus:this.tryOnStatus},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
                         
-                        const response = await window.api.getTryOnStatus(this.tryOnTaskId);
+                        const response = await window.api.getTryOnStatus(this.tryOnTaskId, this.tryOnAccessToken);
                         const responseData = response.data || response;
                         
-                        // #region agent log
-                        fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2742','message':'轮询任务状态-AFTER请求','data':{taskId:this.tryOnTaskId,responseSuccess:response.success,responseStatus:responseData.status,resultImageUrl:responseData.result_image_url},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
-                        // #endregion
                         
                         if (response.success) {
                             const newStatus = this.normalizeTryOnStatus(responseData.status);
                             const newProgress = responseData.progress || 0;
                             
-                            // #region agent log
-                            fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2746','message':'状态更新-BEFORE设置','data':{taskId:this.tryOnTaskId,oldStatus:this.tryOnStatus,newStatus:newStatus,isCompleted:newStatus==='completed'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-                            // #endregion
                             
                             this.tryOnStatus = newStatus;
                             this.tryOnProgress = newProgress;
@@ -3279,17 +3283,11 @@
                                 // 编码图片URL，确保中文字符正确编码
                                 const originalUrl = responseData.result_image_url;
                                 
-                                // #region agent log
-                                fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2754','message':'任务完成-BEFORE设置URL','data':{taskId:this.tryOnTaskId,originalUrl:originalUrl,currentTryOnResultUrl:this.tryOnResultUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                                // #endregion
                                 
                                 // 先设置 tryOnResultUrl，确保 Vue 条件渲染能立即生效
                                 this.tryOnResultUrl = originalUrl;
                                 const encodedUrl = this.encodeImageURL(originalUrl);
                                 
-                                // #region agent log
-                                fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2758','message':'任务完成-AFTER设置URL','data':{taskId:this.tryOnTaskId,originalUrl:originalUrl,encodedUrl:encodedUrl,tryOnResultUrl:this.tryOnResultUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'C'})}).catch(()=>{});
-                                // #endregion
                                 
                                 console.log('任务完成，设置图片URL:', {
                                     original: originalUrl,
@@ -3299,9 +3297,6 @@
                                 this.tryOnResultImageError = false;
                                 this.tryOnResultImageLoaded = false;
                                 
-                                // #region agent log
-                                fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2756','message':'状态变量已设置-BEFORE停止轮询','data':{taskId:this.tryOnTaskId,tryOnStatus:this.tryOnStatus,tryOnResultUrl:this.tryOnResultUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                                // #endregion
                                 
                                 this.stopPolling();
                                 this.showToast('试衣效果生成成功！');
@@ -3311,24 +3306,15 @@
                                     this.tryOnAutoDownloadAfterExit = false;
                                 }
                                 
-                                // #region agent log
-                                fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2762','message':'轮询已停止-AFTER设置状态','data':{taskId:this.tryOnTaskId,tryOnStatus:this.tryOnStatus,tryOnResultUrl:this.tryOnResultUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-                                // #endregion
                                 
                                 // 强制触发 Vue 响应式更新，确保图片立即加载
                                 // 使用 $forceUpdate() 确保 Vue 立即重新渲染
                                 this.$forceUpdate();
                                 
                                 this.$nextTick(() => {
-                                    // #region agent log
-                                    fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2772','message':'Vue nextTick-BEFORE检查图片元素','data':{taskId:this.tryOnTaskId,tryOnResultUrl:this.tryOnResultUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                                    // #endregion
                                     
                                     const imgElement = document.querySelector('.result-image');
                                     
-                                    // #region agent log
-                                    fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2775','message':'Vue nextTick-AFTER查找图片元素','data':{taskId:this.tryOnTaskId,imgElementFound:!!imgElement,imgSrc:imgElement?imgElement.src:null},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                                    // #endregion
                                     
                                     if (imgElement) {
                                         // 强制设置图片src，触发加载
@@ -3336,16 +3322,10 @@
                                         this.$nextTick(() => {
                                             imgElement.src = encodedUrl;
                                             
-                                            // #region agent log
-                                            fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2782','message':'图片src已设置','data':{taskId:this.tryOnTaskId,imgSrc:imgElement.src},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                                            // #endregion
                                         });
                                     } else {
                                         console.warn('未找到图片元素，可能DOM尚未更新，等待Vue渲染...');
                                         
-                                        // #region agent log
-                                        fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2787','message':'图片元素未找到-等待Vue渲染','data':{taskId:this.tryOnTaskId,tryOnStatus:this.tryOnStatus,tryOnResultUrl:this.tryOnResultUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'D'})}).catch(()=>{});
-                                        // #endregion
                                         
                                         // 如果图片元素未找到，可能是Vue尚未渲染，等待一段时间后重试
                                         setTimeout(() => {
@@ -3405,7 +3385,7 @@
                             // 在停止前，尝试最后一次查询状态
                             try {
                                 console.log('轮询错误过多，尝试最后一次查询任务状态...');
-                                const lastResponse = await window.api.getTryOnStatus(this.tryOnTaskId);
+                                const lastResponse = await window.api.getTryOnStatus(this.tryOnTaskId, this.tryOnAccessToken);
                                 const lastResponseData = lastResponse.data || lastResponse;
                                 
                                 if (lastResponse.success) {
@@ -3495,6 +3475,7 @@
                         if (!this.tryOnTaskId) return;
                         const payload = {
                             task_id: this.tryOnTaskId,
+                            access_token: this.tryOnAccessToken,
                             status: this.tryOnStatus,
                             result_image_url: this.tryOnResultUrl,
                             error_message: this.tryOnError,
@@ -3531,11 +3512,13 @@
                             return;
                         }
                         const state = JSON.parse(raw);
-                        if (!state || !state.task_id) {
+                        if (!state || !state.task_id || !state.access_token) {
+                            this.clearTryOnTaskState();
                             return;
                         }
                         const st = this.normalizeTryOnStatus(state.status);
                         this.tryOnTaskId = state.task_id;
+                        this.tryOnAccessToken = state.access_token;
                         this.tryOnStatus = st;
                         this.tryOnProgress = state.progress || 0;
                         this.tryOnResultUrl = state.result_image_url || null;
@@ -3558,10 +3541,16 @@
                         const restoredStatus = this.normalizeTryOnStatus(state.status);
 
                         this.tryOnTaskId = state.task_id;
+                        this.tryOnAccessToken = state.access_token || null;
                         this.tryOnStatus = restoredStatus;
                         this.tryOnProgress = state.progress || 0;
                         this.tryOnResultUrl = state.result_image_url || null;
                         this.tryOnError = state.error_message || null;
+
+                        if (!this.tryOnAccessToken) {
+                            this.clearTryOnTaskState();
+                            return;
+                        }
 
                         // 恢复任务状态时不强制弹窗，避免页面闪烁
                         // 用户可主动进入试衣弹窗查看进度
@@ -3602,7 +3591,7 @@
                     if (this.tryOnTaskId) {
                         try {
                             console.log('轮询超时，尝试最后一次查询任务状态...');
-                            const response = await window.api.getTryOnStatus(this.tryOnTaskId);
+                            const response = await window.api.getTryOnStatus(this.tryOnTaskId, this.tryOnAccessToken);
                             const responseData = response.data || response;
                             
                             if (response.success) {
@@ -3669,9 +3658,6 @@
                 handleTryOnResultImageLoad(event) {
                     const img = event.target;
                     
-                    // #region agent log
-                    fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2866','message':'图片加载成功','data':{taskId:this.tryOnTaskId,imgSrc:img.src,resultUrl:this.tryOnResultUrl},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                    // #endregion
                     
                     console.log('试衣结果图片加载成功:', {
                         src: img.src,
@@ -3693,9 +3679,6 @@
                     const img = event.target;
                     const currentSrc = img.src;
                     
-                    // #region agent log
-                    fetch('http://127.0.0.1:7251/ingest/e444742c-7069-4ae7-8a79-195120f11103',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'index.html:2874','message':'图片加载失败','data':{taskId:this.tryOnTaskId,imgSrc:currentSrc,resultUrl:this.tryOnResultUrl,retryCount:img.dataset.retryCount||'0'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'F'})}).catch(()=>{});
-                    // #endregion
                     
                     console.error('试衣结果图片加载失败:', {
                         src: currentSrc,
@@ -3895,6 +3878,13 @@
                         }
                         return;
                     }
+                    if (!this.tryOnAccessToken) {
+                        if (!silent) {
+                            this.showToast('缺少试衣访问凭证，请重新发起试衣');
+                        }
+                        this.clearTryOnTaskState();
+                        return;
+                    }
 
                     // 并发保护：避免同一任务在多个触发点同时补查，导致重复追踪连接/状态闪动
                     if (this.tryOnCheckTaskInFlight && this.tryOnCheckTaskInFlightTaskId === this.tryOnTaskId) {
@@ -3910,7 +3900,7 @@
 
                     try {
                         console.log('查询任务状态:', this.tryOnTaskId, silent ? '(静默)' : '');
-                        const response = await window.api.getTryOnStatus(this.tryOnTaskId);
+                        const response = await window.api.getTryOnStatus(this.tryOnTaskId, this.tryOnAccessToken);
                         const responseData = response.data || response;
 
                         if (response.success) {
@@ -4012,6 +4002,7 @@
                  */
                 resetTryOn() {
                     this.tryOnTaskId = null;
+                    this.tryOnAccessToken = null;
                     this.tryOnStatus = null;
                     this.tryOnResultUrl = null;
                     this.tryOnProgress = 0;

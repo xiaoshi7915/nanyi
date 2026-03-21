@@ -5,21 +5,25 @@ Wants=mysql.service
 
 [Service]
 Type=notify
-User=root
-Group=root
+# 部署前请创建系统用户并授权可写目录，见 systemd/README.md
+User=nanyi
+Group=nanyi
 WorkingDirectory=/opt/hanfu/products
 Environment="PATH=/opt/hanfu/products/products_env/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 Environment="PYTHONPATH=/opt/hanfu/products"
 Environment="FLASK_ENV=production"
+# 避免在只读挂载下写入 __pycache__
+Environment="PYTHONDONTWRITEBYTECODE=1"
 
-# 激活虚拟环境并启动服务
+# gthread：每 worker 多线程，SSE 长连接占用线程时其他请求仍可由同 worker 内其他线程处理
 ExecStart=/opt/hanfu/products/products_env/bin/gunicorn \
     --chdir /opt/hanfu/products \
     --bind 0.0.0.0:5432 \
     --workers 2 \
-    --worker-class sync \
+    --worker-class gthread \
+    --threads 8 \
     --timeout 120 \
-    --keep-alive 2 \
+    --keep-alive 75 \
     --max-requests 1000 \
     --max-requests-jitter 50 \
     --preload \
@@ -46,7 +50,8 @@ StandardError=append:/opt/hanfu/products/logs/backend_systemd_error.log
 PrivateTmp=yes
 ProtectSystem=strict
 ProtectHome=yes
-ReadWritePaths=/opt/hanfu/products/logs /opt/hanfu/products
+# 仅开放日志与试衣本地存储；若 STORAGE_LOCAL_PATH 指向其他路径，请同步增加一行 ReadWritePaths=
+ReadWritePaths=/opt/hanfu/products/logs /opt/hanfu/products/backend/try_on/storage
 
 [Install]
 WantedBy=multi-user.target

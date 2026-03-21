@@ -39,6 +39,7 @@ def add_try_on_tasks_table():
             create_tasks_table_sql = """
             CREATE TABLE IF NOT EXISTS tasks (
                 id VARCHAR(36) PRIMARY KEY COMMENT '任务ID',
+                access_token VARCHAR(64) NULL COMMENT '试衣任务访问令牌',
                 status VARCHAR(20) NOT NULL DEFAULT 'pending' COMMENT '任务状态：pending, processing, completed, failed',
                 model_type VARCHAR(10) NOT NULL COMMENT '模特类型：ai, real',
                 shot_type VARCHAR(20) NOT NULL COMMENT '拍摄类型：full_body, half_body',

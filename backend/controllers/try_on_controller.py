@@ -7,12 +7,14 @@
 
 import os
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TYPE_CHECKING
 from flask import request, current_app
 from werkzeug.datastructures import FileStorage
 
-from backend.services.try_on_image_service import TryOnImageService
 from backend.services.image_service import ImageService
+
+if TYPE_CHECKING:
+    from backend.services.try_on_image_service import TryOnImageService
 from backend.utils.logger import logger
 from backend.exceptions import ValidationError, NotFoundError, ServiceError
 
@@ -24,7 +26,7 @@ class TryOnController:
         """初始化试衣控制器"""
         # 使用集成的 TryOnImageService（不再使用 HTTP 调用的 TryOnService）
         # 注意：TryOnImageService 需要在应用上下文中初始化，这里延迟初始化
-        self._try_on_image_service: Optional[TryOnImageService] = None
+        self._try_on_image_service: Optional["TryOnImageService"] = None
         self.image_service = ImageService()
         
         # 获取图片目录路径
@@ -32,7 +34,7 @@ class TryOnController:
         project_root = os.path.dirname(os.path.dirname(current_dir))
         self.images_dir = os.path.join(project_root, 'frontend', 'static', 'images')
     
-    def _get_try_on_service(self) -> TryOnImageService:
+    def _get_try_on_service(self) -> "TryOnImageService":
         """
         获取 TryOnImageService 实例（从应用对象获取已初始化的实例）
         
@@ -300,7 +302,7 @@ class TryOnController:
             # 使用固定参数（与原来的 TryOnService 保持一致）
             fixed_prompt = (os.getenv("TRY_ON_FIXED_PROMPT") or "").strip()
             # 固定图生图 prompt：若环境变量未配置，则传空字符串，后端会回退到原有模板逻辑。
-            task_id = try_on_service.create_task(
+            task_id, access_token = try_on_service.create_task(
                 fabric_images=[fabric_file],  # 布料图列表
                 model_type='real',  # 使用真人照片
                 shot_type='half_body',  # 注意：真人图模式会强制生成全身照，但API需要这个参数
@@ -316,6 +318,7 @@ class TryOnController:
             return {
                 'success': True,
                 'task_id': task_id,
+                'access_token': access_token,
                 'status': 'processing',  # 任务初始回传为 processing，避免前端只显示 processing 的情况
                 'estimated_time': 10  # 预计处理时间（秒）
             }
@@ -405,12 +408,13 @@ class TryOnController:
             logger.error(f"获取布料图路径失败: {brand_name}, {e}", exc_info=True)
             return None
     
-    def get_task_status(self, task_id: str) -> Dict:
+    def get_task_status(self, task_id: str, access_token: Optional[str] = None) -> Dict:
         """
         查询AI试衣任务状态（使用集成的服务，从本地数据库查询）
         
         Args:
             task_id: 任务ID
+            access_token: 创建任务时返回的访问令牌（必填，通过 query 或调用方传入）
         
         Returns:
             dict: 包含任务状态和结果信息的字典
@@ -432,7 +436,7 @@ class TryOnController:
             try_on_service = self._get_try_on_service()
             
             # 从本地数据库查询任务状态（不再调用外部 HTTP 服务）
-            task_dict = try_on_service.get_task_status(task_id)
+            task_dict = try_on_service.get_task_status(task_id, access_token)
             
             # 转换状态格式以兼容原有 API 响应格式
             status = task_dict.get('status', 'pending')

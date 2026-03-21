@@ -197,6 +197,9 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Cursor 本地调试日志（勿入库）
+.cursor/debug.log
+
 # 环境变量文件
 .env
 .env.local

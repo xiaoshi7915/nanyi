@@ -5,7 +5,7 @@
 定义AI试衣相关的RESTful API接口
 """
 
-from flask import Blueprint, request, Response, stream_with_context
+from flask import Blueprint, request, Response, stream_with_context, jsonify
 import json
 import time
 from werkzeug.utils import secure_filename
@@ -13,7 +13,14 @@ from werkzeug.utils import secure_filename
 from backend.controllers.try_on_controller import TryOnController
 from backend.utils.decorators import handle_errors
 from backend.utils.response import APIResponse
-from backend.exceptions import ValidationError, ServiceError, NotFoundError
+from backend.utils.rate_limit import rate_limit
+from backend.exceptions import (
+    BaseAPIException,
+    ValidationError,
+    ServiceError,
+    NotFoundError,
+    PermissionError,
+)
 
 # 创建蓝图
 try_on_bp = Blueprint('try_on', __name__, url_prefix='/api/try-on')
@@ -86,6 +93,7 @@ def get_styles():
 
 
 @try_on_bp.route('/start', methods=['POST'])
+@rate_limit(max_requests=12, per_seconds=60, scope='try_on_start')
 @handle_errors
 def start_try_on():
     """
@@ -163,6 +171,7 @@ def start_try_on():
             return APIResponse.success(
                 data={
                     'task_id': result.get('task_id'),
+                    'access_token': result.get('access_token'),
                     'status': result.get('status'),
                     'estimated_time': result.get('estimated_time')
                 },
@@ -183,6 +192,33 @@ def start_try_on():
             field=e.details.get('field'),
             value=e.details.get('value')
         )
+    except NotFoundError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"试衣任务资源不存在: {e.message}")
+        return APIResponse.error(
+            message=e.message,
+            status_code=404,
+            error_code=e.error_code,
+            details=e.details,
+        )
+    except ServiceError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"试衣任务服务错误: {e.message}")
+        return APIResponse.error(
+            message=e.message,
+            status_code=503,
+            error_code=e.error_code,
+            details=e.details,
+        )
+    except PermissionError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"试衣任务权限错误: {e.message}")
+        return APIResponse.error(
+            message=e.message,
+            status_code=403,
+            error_code=e.error_code,
+            details=e.details,
+        )
     except Exception as e:
         from backend.utils.logger import logger
         logger.error(f"试衣任务启动异常: {str(e)}", exc_info=True)
@@ -193,6 +229,7 @@ def start_try_on():
 
 
 @try_on_bp.route('/status/<task_id>', methods=['GET'])
+@rate_limit(max_requests=180, per_seconds=60, scope='try_on_status')
 @handle_errors
 def get_task_status(task_id: str):
     """
@@ -209,9 +246,10 @@ def get_task_status(task_id: str):
     try:
         from backend.utils.logger import logger
         logger.debug(f"收到任务状态查询请求: task_id={task_id}")
-        
+        access_token = request.args.get('access_token', '') or ''
+
         # 调用控制器处理业务逻辑
-        result = try_on_controller.get_task_status(task_id)
+        result = try_on_controller.get_task_status(task_id, access_token)
         
         # 使用APIResponse统一响应格式
         if result.get('success'):
@@ -257,6 +295,9 @@ def get_task_status(task_id: str):
             status_code=503,  # 使用503表示服务暂时不可用
             details=e.details
         )
+    except BaseAPIException:
+        # 例如 access_token 校验失败（PermissionError），交给 @handle_errors 统一返回 403
+        raise
     except Exception as e:
         # 未预期的异常，记录详细日志
         from backend.utils.logger import logger
@@ -268,11 +309,17 @@ def get_task_status(task_id: str):
 
 
 @try_on_bp.route('/stream/<task_id>', methods=['GET'])
+@rate_limit(max_requests=24, per_seconds=60, scope='try_on_stream')
+@handle_errors
 def stream_task_status(task_id: str):
     """
     SSE：实时推送任务状态
-    GET /api/try-on/stream/<task_id>
+    GET /api/try-on/stream/<task_id>?access_token=...
     """
+    access_token = request.args.get('access_token', '') or ''
+    # 首包前校验 token，失败由 @handle_errors 返回 403 等
+    try_on_controller.get_task_status(task_id, access_token)
+
     @stream_with_context
     def generate():
         from backend.utils.logger import logger
@@ -281,7 +328,7 @@ def stream_task_status(task_id: str):
 
         while True:
             try:
-                result = try_on_controller.get_task_status(task_id)
+                result = try_on_controller.get_task_status(task_id, access_token)
                 payload = {
                     "success": bool(result.get("success")),
                     "status": result.get("status"),

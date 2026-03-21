@@ -9,8 +9,10 @@ import uuid
 import asyncio
 import time
 import threading
+import hmac
+import secrets
 from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 from enum import Enum
 
 from backend.config.config import Config
@@ -24,6 +26,7 @@ try:
     from backend.exceptions import (
         ValidationError,
         NotFoundError as TaskNotFoundError,
+        PermissionError as TaskAccessDenied,
         ServiceError as TaskProcessingError,
         ServiceError as StorageError,
         ServiceError as AIModelError,
@@ -34,23 +37,27 @@ except ImportError:
     class ValidationError(Exception):
         """参数验证错误"""
         pass
-    
+
     class TaskNotFoundError(Exception):
         """任务不存在错误"""
         pass
-    
+
+    class TaskAccessDenied(Exception):
+        """任务访问被拒绝"""
+        pass
+
     class TaskProcessingError(Exception):
         """任务处理错误"""
         pass
-    
+
     class StorageError(Exception):
         """存储服务错误"""
         pass
-    
+
     class AIModelError(Exception):
         """AI模型服务错误"""
         pass
-    
+
     class ImageProcessingError(Exception):
         """图片处理错误"""
         pass
@@ -72,7 +79,8 @@ class Task:
         task_id: str,
         params: GenerateParams,
         status: TaskStatus = TaskStatus.PENDING,
-        fabric_image_filename: Optional[str] = None
+        fabric_image_filename: Optional[str] = None,
+        access_token: Optional[str] = None,
     ):
         """
         初始化任务
@@ -82,11 +90,13 @@ class Task:
             params: 生成参数
             status: 任务状态
             fabric_image_filename: 成衣图原始文件名（用于生成结果文件名）
+            access_token: 查询状态/SSE 所需的密钥（仅创建任务时下发给客户端）
         """
         self.task_id = task_id
         self.params = params
         self.status = status
         self.fabric_image_filename = fabric_image_filename  # 保存成衣图原始文件名
+        self.access_token = access_token
         self.result_image_url: Optional[str] = None
         self.local_path: Optional[str] = None
         self.error_message: Optional[str] = None
@@ -97,6 +107,7 @@ class Task:
         """转换为字典（包含数据库所需的所有字段）"""
         return {
             "task_id": self.task_id,
+            "access_token": self.access_token,
             "status": self.status.value,
             "model_type": self.params.model_type,
             "shot_type": self.params.shot_type,
@@ -144,7 +155,7 @@ class TryOnImageService:
             self.ai_model = TryOnSeedreamModel(config)
         
         # 初始化服务依赖
-        self.db_service = TryOnDatabaseService(config)
+        self.db_service = TryOnDatabaseService(config, app=app)
         self.storage_service = TryOnStorageService(config)
         
         # 任务存储（内存作为缓存，数据库是主存储）
@@ -159,6 +170,7 @@ class TryOnImageService:
         # 后台线程和事件循环
         self._worker_thread: Optional[threading.Thread] = None
         self._worker_loop: Optional[asyncio.AbstractEventLoop] = None
+        self._worker_loop_ready = threading.Event()
         self._worker_started = False
         self._worker_restart_count = 0  # 工作器重启次数
         self._worker_last_heartbeat = time.time()  # 工作器最后心跳时间
@@ -271,27 +283,16 @@ class TryOnImageService:
         real_person_image: Optional[Any] = None,
         model_provider: str = "seedream",
         **kwargs
-    ) -> str:
+    ) -> Tuple[str, str]:
         """
         创建试衣生成任务（同步方法，适配 Flask）
         
-        Args:
-            fabric_images: 布料/成衣图片列表（Flask FileStorage 对象）
-            model_type: 模特类型
-            shot_type: 拍摄类型
-            aspect_ratio: 图像比例
-            style: 风格
-            resolution: 分辨率（可选）
-            ai_model_id: AI模特ID（可选）
-            real_person_image: 真人照片（可选，Flask FileStorage 对象）
-            model_provider: 模型提供商（默认seedream）
-            **kwargs: 其他参数（prompt, seed等）
-        
         Returns:
-            任务ID
+            (task_id, access_token) 任务 ID 与仅用于状态查询的访问令牌
         """
         # 生成任务ID
         task_id = str(uuid.uuid4())
+        access_token = secrets.token_urlsafe(32)
         
         # 准备生成参数（同步）
         params = self._prepare_generate_params(
@@ -320,7 +321,8 @@ class TryOnImageService:
             task_id=task_id,
             params=params,
             status=TaskStatus.PENDING,
-            fabric_image_filename=fabric_image_filename
+            fabric_image_filename=fabric_image_filename,
+            access_token=access_token,
         )
         
         # 保存任务到内存
@@ -350,11 +352,27 @@ class TryOnImageService:
         # 启动任务处理工作器（如果尚未启动）
         if not self._worker_started:
             self._start_worker_thread()
+
+        if (
+            not self._worker_started
+            or self._worker_loop is None
+            or self._worker_loop.is_closed()
+        ):
+            logger.error(
+                "试衣工作器不可用，无法将任务入队: task_id=%s worker_started=%s",
+                task_id,
+                self._worker_started,
+            )
+            raise TaskProcessingError(
+                message="试衣服务处理队列暂不可用，请稍后重试",
+                service_name="TryOnImageService",
+                details={"task_id": task_id},
+            )
         
         # 将任务加入队列（在后台线程的事件循环中）
         self._add_task_to_queue(task_id)
         
-        return task_id
+        return task_id, access_token
     
     def _start_worker_thread(self):
         """
@@ -372,6 +390,8 @@ class TryOnImageService:
                 # 初始化队列和信号量
                 self._task_queue = asyncio.Queue()
                 self._task_semaphore = asyncio.Semaphore(self._max_concurrent_tasks)
+                # 先于入队通知主线程：事件循环与队列已就绪（避免 create_task 紧接入队时 _worker_loop 仍为 None）
+                self._worker_loop_ready.set()
                 
                 # 启动工作器任务
                 loop.create_task(self._start_task_worker())
@@ -395,16 +415,24 @@ class TryOnImageService:
                 if self._worker_loop:
                     self._worker_loop.close()
                 self._worker_started = False
+                self._worker_loop_ready.clear()
         
         # 启动后台线程
+        self._worker_loop_ready.clear()
         self._worker_thread = threading.Thread(
             target=worker_thread_func,
             name="try_on_worker",
             daemon=True
         )
         self._worker_thread.start()
-        self._worker_started = True
-        logger.info("任务处理工作器线程已启动")
+        if self._worker_loop_ready.wait(timeout=15.0):
+            self._worker_started = True
+            logger.info("任务处理工作器线程已启动（事件循环已就绪）")
+        else:
+            self._worker_started = False
+            logger.error(
+                "Try-On 工作器在 15s 内未完成初始化，试衣任务将无法入队处理；请检查线程/资源是否受限"
+            )
     
     async def _wait_for_shutdown(self):
         """等待关闭信号"""
@@ -553,12 +581,6 @@ class TryOnImageService:
                 # 更新任务结果
                 task.local_path = result["local_path"]
                 
-                # #region agent log
-                with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                    import json
-                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"D","location":"try_on_image_service.py:543","message":"存储结果-BEFORE路径转换","data":{"task_id":task_id,"local_path":task.local_path,"oss_url":result.get("oss_url")},"timestamp":int(time.time()*1000)}) + '\n')
-                # #endregion
-                
                 # 如果本地路径在前端文件夹下，转换为前端可访问的 URL
                 # 优先使用本地路径（如果在前端文件夹下），否则使用 OSS URL
                 if task.local_path:
@@ -570,63 +592,27 @@ class TryOnImageService:
                     frontend_images_path = os.path.abspath(frontend_images_path)
                     local_path_abs = os.path.abspath(task.local_path)
                     
-                    # #region agent log
-                    with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                        import json
-                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"D","location":"try_on_image_service.py:556","message":"路径转换检查","data":{"task_id":task_id,"local_path_abs":local_path_abs,"frontend_images_path":frontend_images_path,"starts_with":local_path_abs.startswith(frontend_images_path)},"timestamp":int(time.time()*1000)}) + '\n')
-                    # #endregion
-                    
                     if local_path_abs.startswith(frontend_images_path):
                         # 计算相对路径（相对于 frontend/static/images）
                         relative_path = os.path.relpath(local_path_abs, frontend_images_path)
                         # 转换为前端可访问的 URL（使用正斜杠）
                         task.result_image_url = f"/static/images/{relative_path.replace(os.sep, '/')}"
                         logger.info(f"使用前端本地路径作为结果URL: {task.result_image_url} (本地路径: {task.local_path})")
-                        
-                        # #region agent log
-                        with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                            import json
-                            f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"D","location":"try_on_image_service.py:561","message":"路径转换成功-前端路径","data":{"task_id":task_id,"result_image_url":task.result_image_url,"relative_path":relative_path},"timestamp":int(time.time()*1000)}) + '\n')
-                        # #endregion
                     else:
                         # 不在前端文件夹下，使用 OSS URL
                         task.result_image_url = result["oss_url"]
                         logger.info(f"使用OSS URL作为结果URL: {task.result_image_url}")
-                        
-                        # #region agent log
-                        with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                            import json
-                            f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"D","location":"try_on_image_service.py:565","message":"路径转换-使用OSS","data":{"task_id":task_id,"result_image_url":task.result_image_url},"timestamp":int(time.time()*1000)}) + '\n')
-                        # #endregion
                 else:
                     # 没有本地路径，使用 OSS URL
                     task.result_image_url = result["oss_url"]
-                    
-                    # #region agent log
-                    with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                        import json
-                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"D","location":"try_on_image_service.py:568","message":"路径转换-无本地路径使用OSS","data":{"task_id":task_id,"result_image_url":task.result_image_url},"timestamp":int(time.time()*1000)}) + '\n')
-                    # #endregion
                 
                 task.status = TaskStatus.COMPLETED
                 task.updated_at = datetime.now()
-                
-                # #region agent log
-                with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                    import json
-                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"B","location":"try_on_image_service.py:575","message":"任务完成-BEFORE数据库保存","data":{"task_id":task_id,"status":task.status.value,"result_image_url":task.result_image_url,"local_path":task.local_path},"timestamp":int(time.time()*1000)}) + '\n')
-                # #endregion
                 
                 # 更新数据库（数据库是主存储）
                 # 在后台线程中需要使用 Flask 应用上下文
                 try:
                     task_dict = task.to_dict()
-                    
-                    # #region agent log
-                    with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                        import json
-                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"B","location":"try_on_image_service.py:580","message":"to_dict结果-BEFORE保存","data":{"task_id":task_id,"task_dict_result_image_url":task_dict.get("result_image_url"),"task_dict_local_path":task_dict.get("local_path"),"task_dict_status":task_dict.get("status")},"timestamp":int(time.time()*1000)}) + '\n')
-                    # #endregion
                     
                     # 在 Flask 应用上下文中执行数据库操作
                     if self.app:
@@ -641,20 +627,8 @@ class TryOnImageService:
                             logger.error(f"无法获取 Flask 应用上下文，无法保存任务到数据库: task_id={task_id}")
                             save_result = False
                     
-                    # #region agent log
-                    with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                        import json
-                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"A","location":"try_on_image_service.py:595","message":"数据库保存结果","data":{"task_id":task_id,"save_result":save_result,"has_app":self.app is not None},"timestamp":int(time.time()*1000)}) + '\n')
-                    # #endregion
-                    
                     logger.debug(f"任务状态已同步到数据库: task_id={task_id}")
                 except Exception as e:
-                    # #region agent log
-                    with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                        import json
-                        import traceback
-                        f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"C","location":"try_on_image_service.py:602","message":"数据库保存异常","data":{"task_id":task_id,"error":str(e),"traceback":traceback.format_exc()},"timestamp":int(time.time()*1000)}) + '\n')
-                    # #endregion
                     logger.warning(f"更新任务到数据库失败: {str(e)}", exc_info=True)
                 
                 total_duration = time.time() - start_time
@@ -838,6 +812,8 @@ class TryOnImageService:
             task.result_image_url = task_dict.get("result_image_url")
             task.local_path = task_dict.get("local_path")
             task.error_message = task_dict.get("error_message")
+            if task_dict.get("access_token"):
+                task.access_token = task_dict.get("access_token")
             # 注意：不更新created_at和updated_at，保持数据库的值
             if task_dict.get("created_at"):
                 task.created_at = task_dict.get("created_at")
@@ -849,34 +825,33 @@ class TryOnImageService:
             # 实际使用中，应该优先从数据库读取
             logger.debug(f"任务不在内存缓存中，无法完全重建: task_id={task_id}")
     
-    def get_task_status(self, task_id: str) -> Dict[str, Any]:
+    @staticmethod
+    def _strip_access_token_field(task_dict: Dict[str, Any]) -> Dict[str, Any]:
+        return {k: v for k, v in task_dict.items() if k != "access_token"}
+
+    def _require_task_access_token(self, task_dict: Dict[str, Any], access_token: Optional[str]) -> None:
+        """校验试衣任务 access_token，失败抛出 TaskAccessDenied（即 PermissionError）"""
+        token = (access_token or "").strip()
+        if not token:
+            raise TaskAccessDenied(message="缺少试衣任务访问凭证（access_token）")
+        stored = task_dict.get("access_token") or ""
+        if isinstance(stored, str):
+            stored = stored.strip()
+        if not stored:
+            raise TaskAccessDenied(message="试衣任务访问凭证无效或已过期")
+        if not hmac.compare_digest(stored, token):
+            raise TaskAccessDenied(message="试衣任务访问凭证无效")
+
+    def get_task_status(self, task_id: str, access_token: Optional[str] = None) -> Dict[str, Any]:
         """
-        获取任务状态（优先从数据库读取，内存作为缓存）
-        
-        Args:
-            task_id: 任务ID
-        
-        Returns:
-            任务状态字典
-        
-        Raises:
-            TaskNotFoundError: 任务不存在时抛出异常
+        获取任务状态（优先从数据库读取，内存作为缓存）。
+        必须传入创建任务时返回的 access_token，否则拒绝访问。
         """
-        # #region agent log
-        with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-            import json
-            f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"G","location":"try_on_image_service.py:852","message":"get_task_status调用-BEFORE查询","data":{"task_id":task_id},"timestamp":int(time.time()*1000)}) + '\n')
-        # #endregion
-        
         # 优先从数据库读取（数据库是主存储）
-        # 注意：必须始终从数据库读取最新状态，不能依赖内存缓存
-        # 关键修复：强制刷新数据库会话，确保读取最新数据
+        task_dict: Optional[Dict[str, Any]] = None
         try:
-            # 在 Flask 应用上下文中执行数据库操作
-            # 关键修复：强制刷新会话，确保读取最新数据
             if self.app:
                 with self.app.app_context():
-                    # 强制刷新会话，清除任何缓存
                     from backend.models import db
                     db.session.expire_all()
                     task_dict = self.db_service.get_task(task_id)
@@ -886,45 +861,23 @@ class TryOnImageService:
                     from backend.models import db
                     db.session.expire_all()
                     task_dict = self.db_service.get_task(task_id)
-                else:
-                    task_dict = None
-            
-            if task_dict:
-                # #region agent log
-                with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                    import json
-                    f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"G","location":"try_on_image_service.py:875","message":"get_task_status-从数据库获取","data":{"task_id":task_id,"status":task_dict.get("status"),"result_image_url":task_dict.get("result_image_url")},"timestamp":int(time.time()*1000)}) + '\n')
-                # #endregion
-                
-                # 同步到内存缓存（但返回数据库的最新状态）
-                self._sync_task_to_cache(task_dict)
-                logger.debug(f"从数据库获取任务状态: task_id={task_id}, status={task_dict.get('status')}")
-                return task_dict
         except Exception as e:
             logger.warning(f"从数据库获取任务状态失败: {str(e)}", exc_info=True)
-            
-            # #region agent log
-            with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                import json
-                import traceback
-                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"G","location":"try_on_image_service.py:882","message":"get_task_status-数据库查询异常","data":{"task_id":task_id,"error":str(e),"traceback":traceback.format_exc()},"timestamp":int(time.time()*1000)}) + '\n')
-            # #endregion
-        
+
+        if task_dict:
+            self._require_task_access_token(task_dict, access_token)
+            self._sync_task_to_cache(task_dict)
+            logger.debug(f"从数据库获取任务状态: task_id={task_id}, status={task_dict.get('status')}")
+            return self._strip_access_token_field(task_dict)
+
         # 如果数据库中没有，尝试从内存缓存获取（降级方案）
         task = self.tasks.get(task_id)
         if task:
+            mem_dict = task.to_dict()
+            self._require_task_access_token(mem_dict, access_token)
             logger.debug(f"从内存缓存获取任务状态: task_id={task_id}")
-            
-            # #region agent log
-            with open('/opt/hanfu/products/.cursor/debug.log', 'a') as f:
-                import json
-                f.write(json.dumps({"sessionId":"debug-session","runId":"run1","hypothesisId":"G","location":"try_on_image_service.py:890","message":"get_task_status-从内存缓存获取","data":{"task_id":task_id,"status":task.status.value},"timestamp":int(time.time()*1000)}) + '\n')
-            # #endregion
-            
-            return task.to_dict()
-        
-        # 都不存在，抛出异常
-        # 使用主项目的 NotFoundError（使用 details 参数，不是 detail）
+            return self._strip_access_token_field(mem_dict)
+
         from backend.exceptions import NotFoundError
         raise NotFoundError(
             message=f"任务不存在: {task_id}",
@@ -960,7 +913,7 @@ class TryOnImageService:
         # 限制数量
         tasks = tasks[:limit]
         
-        return [task.to_dict() for task in tasks]
+        return [self._strip_access_token_field(task.to_dict()) for task in tasks]
     
     def delete_task(self, task_id: str) -> bool:
         """

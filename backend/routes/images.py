@@ -14,12 +14,55 @@ from backend.utils.rate_limit import rate_limit
 from backend.utils.response import APIResponse
 from backend.utils.validators import validate_pagination, validate_boolean
 from backend.exceptions import ValidationError
+from backend.config.config import Config
 
 # 创建蓝图
 images_bp = Blueprint('images', __name__, url_prefix='/api')
 
 # 创建控制器实例
 image_controller = ImageController()
+
+# 允许通过 view/download 返回的图片扩展名（与试衣上传白名单对齐）
+_ALLOWED_IMAGE_EXT = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'}
+
+
+def _unsafe_path_component(filepath: str) -> bool:
+    """检测路径穿越或非法分段（不依赖 realpath 前的粗略过滤）。"""
+    if filepath is None or filepath.strip() == '':
+        return True
+    norm = filepath.replace('\\', '/').strip()
+    if norm.startswith('/'):
+        return True
+    for part in norm.split('/'):
+        if part == '..' or part == '':
+            return True
+    return False
+
+
+def _resolve_safe_file_under_dir(base_dir: str, filepath: str):
+    """
+    将 filepath 解析为 base_dir 下的真实文件路径；含 realpath 与目录边界校验，防护 symlink 逃逸。
+    不合法或不存在时返回 None。
+    """
+    import os
+
+    if _unsafe_path_component(filepath):
+        return None
+    if not os.path.isdir(base_dir):
+        return None
+    base_real = os.path.realpath(base_dir)
+    joined = os.path.join(base_dir, filepath)
+    full_real = os.path.realpath(joined)
+    if full_real == base_real:
+        return None
+    if not full_real.startswith(base_real + os.sep):
+        return None
+    if not os.path.isfile(full_real):
+        return None
+    ext = os.path.splitext(full_real)[1].lstrip('.').lower()
+    if ext not in _ALLOWED_IMAGE_EXT:
+        return None
+    return full_real
 
 
 @images_bp.route('/images')
@@ -79,31 +122,20 @@ def get_images():
 def view_image(filepath):
     """查看图片"""
     import os
-    
-    # 获取前端静态图片目录
+
     current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     project_root = os.path.dirname(current_dir)
     images_dir = os.path.join(project_root, 'frontend', 'static', 'images')
-    
-    # 构建完整路径
-    full_path = os.path.join(images_dir, filepath)
-    
+
     from backend.utils.logger import logger
-    logger.debug(f"图片请求: {filepath}")
-    logger.debug(f"完整路径: {full_path}")
-    logger.debug(f"文件存在: {os.path.exists(full_path)}")
-    
-    # 检查文件是否存在
-    if not os.path.exists(full_path):
-        logger.warning(f"文件不存在: {full_path}")
+    logger.debug("图片请求(view): %s", filepath)
+
+    full_path = _resolve_safe_file_under_dir(images_dir, filepath)
+    if not full_path:
+        logger.warning("图片 view 拒绝或不存在: filepath=%s", filepath)
         abort(404)
-    
-    # 检查文件是否在允许的目录内（安全检查）
-    if not os.path.abspath(full_path).startswith(os.path.abspath(images_dir)):
-        logger.warning(f"安全检查失败: {full_path}")
-        abort(403)
-    
-    logger.debug(f"返回图片文件: {full_path}")
+
+    logger.debug("返回图片文件: %s", full_path)
     return send_file(full_path)
 
 
@@ -111,18 +143,17 @@ def view_image(filepath):
 @handle_errors
 def download_image(filepath):
     """下载图片"""
-    from backend.config.config import Config
     import os
-    
-    # 构建完整路径
-    full_path = os.path.join(Config.UPLOAD_FOLDER, filepath)
-    
-    # 检查文件是否存在
-    if not os.path.exists(full_path):
+
+    current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    project_root = os.path.dirname(current_dir)
+    upload_dir = os.path.join(project_root, Config.UPLOAD_FOLDER)
+
+    from backend.utils.logger import logger
+    logger.debug("图片请求(download): %s", filepath)
+
+    full_path = _resolve_safe_file_under_dir(upload_dir, filepath)
+    if not full_path:
         abort(404)
-    
-    # 检查文件是否在允许的目录内（安全检查）
-    if not os.path.abspath(full_path).startswith(os.path.abspath(Config.UPLOAD_FOLDER)):
-        abort(403)
-    
+
     return send_file(full_path, as_attachment=True)

@@ -191,10 +191,12 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     """测试环境配置"""
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, config_name='testing'):
+        super().__init__(config_name=config_name)
         self.TESTING = True
         self.SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+        # 基类为 MySQL 配置了 pool_* / connect_args，与内存 SQLite 不兼容
+        self.SQLALCHEMY_ENGINE_OPTIONS = {}
 
 # 配置映射
 config_map = {

@@ -231,10 +231,11 @@ class NanyiAPI {
     /**
      * 查询试衣任务状态
      * @param {string} taskId - 任务ID
+     * @param {string} accessToken - 创建任务时返回的 access_token（必填）
      */
-    async getTryOnStatus(taskId) {
-        // 状态查询使用更长的超时时间（60秒）
-        const url = `${this.baseURL}/try-on/status/${taskId}`;
+    async getTryOnStatus(taskId, accessToken) {
+        const token = encodeURIComponent(accessToken || '');
+        const url = `${this.baseURL}/try-on/status/${taskId}?access_token=${token}`;
         
         try {
             const controller = new AbortController();
@@ -270,12 +271,14 @@ class NanyiAPI {
     /**
      * 订阅试衣任务状态（SSE）
      * @param {string} taskId - 任务ID
+     * @param {string} accessToken - 创建任务时返回的 access_token（query 传递）
      * @param {function} onMessage - 收到消息回调
      * @param {function} onError - 错误回调
      * @returns {EventSource}
      */
-    subscribeTryOnStatus(taskId, onMessage, onError) {
-        const url = `${this.baseURL}/try-on/stream/${taskId}`;
+    subscribeTryOnStatus(taskId, accessToken, onMessage, onError) {
+        const token = encodeURIComponent(accessToken || '');
+        const url = `${this.baseURL}/try-on/stream/${taskId}?access_token=${token}`;
         const eventSource = new EventSource(url);
 
         eventSource.onmessage = (event) => {
