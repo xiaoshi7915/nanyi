@@ -1,6 +1,6 @@
 {
   "minimax": {
-    "apiKey": "sk-xCHgFs402ejpDd0vDNdcWnaszOwmozNbRTRItIQvdtnJaR31",
+    "apiKey": "请填写你的 API Key，勿提交真实密钥",
     "model": "MiniMax-M2.1",
     "apiBase": "https://api.cts.flamelephant.com/v1"
   }

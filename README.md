@@ -4,6 +4,8 @@
 
 南意秋棠是一个传统美学设计产品展示系统，用于展示和管理汉服面料设计产品。
 
+**首页布料卡片**：每张卡片底部提供「试穿」与「分享」；「分享」与品牌详情内「生成布料卡片」相同，均调用 `/api/share/card/{品牌名}` 后打开 `card.html` 分享页。
+
 ## 技术栈
 
 - **前端**: Flask (静态文件服务)
@@ -42,7 +44,7 @@ products/
 ├── debug-start.sh       # 调试启动脚本
 ├── setup-env.sh         # 环境设置脚本
 ├── requirements.txt     # Python依赖
-└── .env                 # 环境变量配置
+└── .env.example         # 环境变量模板（勿将真实 .env 提交到仓库）
 ```
 
 ## 快速开始
@@ -77,7 +79,31 @@ vi .env
 - `DB_NAME` - 数据库名称
 - `CORS_ORIGINS` - CORS允许的域名（HTTPS）
 
+AI试穿（Try-On / Seedream）环境变量：
+- `ARK_API_KEY` - 火山引擎方舟 API Key
+- `ARK_BASE_URL` - 火山引擎方舟 Base URL（默认 `https://ark.cn-beijing.volces.com/api/v3`）
+- `ARK_MODEL_NAME` - 默认 `doubao-seedream-4-5-251128`；如需更换模型，修改此项为对应的 Ark model 名称并重启后端服务
+- `TRY_ON_WATERMARK` - 是否给生成结果加水印（默认 `false`）
+
+**AI 试衣前端交互说明（便于排查体验问题）**：
+- 点击「退出」仅关闭弹窗并回到首页浏览，**不会**再打开「试衣结果准备中」空白标签页；后台任务仍通过 SSE/轮询继续追踪。
+- 进行中的 `task_id` 与 `access_token` 会写入浏览器 `localStorage`（`nanyi_try_on_task_state_v2`），再次打开试衣时会自动拉回任务；查询状态/SSE 必须携带该令牌。
+- 页面切回前台时的状态补查为**静默**模式，不再连环弹出「任务仍在处理中」类 Toast，避免闪屏感。
+
+可选的环境变量（Redis缓存）：
+- `REDIS_HOST` - Redis主机地址（默认：localhost）
+- `REDIS_PORT` - Redis端口（默认：6379）
+- `REDIS_DB` - Redis数据库编号（默认：0）
+- `REDIS_PASSWORD` - Redis密码（可选）
+
 ### 3. 数据库迁移
+
+试衣任务表若缺少 `access_token` 列，请执行：
+
+```bash
+source products_env/bin/activate
+python backend/migrations/add_tasks_access_token_column.py
+```
 
 ```bash
 # 运行数据库迁移（Admin表新字段）
@@ -162,6 +188,11 @@ sudo journalctl -u nanyi-frontend.service -f
 - `POST /api/like/card/<brand_name>` - 点赞品牌
 - `GET /api/like/card/<brand_name>` - 获取点赞状态
 
+### AI 试衣 API
+- `POST /api/try-on/start` - 启动任务，响应 `data` 中含 `task_id`、`access_token`
+- `GET /api/try-on/status/<task_id>?access_token=...` - 查询状态（须带令牌）
+- `GET /api/try-on/stream/<task_id>?access_token=...` - SSE 推送（须带令牌）
+
 ## 安全特性
 
 1. **环境变量配置**: 所有敏感信息从环境变量读取
@@ -174,9 +205,13 @@ sudo journalctl -u nanyi-frontend.service -f
 ## 性能优化
 
 1. **数据库索引**: 为常用查询字段添加索引
-2. **查询优化**: 避免N+1查询问题
-3. **缓存策略**: 内存缓存（建议升级到Redis）
-4. **API版本控制**: 支持 `/api` 和 `/api/v1`
+2. **查询优化**: 避免N+1查询问题，使用数据库聚合查询
+3. **缓存策略**: 多层缓存（Redis + 内存缓存）
+   - Redis缓存：持久化缓存，支持分布式
+   - 内存缓存：本地快速缓存，作为Redis的备用
+4. **API性能监控**: 自动记录API响应时间，慢查询告警
+5. **响应压缩**: Gzip压缩减少传输大小
+6. **API版本控制**: 支持 `/api` 和 `/api/v1`
 
 ## 日志
 
@@ -193,9 +228,12 @@ sudo journalctl -u nanyi-frontend.service -f
 
 ### 测试
 ```bash
-# 运行测试（待实现）
+source products_env/bin/activate
 pytest tests/
 ```
+
+- **安全回归（Phase 4）**：`tests/test_security_phase4.py` 覆盖试衣 `access_token` 403、`/api/cache/clear` 的 pattern 校验、详情页 Markdown 安全子集与静态检查、SSE 快速结束烟雾测试。
+- **人工验收（试衣链路）**：浏览器中「试穿」→ 拿到 `task_id` 与 `access_token` → 轮询或 SSE 至 `completed` → 结果图 URL 可访问。部署后可用 `journalctl -u nanyi-backend.service -f` 观察多用户同时打开 SSE 时站点其它接口仍可响应（Gunicorn `gthread` 场景）。
 
 ### 部署
 1. 确保环境变量已配置

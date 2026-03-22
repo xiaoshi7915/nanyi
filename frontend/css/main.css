@@ -567,6 +567,8 @@ body {
     align-items: flex-start;
     min-height: 60px; /* 确保有足够空间 */
     position: relative;
+    /* 为右下角「试穿+分享」纵向按钮预留空间，避免与标签文字叠在一起 */
+    padding-bottom: 52px;
 }
 
 /* 产品卡片标签区域 - 支持2排显示 */
@@ -651,6 +653,76 @@ body {
     color: #dc3545;  /* 悬停时改为红色 */
 }
 
+/* 首页布料卡片底部：试穿 + 分享（纵向排列，与点赞区错开） */
+.brand-card-actions {
+    position: absolute;
+    bottom: 8px;
+    right: 86px; /* 给 .like-display 留出空间，避免重叠 */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    z-index: 2;
+}
+
+/* 试穿功能按钮（首页卡片） */
+.try-on-card-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 0.18rem 0.45rem;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(102, 126, 234, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    white-space: nowrap;
+}
+
+.try-on-card-btn i {
+    font-size: 0.55rem;
+}
+
+.try-on-card-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.35);
+}
+
+/* 分享卡片按钮（与详情页「生成布料卡片」同源逻辑，样式与试穿区分） */
+.share-card-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    padding: 0.18rem 0.45rem;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(17, 153, 142, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    white-space: nowrap;
+}
+
+.share-card-btn i {
+    font-size: 0.55rem;
+}
+
+.share-card-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(17, 153, 142, 0.4);
+}
+
 /* 移动端优化 - 主流手机适配 */
 @media (max-width: 768px) {
     .meta-tags {
@@ -676,6 +748,30 @@ body {
     .like-display i {
         font-size: 0.55rem;
     }
+
+    /* 给小屏更紧凑的右侧间距，避免与 .like-display 重叠 */
+    .brand-card-actions {
+        bottom: 6px;
+        right: 72px;
+    }
+
+    .try-on-card-btn {
+        padding: 0.15rem 0.4rem;
+        font-size: 0.55rem;
+    }
+
+    .try-on-card-btn i {
+        font-size: 0.55rem;
+    }
+
+    .share-card-btn {
+        padding: 0.15rem 0.4rem;
+        font-size: 0.55rem;
+    }
+
+    .share-card-btn i {
+        font-size: 0.55rem;
+    }
 }
 
 /* 小屏手机优化 (iPhone SE, 小米等) */
@@ -697,6 +793,29 @@ body {
     }
     
     .like-display i {
+        font-size: 0.5rem;
+    }
+
+    /* 超小屏进一步缩小，保证视觉紧凑且避免冲突 */
+    .brand-card-actions {
+        right: 60px;
+    }
+
+    .try-on-card-btn {
+        padding: 0.1rem 0.3rem;
+        font-size: 0.5rem;
+    }
+
+    .try-on-card-btn i {
+        font-size: 0.5rem;
+    }
+
+    .share-card-btn {
+        padding: 0.1rem 0.3rem;
+        font-size: 0.5rem;
+    }
+
+    .share-card-btn i {
         font-size: 0.5rem;
     }
 }

@@ -9,6 +9,7 @@ from flask import Blueprint, request
 from backend.utils.decorators import handle_errors
 from backend.services.cache_service import cache_service
 from backend.utils.response import APIResponse
+from backend.utils.validators import validate_cache_clear_pattern
 
 # 创建蓝图 - 添加API版本控制
 # 注意：为了向后兼容，同时支持 /api 和 /api/v1
@@ -41,8 +42,8 @@ def get_cache_stats():
 def clear_cache():
     """清理缓存"""
     data = request.get_json() or {}
-    pattern = data.get('pattern', '.*')
-    
+    pattern = validate_cache_clear_pattern(data.get('pattern', '.*'))
+
     cache_service.clear_pattern(pattern)
     
     return APIResponse.success(

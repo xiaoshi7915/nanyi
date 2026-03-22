@@ -5,6 +5,28 @@
 - `nanyi-backend.service` - 后端服务
 - `nanyi-frontend.service` - 前端服务
 
+## 后端降权与目录权限（使用 `nanyi` 用户前必做）
+
+`nanyi-backend.service` 以 **`User=nanyi`** 运行，且 `ProtectSystem=strict` 下仅 **`ReadWritePaths`** 中的路径可写（当前为 `logs` 与试衣本地存储）。
+
+```bash
+# 系统用户（无登录 shell）
+sudo useradd -r -M -s /sbin/nologin nanyi 2>/dev/null || true
+
+sudo mkdir -p /opt/hanfu/products/logs /opt/hanfu/products/backend/try_on/storage
+
+# 可写目录归 nanyi
+sudo chown -R nanyi:nanyi /opt/hanfu/products/logs /opt/hanfu/products/backend/try_on/storage
+
+# 代码与虚拟环境需可读、可进入目录（按你当前部署属主选择其一）：
+# 方案 A：整仓对其它用户开放读与目录执行
+sudo chmod -R a+rX /opt/hanfu/products
+# 方案 B：将项目组设为 nanyi 并组读
+# sudo chgrp -R nanyi /opt/hanfu/products && sudo chmod -R g+rX /opt/hanfu/products
+```
+
+若 `.env` 中 **`STORAGE_LOCAL_PATH`** 指向其它目录，请在 `nanyi-backend.service` 里为该路径增加一行 `ReadWritePaths=`，并同样 `chown nanyi:nanyi`。
+
 ## 安装步骤
 
 ### 1. 复制服务文件
@@ -86,14 +108,17 @@ sudo systemctl enable nanyi-frontend.service
 ## 服务配置说明
 
 ### 后端服务 (nanyi-backend.service)
-- **类型**: notify (gunicorn支持systemd通知)
+- **类型**: notify (gunicorn 支持 systemd 通知)
+- **运行用户**: `nanyi`（非 root）
 - **工作目录**: /opt/hanfu/products
 - **端口**: 5432
-- **Worker数量**: 2
-- **自动重启**: 是（10秒后）
+- **Worker**: 2，`worker-class=gthread`，`threads=8`（利于 SSE 长连接与其它请求并发）
+- **keep-alive**: 75（长连接更友好）
+- **可写路径**: 仅 `logs/` 与 `backend/try_on/storage/`（见服务单元文件中 `ReadWritePaths`）
+- **自动重启**: 是（10 秒后）
 - **日志**: 
-  - systemd日志: `journalctl -u nanyi-backend.service`
-  - 应用日志: `/opt/hanfu/products/logs/backend.log`
+  - systemd: `journalctl -u nanyi-backend.service`
+  - 应用: `/opt/hanfu/products/logs/backend.log`
 
 ### 前端服务 (nanyi-frontend.service)
 - **类型**: simple (Flask开发服务器)

@@ -5,13 +5,22 @@
 定义AI试衣相关的RESTful API接口
 """
 
-from flask import Blueprint, request
+from flask import Blueprint, request, Response, stream_with_context, jsonify
+import json
+import time
 from werkzeug.utils import secure_filename
 
 from backend.controllers.try_on_controller import TryOnController
 from backend.utils.decorators import handle_errors
 from backend.utils.response import APIResponse
-from backend.exceptions import ValidationError
+from backend.utils.rate_limit import rate_limit
+from backend.exceptions import (
+    BaseAPIException,
+    ValidationError,
+    ServiceError,
+    NotFoundError,
+    PermissionError,
+)
 
 # 创建蓝图
 try_on_bp = Blueprint('try_on', __name__, url_prefix='/api/try-on')
@@ -22,8 +31,8 @@ try_on_controller = TryOnController()
 # 允许的图片文件扩展名
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'}
 
-# 最大文件大小（20MB，支持AI试衣功能）
-MAX_FILE_SIZE = 20 * 1024 * 1024
+# 最大文件大小（10MB，与 Ark 输入图片限制一致）
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 
 def allowed_file(filename: str) -> bool:
@@ -84,6 +93,7 @@ def get_styles():
 
 
 @try_on_bp.route('/start', methods=['POST'])
+@rate_limit(max_requests=12, per_seconds=60, scope='try_on_start')
 @handle_errors
 def start_try_on():
     """
@@ -121,18 +131,6 @@ def start_try_on():
             value=user_image_file.filename
         )
     
-    # 检查文件大小
-    user_image_file.seek(0, 2)  # 移动到文件末尾
-    file_size = user_image_file.tell()
-    user_image_file.seek(0)  # 重置文件指针
-    
-    if file_size > MAX_FILE_SIZE:
-        return APIResponse.validation_error(
-            message=f'文件大小超过限制（最大{MAX_FILE_SIZE // 1024 // 1024}MB）',
-            field='user_image',
-            value=f'{file_size} bytes'
-        )
-    
     # 获取品牌名称
     brand_name = request.form.get('brand_name')
     if not brand_name:
@@ -141,10 +139,24 @@ def start_try_on():
             field='brand_name'
         )
     
-    # 读取文件内容
+    # 读取文件内容并校验大小
+    # 注意：不要先 seek/tell 再 read（部分浏览器/中间件会导致上传临时文件在 seek 后不可用）。
     try:
         user_image_data = user_image_file.read()
         user_image_filename = secure_filename(user_image_file.filename)
+
+        # 使用已读入的字节长度校验大小，避免额外 seek 造成临时文件失效
+        file_size = len(user_image_data) if user_image_data else 0
+        if file_size > MAX_FILE_SIZE:
+            return APIResponse.validation_error(
+                message=f'文件大小超过限制（最大{MAX_FILE_SIZE // 1024 // 1024}MB）',
+                field='user_image',
+                value=f'{file_size} bytes'
+            )
+        
+        # 记录请求信息（用于调试）
+        from backend.utils.logger import logger
+        logger.info(f"收到试衣任务请求: brand_name={brand_name}, filename={user_image_filename}, size={len(user_image_data)} bytes")
         
         # 调用控制器处理业务逻辑
         result = try_on_controller.start_try_on_task(
@@ -155,27 +167,61 @@ def start_try_on():
         
         # 使用APIResponse统一响应格式
         if result.get('success'):
+            logger.info(f"试衣任务创建成功: task_id={result.get('task_id')}")
             return APIResponse.success(
                 data={
                     'task_id': result.get('task_id'),
+                    'access_token': result.get('access_token'),
                     'status': result.get('status'),
                     'estimated_time': result.get('estimated_time')
                 },
                 message='试衣任务已启动'
             )
         else:
+            logger.error(f"试衣任务创建失败: {result.get('error')}")
             return APIResponse.error(
                 message=result.get('error', '启动试衣任务失败'),
                 status_code=500
             )
             
     except ValidationError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"试衣任务参数验证失败: {e.message}")
         return APIResponse.validation_error(
             message=e.message,
             field=e.details.get('field'),
             value=e.details.get('value')
         )
+    except NotFoundError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"试衣任务资源不存在: {e.message}")
+        return APIResponse.error(
+            message=e.message,
+            status_code=404,
+            error_code=e.error_code,
+            details=e.details,
+        )
+    except ServiceError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"试衣任务服务错误: {e.message}")
+        return APIResponse.error(
+            message=e.message,
+            status_code=503,
+            error_code=e.error_code,
+            details=e.details,
+        )
+    except PermissionError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"试衣任务权限错误: {e.message}")
+        return APIResponse.error(
+            message=e.message,
+            status_code=403,
+            error_code=e.error_code,
+            details=e.details,
+        )
     except Exception as e:
+        from backend.utils.logger import logger
+        logger.error(f"试衣任务启动异常: {str(e)}", exc_info=True)
         return APIResponse.error(
             message=f'启动试衣任务失败: {str(e)}',
             status_code=500
@@ -183,6 +229,7 @@ def start_try_on():
 
 
 @try_on_bp.route('/status/<task_id>', methods=['GET'])
+@rate_limit(max_requests=180, per_seconds=60, scope='try_on_status')
 @handle_errors
 def get_task_status(task_id: str):
     """
@@ -197,11 +244,16 @@ def get_task_status(task_id: str):
         JSON响应，包含任务状态和结果信息
     """
     try:
+        from backend.utils.logger import logger
+        logger.debug(f"收到任务状态查询请求: task_id={task_id}")
+        access_token = request.args.get('access_token', '') or ''
+
         # 调用控制器处理业务逻辑
-        result = try_on_controller.get_task_status(task_id)
+        result = try_on_controller.get_task_status(task_id, access_token)
         
         # 使用APIResponse统一响应格式
         if result.get('success'):
+            logger.debug(f"任务状态查询成功: task_id={task_id}, status={result.get('status')}")
             return APIResponse.success(
                 data={
                     'status': result.get('status'),
@@ -212,31 +264,109 @@ def get_task_status(task_id: str):
                 message='查询任务状态成功'
             )
         else:
+            logger.warning(f"任务状态查询失败: task_id={task_id}, error={result.get('error')}")
             return APIResponse.error(
                 message=result.get('error', '查询任务状态失败'),
                 status_code=500
             )
             
     except ValidationError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"任务状态查询参数验证失败: task_id={task_id}, error={e.message}")
         return APIResponse.validation_error(
             message=e.message,
             field=e.details.get('field'),
             value=e.details.get('value')
         )
+    except NotFoundError as e:
+        from backend.utils.logger import logger
+        logger.warning(f"任务不存在: task_id={task_id}, error={e.message}")
+        return APIResponse.error(
+            message=e.message,
+            status_code=404,
+            details=e.details
+        )
     except ServiceError as e:
         # ServiceError是预期的业务异常，返回友好的错误信息
         from backend.utils.logger import logger
-        logger.warning(f"查询任务状态业务异常: {e.message}", exc_info=True)
+        logger.warning(f"查询任务状态业务异常: task_id={task_id}, error={e.message}", exc_info=True)
         return APIResponse.error(
             message=e.message,
             status_code=503,  # 使用503表示服务暂时不可用
             details=e.details
         )
+    except BaseAPIException:
+        # 例如 access_token 校验失败（PermissionError），交给 @handle_errors 统一返回 403
+        raise
     except Exception as e:
         # 未预期的异常，记录详细日志
         from backend.utils.logger import logger
-        logger.error(f"查询任务状态异常: {task_id}", exc_info=True)
+        logger.error(f"查询任务状态异常: task_id={task_id}, error={str(e)}", exc_info=True)
         return APIResponse.error(
             message='查询任务状态失败，请稍后重试',
             status_code=500
         )
+
+
+@try_on_bp.route('/stream/<task_id>', methods=['GET'])
+@rate_limit(max_requests=24, per_seconds=60, scope='try_on_stream')
+@handle_errors
+def stream_task_status(task_id: str):
+    """
+    SSE：实时推送任务状态
+    GET /api/try-on/stream/<task_id>?access_token=...
+    """
+    access_token = request.args.get('access_token', '') or ''
+    # 首包前校验 token，失败由 @handle_errors 返回 403 等
+    try_on_controller.get_task_status(task_id, access_token)
+
+    @stream_with_context
+    def generate():
+        from backend.utils.logger import logger
+        start_time = time.time()
+        timeout_seconds = 600  # 最长保持10分钟
+
+        while True:
+            try:
+                result = try_on_controller.get_task_status(task_id, access_token)
+                payload = {
+                    "success": bool(result.get("success")),
+                    "status": result.get("status"),
+                    "result_image_url": result.get("result_image_url"),
+                    "progress": result.get("progress", 0),
+                    "error": result.get("error")
+                }
+                yield f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+                status = payload.get("status")
+                if status in {"completed", "failed"}:
+                    break
+
+                if (time.time() - start_time) > timeout_seconds:
+                    timeout_payload = {
+                        "success": False,
+                        "status": "failed",
+                        "result_image_url": None,
+                        "progress": 0,
+                        "error": "任务状态推送超时，请重试"
+                    }
+                    yield f"data: {json.dumps(timeout_payload, ensure_ascii=False)}\n\n"
+                    break
+
+                time.sleep(1)
+            except Exception as e:
+                logger.warning(f"SSE推送任务状态异常: task_id={task_id}, error={str(e)}")
+                err_payload = {
+                    "success": False,
+                    "status": "failed",
+                    "result_image_url": None,
+                    "progress": 0,
+                    "error": f"状态推送异常: {str(e)}"
+                }
+                yield f"data: {json.dumps(err_payload, ensure_ascii=False)}\n\n"
+                break
+
+    response = Response(generate(), mimetype='text/event-stream')
+    response.headers['Cache-Control'] = 'no-cache'
+    response.headers['X-Accel-Buffering'] = 'no'
+    return response

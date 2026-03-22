@@ -20,22 +20,21 @@ def test_api_images_endpoint(client):
     assert response.status_code == 200
     data = json.loads(response.data)
     assert 'success' in data
-    assert 'data' in data
+    assert 'brands' in data
 
 def test_api_images_pagination(client):
     """测试图片API分页"""
     response = client.get('/api/images?page=1&per_page=1')
     assert response.status_code == 200
     data = json.loads(response.data)
-    assert data['success'] == True
-    assert 'data' in data
-    assert 'pagination' in data['data']
+    assert data['success'] is True
+    assert 'brands' in data
+    assert 'pagination' in data
 
 def test_api_images_invalid_page(client):
-    """测试无效的分页参数"""
+    """无效分页参数应返回校验错误"""
     response = client.get('/api/images?page=-1&per_page=0')
-    # 应该返回200，但使用默认值
-    assert response.status_code == 200
+    assert response.status_code == 400
 
 def test_rate_limiting(client):
     """测试请求限流"""

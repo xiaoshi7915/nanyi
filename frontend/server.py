@@ -24,18 +24,31 @@ def create_frontend_app():
     frontend_dir = os.path.dirname(os.path.abspath(__file__))
     
     app = Flask(__name__, 
-                static_folder=os.path.join(frontend_dir, 'static'),
+                static_folder=None,  # 禁用默认静态文件夹，使用自定义路由
                 template_folder=frontend_dir)
     
     # CORS配置
     cors_origins = os.environ.get('CORS_ORIGINS', 'http://localhost:5432').split(',')
     CORS(app, origins=cors_origins)
     
+    # 静态图片路由 - 必须在通用路由之前，使用更具体的路径匹配
+    @app.route('/static/images/<path:filename>')
+    def static_images(filename):
+        """静态图片文件服务（支持 generated 子目录）"""
+        static_images_dir = os.path.join(frontend_dir, 'static', 'images')
+        file_path = os.path.join(static_images_dir, filename)
+        # 检查文件是否存在
+        if not os.path.exists(file_path) or not os.path.isfile(file_path):
+            from flask import abort
+            abort(404)
+        return send_from_directory(static_images_dir, filename)
+    
     @app.route('/')
     def index():
         """主页"""
         return send_from_directory(frontend_dir, 'index.html')
     
+    # 通用静态文件路由 - 放在最后
     @app.route('/<path:filename>')
     def static_files(filename):
         """静态文件服务"""

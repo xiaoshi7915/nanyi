@@ -11,6 +11,8 @@ from backend.utils.logger import log_access
 from backend.services.cache_service import cached
 from backend.utils.decorators import handle_errors
 from backend.utils.response import APIResponse
+from backend.utils.client_ip import get_trusted_client_ip
+from backend.utils.rate_limit import rate_limit
 
 # 创建蓝图
 brands_bp = Blueprint('brands', __name__, url_prefix='/api')
@@ -50,11 +52,11 @@ def get_brand_detail(brand_name):
 
 
 @brands_bp.route('/like/card/<path:brand_name>', methods=['POST'])
+@rate_limit(max_requests=40, per_seconds=60, scope='like_toggle')
 @handle_errors
 def like_brand_card(brand_name):
     """切换布料卡片点赞状态（点赞/取消点赞）"""
-    # 获取客户端IP作为唯一标识
-    client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+    client_ip = get_trusted_client_ip()
     user_agent = request.environ.get('HTTP_USER_AGENT', '')
     
     # 创建唯一标识（使用基础品牌名）
@@ -84,11 +86,11 @@ def like_brand_card(brand_name):
 
 
 @brands_bp.route('/like/card/<path:brand_name>', methods=['GET'])
+@rate_limit(max_requests=120, per_seconds=60, scope='like_status')
 @handle_errors  
 def get_brand_like_count(brand_name):
     """获取布料卡片点赞数"""
-    # 获取客户端IP作为唯一标识
-    client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+    client_ip = get_trusted_client_ip()
     user_agent = request.environ.get('HTTP_USER_AGENT', '')
     
     # 创建唯一标识（使用基础品牌名）

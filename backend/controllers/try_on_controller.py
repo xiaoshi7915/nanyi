@@ -7,11 +7,14 @@
 
 import os
 import re
-from typing import Dict, List, Optional
-from flask import request
+from typing import Dict, List, Optional, TYPE_CHECKING
+from flask import request, current_app
+from werkzeug.datastructures import FileStorage
 
-from backend.services.try_on_service import TryOnService
 from backend.services.image_service import ImageService
+
+if TYPE_CHECKING:
+    from backend.services.try_on_image_service import TryOnImageService
 from backend.utils.logger import logger
 from backend.exceptions import ValidationError, NotFoundError, ServiceError
 
@@ -21,13 +24,41 @@ class TryOnController:
     
     def __init__(self):
         """初始化试衣控制器"""
-        self.try_on_service = TryOnService()
+        # 使用集成的 TryOnImageService（不再使用 HTTP 调用的 TryOnService）
+        # 注意：TryOnImageService 需要在应用上下文中初始化，这里延迟初始化
+        self._try_on_image_service: Optional["TryOnImageService"] = None
         self.image_service = ImageService()
         
         # 获取图片目录路径
         current_dir = os.path.dirname(os.path.abspath(__file__))
         project_root = os.path.dirname(os.path.dirname(current_dir))
         self.images_dir = os.path.join(project_root, 'frontend', 'static', 'images')
+    
+    def _get_try_on_service(self) -> "TryOnImageService":
+        """
+        获取 TryOnImageService 实例（从应用对象获取已初始化的实例）
+        
+        Returns:
+            TryOnImageService 实例
+        
+        Raises:
+            ServiceError: 如果服务未初始化
+        """
+        if self._try_on_image_service is None:
+            # 从应用对象获取已初始化的服务实例（在 app.py 中初始化）
+            if hasattr(current_app, 'try_on_image_service') and current_app.try_on_image_service is not None:
+                self._try_on_image_service = current_app.try_on_image_service
+                logger.debug("使用应用已初始化的 TryOnImageService 实例")
+            else:
+                # 如果应用中没有初始化，抛出异常
+                error_msg = "TryOnImageService 未在应用启动时初始化，请检查应用启动日志"
+                logger.error(error_msg)
+                raise ServiceError(
+                    message=error_msg,
+                    service_name='TryOnController',
+                    details={'hint': 'TryOnImageService 应该在 app.py 的 create_app 函数中初始化'}
+                )
+        return self._try_on_image_service
     
     def get_available_styles(self, base_brand_name: Optional[str] = None) -> Dict:
         """
@@ -154,30 +185,38 @@ class TryOnController:
             if not brand_images:
                 return None
             
-            # 优先查找布料图
-            fabric_image = next(
-                (img for img in brand_images if img.get('image_type') == '布料图'),
+            # 按优先级选择：设计图 -> 布料图 -> 成衣图
+            # 这样可以保证模态框里预览图与实际试穿输入的参考图类型一致。
+            preview_image = next(
+                (img for img in brand_images if img.get('image_type') == '设计图'),
                 None
             )
             
+            # 如果没有设计图，使用布料图
+            if not preview_image:
+                preview_image = next(
+                    (img for img in brand_images if img.get('image_type') == '布料图'),
+                    None
+                )
+            
             # 如果没有布料图，使用成衣图
-            if not fabric_image:
-                fabric_image = next(
+            if not preview_image:
+                preview_image = next(
                     (img for img in brand_images if img.get('image_type') == '成衣图'),
                     None
                 )
             
             # 如果还没有，使用第一张图片
-            if not fabric_image:
-                fabric_image = brand_images[0]
+            if not preview_image:
+                preview_image = brand_images[0]
             
             # 返回图片URL
-            if fabric_image.get('url'):
-                return fabric_image['url']
-            elif fabric_image.get('relative_path'):
-                return f"/static/images/{fabric_image['relative_path']}"
-            elif fabric_image.get('filename'):
-                return f"/static/images/{fabric_image['filename']}"
+            if preview_image.get('url'):
+                return preview_image['url']
+            elif preview_image.get('relative_path'):
+                return f"/static/images/{preview_image['relative_path']}"
+            elif preview_image.get('filename'):
+                return f"/static/images/{preview_image['filename']}"
             
             return None
             
@@ -192,7 +231,7 @@ class TryOnController:
         user_image_filename: str
     ) -> Dict:
         """
-        启动AI试衣任务
+        启动AI试衣任务（使用集成的服务，不再使用 HTTP 调用）
         
         Args:
             brand_name: 选定的款式名称（品牌+颜色，如"丹若(玉绿)"）
@@ -239,14 +278,50 @@ class TryOnController:
             
             logger.info(f"启动AI试衣任务: brand_name={brand_name}, fabric_image={fabric_image_path}")
             
-            # 调用试衣服务
-            result = self.try_on_service.generate_try_on(
-                fabric_image_path=fabric_image_path,
-                user_image_file=user_image_file,
-                user_image_filename=user_image_filename
+            # 获取集成的试衣服务实例
+            try_on_service = self._get_try_on_service()
+            
+            # 读取布料图文件
+            with open(fabric_image_path, 'rb') as f:
+                fabric_image_data = f.read()
+            
+            # 创建 FileStorage 对象（模拟 Flask 上传文件对象）
+            from io import BytesIO
+            fabric_file = FileStorage(
+                stream=BytesIO(fabric_image_data),
+                filename=os.path.basename(fabric_image_path),
+                content_type='image/jpeg'
+            )
+            user_image_file_obj = FileStorage(
+                stream=BytesIO(user_image_file),
+                filename=user_image_filename,
+                content_type='image/jpeg'
             )
             
-            return result
+            # 调用集成的试衣服务创建任务
+            # 使用固定参数（与原来的 TryOnService 保持一致）
+            fixed_prompt = (os.getenv("TRY_ON_FIXED_PROMPT") or "").strip()
+            # 固定图生图 prompt：若环境变量未配置，则传空字符串，后端会回退到原有模板逻辑。
+            task_id, access_token = try_on_service.create_task(
+                fabric_images=[fabric_file],  # 布料图列表
+                model_type='real',  # 使用真人照片
+                shot_type='half_body',  # 注意：真人图模式会强制生成全身照，但API需要这个参数
+                aspect_ratio='9:16',  # 竖屏，适合手机
+                style='portrait_photography',  # 人像摄影风格
+                real_person_image=user_image_file_obj,  # 用户上传的真人照片
+                prompt=fixed_prompt,  # 图生图固定 prompt（来自环境变量）
+                model_provider='seedream'  # 模型提供商
+            )
+            
+            logger.info(f"AI试衣任务创建成功: task_id={task_id}")
+            
+            return {
+                'success': True,
+                'task_id': task_id,
+                'access_token': access_token,
+                'status': 'processing',  # 任务初始回传为 processing，避免前端只显示 processing 的情况
+                'estimated_time': 10  # 预计处理时间（秒）
+            }
             
         except (ValidationError, NotFoundError, ServiceError):
             # 重新抛出这些异常，让路由层处理
@@ -279,44 +354,36 @@ class TryOnController:
             
             logger.debug(f"找到 {len(brand_images)} 张品牌图片: {brand_name}")
             
-            # 优先查找布料图
-            fabric_images = [img for img in brand_images if img.get('image_type') == '布料图']
+            # 按优先级选择参考图：设计图 -> 布料图 -> 成衣图
+            # 注意：函数名仍保留为 _get_fabric_image_path，但实际返回的是“参考图”的本地路径。
+            fabric_image = None
+            type_priority = ['设计图', '布料图', '成衣图']
             
-            # 如果找到多个布料图，优先选择与品牌名匹配的（如果品牌名包含颜色）
-            if fabric_images:
-                # 如果品牌名包含颜色信息，尝试精确匹配
+            for image_type in type_priority:
+                images_of_type = [img for img in brand_images if img.get('image_type') == image_type]
+                if not images_of_type:
+                    continue
+                
+                # 如果品牌名包含颜色信息，尝试精确匹配到同一颜色变体
                 if '(' in brand_name:
                     exact_match = next(
-                        (img for img in fabric_images if img.get('brand_name') == brand_name),
+                        (img for img in images_of_type if img.get('brand_name') == brand_name),
                         None
                     )
                     if exact_match:
                         fabric_image = exact_match
                     else:
-                        # 使用第一张布料图
-                        fabric_image = fabric_images[0]
+                        # 精确匹配失败时，使用该类型下的第一张作为兜底
+                        fabric_image = images_of_type[0]
                 else:
-                    # 品牌名没有颜色信息，使用第一张布料图
-                    fabric_image = fabric_images[0]
-            else:
-                fabric_image = None
-            
-            # 如果没有布料图，使用成衣图作为备选
-            if not fabric_image:
-                garment_images = [img for img in brand_images if img.get('image_type') == '成衣图']
-                if garment_images:
-                    # 同样优先匹配颜色
-                    if '(' in brand_name:
-                        exact_match = next(
-                            (img for img in garment_images if img.get('brand_name') == brand_name),
-                            None
-                        )
-                        fabric_image = exact_match if exact_match else garment_images[0]
-                    else:
-                        fabric_image = garment_images[0]
+                    # 品牌名不含颜色信息时，直接取该类型下第一张
+                    fabric_image = images_of_type[0]
+                
+                # 找到就跳出循环，保证优先级生效
+                break
             
             if not fabric_image:
-                logger.warning(f"未找到布料图或成衣图: {brand_name} (共找到{len(brand_images)}张图片)")
+                logger.warning(f"未找到参考图（设计图/布料图/成衣图）: {brand_name} (共找到{len(brand_images)}张图片)")
                 return None
             
             # 获取图片的相对路径
@@ -341,12 +408,13 @@ class TryOnController:
             logger.error(f"获取布料图路径失败: {brand_name}, {e}", exc_info=True)
             return None
     
-    def get_task_status(self, task_id: str) -> Dict:
+    def get_task_status(self, task_id: str, access_token: Optional[str] = None) -> Dict:
         """
-        查询AI试衣任务状态
+        查询AI试衣任务状态（使用集成的服务，从本地数据库查询）
         
         Args:
             task_id: 任务ID
+            access_token: 创建任务时返回的访问令牌（必填，通过 query 或调用方传入）
         
         Returns:
             dict: 包含任务状态和结果信息的字典
@@ -363,16 +431,59 @@ class TryOnController:
             )
         
         try:
-            # 调用试衣服务查询状态
-            result = self.try_on_service.get_task_status(task_id)
+            # 获取集成的试衣服务实例
+            logger.debug(f"查询任务状态: task_id={task_id}")
+            try_on_service = self._get_try_on_service()
             
-            return result
+            # 从本地数据库查询任务状态（不再调用外部 HTTP 服务）
+            task_dict = try_on_service.get_task_status(task_id, access_token)
             
-        except (ValidationError, ServiceError):
-            # 重新抛出这些异常，让路由层处理
+            # 转换状态格式以兼容原有 API 响应格式
+            status = task_dict.get('status', 'pending')
+            result_image_url = task_dict.get('result_image_url')
+            error_message = task_dict.get('error_message')
+            
+            # 计算进度（根据状态估算）
+            if status == 'completed':
+                progress = 100
+            elif status == 'processing':
+                progress = 50  # 处理中，估算为50%
+            elif status == 'failed':
+                progress = 0
+            else:
+                progress = 0  # pending 状态
+            
+            logger.debug(f"任务状态查询成功: task_id={task_id}, status={status}")
+            return {
+                'success': True,
+                'status': status,
+                'result_image_url': result_image_url,
+                'progress': progress,
+                'error': error_message
+            }
+            
+        except NotFoundError:
+            # NotFoundError 直接重新抛出
+            raise
+        except ValidationError:
+            # ValidationError 直接重新抛出
+            raise
+        except ServiceError:
+            # ServiceError 直接重新抛出
             raise
         except Exception as e:
-            logger.error(f"查询任务状态失败: {e}", exc_info=True)
+            # 检查是否是任务不存在的异常
+            error_msg = str(e).lower()
+            error_type = type(e).__name__
+            if 'not found' in error_msg or '不存在' in error_msg or 'TaskNotFoundError' in error_type or 'NotFoundError' in error_type:
+                logger.warning(f"任务不存在: task_id={task_id}, error={str(e)}")
+                raise NotFoundError(
+                    message=f'任务不存在: {task_id}',
+                    resource_type='task',
+                    resource_id=task_id
+                )
+            # 其他未知异常
+            logger.error(f"查询任务状态失败: task_id={task_id}, error={str(e)}", exc_info=True)
             raise ServiceError(
                 message=f'查询任务状态失败: {str(e)}',
                 service_name='TryOnController',
