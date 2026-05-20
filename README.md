@@ -105,6 +105,13 @@ source products_env/bin/activate
 python backend/migrations/add_tasks_access_token_column.py
 ```
 
+用户中心与微信登录相关表（`users`、`oauth_bindings`、`user_assets`，并为 `tasks` / `brand_likes` 增加 `user_id`）：
+
+```bash
+source products_env/bin/activate
+python backend/migrations/add_users_oauth_assets_and_user_ids.py
+```
+
 ```bash
 # 运行数据库迁移（Admin表新字段）
 source products_env/bin/activate

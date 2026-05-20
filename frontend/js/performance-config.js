@@ -311,9 +311,12 @@ class OptimizedCacheManager {
     }
     
     /**
-     * 获取应用版本（基于当前时间戳的小时数，每小时检查一次更新）
+     * 获取应用版本（与 app-version.js 发布号一致，变更时清空 localStorage 业务缓存）
      */
     getAppVersion() {
+        if (typeof window !== 'undefined' && window.APP_RELEASE_VERSION) {
+            return String(window.APP_RELEASE_VERSION);
+        }
         return Math.floor(Date.now() / (60 * 60 * 1000)).toString();
     }
     

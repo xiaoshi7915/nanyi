@@ -302,6 +302,57 @@ class NanyiAPI {
 
         return eventSource;
     }
+
+    /**
+     * 构建带可选 JWT 的请求头
+     */
+    _authHeaders(extra = {}) {
+        const headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            ...extra,
+        };
+        if (window.NanyiAuth && typeof window.NanyiAuth.getAccessToken === 'function') {
+            const token = window.NanyiAuth.getAccessToken();
+            if (token) {
+                headers.Authorization = 'Bearer ' + token;
+            }
+        }
+        return headers;
+    }
+
+    /**
+     * 提交品牌评价（登录时附带 Bearer，便于后台审计）
+     * @param {{ brand_name: string, rating?: number, content?: string, is_anonymous?: boolean }} payload
+     */
+    async submitReview(payload) {
+        const url = `${this.baseURL}/reviews`;
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: this._authHeaders(),
+            body: JSON.stringify(payload),
+        });
+        if (!response.ok) {
+            let msg = `HTTP ${response.status}`;
+            try {
+                const errBody = await response.json();
+                msg = errBody.message || errBody.error || msg;
+            } catch (e) { /* ignore */ }
+            throw new Error(msg);
+        }
+        return response.json();
+    }
+
+    /**
+     * 获取某品牌的公开评价列表
+     * @param {string} brandName - 完整品牌名（与卡片一致）
+     * @param {number} page
+     * @param {number} limit
+     */
+    async getBrandReviews(brandName, page = 1, limit = 20) {
+        const encoded = encodeURIComponent(brandName);
+        return this.request(`/reviews/brand/${encoded}?page=${page}&limit=${limit}`);
+    }
 }
 
 // 创建全局API实例

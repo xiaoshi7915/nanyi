@@ -117,6 +117,26 @@ class Config:
         self.BACKEND_URL = os.environ.get('BACKEND_URL') or f'http://localhost:{self.BACKEND_PORT}'
         self.FRONTEND_URL = os.environ.get('FRONTEND_URL') or f'http://localhost:{self.FRONTEND_PORT}'
         
+        # 管理后台 API 令牌（评价审计等 /api/admin/*）；未设置则管理接口返回 503
+        self.ADMIN_API_TOKEN = (os.environ.get('ADMIN_API_TOKEN') or '').strip()
+
+        # 用户 JWT（access / refresh）；未单独配置时复用 SECRET_KEY（生产建议独立配置）
+        self.JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or self.SECRET_KEY
+        self.JWT_ACCESS_EXPIRES_MINUTES = int(os.environ.get('JWT_ACCESS_EXPIRES_MINUTES', '15'))
+        self.JWT_REFRESH_EXPIRES_DAYS = int(os.environ.get('JWT_REFRESH_EXPIRES_DAYS', '30'))
+        
+        # 微信公众号 / 开放平台网页授权（仅微信内 H5 使用 snsapi_userinfo）
+        self.WECHAT_APP_ID = os.environ.get('WECHAT_APP_ID', '').strip()
+        self.WECHAT_APP_SECRET = os.environ.get('WECHAT_APP_SECRET', '').strip()
+        # 授权回调地址，须与微信开放平台配置一致；默认使用 BACKEND_URL + 固定路径
+        _default_wx_cb = f"{self.BACKEND_URL.rstrip('/')}/api/auth/wechat/callback"
+        self.WECHAT_OAUTH_REDIRECT_URI = os.environ.get(
+            'WECHAT_OAUTH_REDIRECT_URI', _default_wx_cb
+        ).strip()
+        
+        # 试衣：用户维度月度配额上限（与限流配合；具体计数在 try_on 路由中实现）
+        self.TRY_ON_USER_MONTHLY_QUOTA = int(os.environ.get('TRY_ON_USER_MONTHLY_QUOTA', '30'))
+        
         # CSRF保护配置
         self.WTF_CSRF_ENABLED = True
         self.WTF_CSRF_TIME_LIMIT = 3600  # CSRF token有效期1小时

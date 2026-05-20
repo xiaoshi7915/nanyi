@@ -29,4 +29,15 @@ Product = None
 Admin = None
 AccessLog = None
 
-__all__ = ['db', 'Product', 'Admin', 'AccessLog', 'init_models'] 
+from .user import User, OAuthBinding, UserAsset
+
+__all__ = [
+    'db',
+    'Product',
+    'Admin',
+    'AccessLog',
+    'User',
+    'OAuthBinding',
+    'UserAsset',
+    'init_models',
+] 

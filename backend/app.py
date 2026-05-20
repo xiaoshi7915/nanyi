@@ -152,6 +152,10 @@ def create_app(config_name='development'):
             # 创建点赞数据表
             from backend.models.brand_like import BrandLike
             BrandLike.create_table()
+
+            # 创建评价数据表
+            from backend.models.brand_review import BrandReview
+            BrandReview.create_table()
             
             logger.info("✅ 数据表创建成功")
             
@@ -205,6 +209,9 @@ def create_app(config_name='development'):
         from backend.routes.share import share_bp
         from backend.routes.static_cards import static_cards_bp
         from backend.routes.try_on import try_on_bp
+        from backend.routes.auth import auth_bp
+        from backend.routes.reviews import reviews_bp
+        from backend.routes.admin_reviews import admin_reviews_bp
         
         app.register_blueprint(images_bp)
         app.register_blueprint(brands_bp)
@@ -213,9 +220,12 @@ def create_app(config_name='development'):
         app.register_blueprint(share_bp)
         app.register_blueprint(static_cards_bp)
         app.register_blueprint(try_on_bp)
+        app.register_blueprint(auth_bp)
+        app.register_blueprint(reviews_bp)
+        app.register_blueprint(admin_reviews_bp)
         
         logger.info("✅ API路由注册成功 (支持 /api 和 /api/v1)")
-        logger.info("✅ 已注册路由模块: images, brands, products, filters, share, try_on")
+        logger.info("✅ 已注册路由模块: images, brands, products, filters, share, try_on, auth, reviews, admin_reviews")
     except ImportError as e:
         logger.warning(f"警告: 路由导入失败 - {e}")
         import traceback

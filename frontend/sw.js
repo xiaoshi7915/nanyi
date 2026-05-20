@@ -3,8 +3,9 @@
  * 实现离线缓存和资源预缓存，提升性能和用户体验
  */
 
-// 版本号：每次更新时修改此版本号，会自动清除旧缓存
-const SW_VERSION = 'v1.0.2';
+// 与 js/app-version.js 中的 APP_RELEASE_VERSION 保持一致（由 importScripts 注入）
+importScripts('/js/app-version.js');
+const SW_VERSION = APP_RELEASE_VERSION;
 const CACHE_NAME = `nanyi-products-${SW_VERSION}`;
 const STATIC_CACHE_NAME = `nanyi-static-${SW_VERSION}`;
 const DYNAMIC_CACHE_NAME = `nanyi-dynamic-${SW_VERSION}`;
@@ -37,10 +38,7 @@ self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(STATIC_CACHE_NAME).then((cache) => {
             return cache.addAll(STATIC_ASSETS);
-        }).then(() => {
-            // 不立即激活，等待旧版本关闭后再激活，避免频繁刷新
-            // return self.skipWaiting(); // 注释掉，让浏览器自然更新
-        })
+        }).then(() => self.skipWaiting())
     );
 });
 

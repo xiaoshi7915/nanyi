@@ -28,6 +28,7 @@ pydantic==2.5.0  # try_on 服务需要（用于参数验证）
 
 # 工具库
 python-multipart==0.0.6  # try_on 服务需要（用于文件上传）
+PyJWT==2.8.0  # 用户 JWT（access / refresh）
 
 # 服务器
 gunicorn==23.0.0

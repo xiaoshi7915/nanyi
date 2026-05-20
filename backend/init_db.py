@@ -17,6 +17,7 @@ from backend.models.product import Product
 from backend.models.access_log import AccessLog
 from backend.models.admin import Admin
 from backend.models.brand_like import BrandLike
+from backend.models.brand_review import BrandReview
 from backend.utils.logger import logger
 
 def init_database():
@@ -39,6 +40,12 @@ def init_database():
                 logger.info("✅ 点赞表创建成功")
             else:
                 logger.error("❌ 点赞表创建失败")
+
+            logger.info("📝 创建评价表...")
+            if BrandReview.create_table():
+                logger.info("✅ 评价表创建成功")
+            else:
+                logger.error("❌ 评价表创建失败")
             
             logger.info("🎉 数据库初始化完成！")
             
@@ -63,7 +70,10 @@ def check_tables():
                 logger.info(f"  ✓ {table}")
             
             # 检查必要表是否存在
-            required_tables = ['products', 'access_logs', 'admins', 'brand_likes', 'brand_like_stats']
+            required_tables = [
+                'products', 'access_logs', 'admins',
+                'brand_likes', 'brand_like_stats', 'brand_reviews',
+            ]
             missing_tables = [table for table in required_tables if table not in tables]
             
             if missing_tables:

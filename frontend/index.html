@@ -48,11 +48,14 @@
     <!-- 引入图标库 -->
     <link rel="stylesheet" href="static/lib/all.min.css">
     
+    <!-- 发布版本号（发布时与 js/app-version.js 同步修改） -->
+    <script src="js/app-version.js"></script>
+    
     <!-- 引入样式文件 -->
-    <link rel="stylesheet" href="css/main.css?v=20250622-3">
-    <link rel="stylesheet" href="static/css/responsive.css?v=20250622-3">
-    <link rel="stylesheet" href="css/skeleton.css?v=20250622-3">
-    <link rel="stylesheet" href="css/try-on.css?v=20250622-3">
+    <link rel="stylesheet" href="css/main.css?v=20260520-2-1-2-1">
+    <link rel="stylesheet" href="static/css/responsive.css?v=20260520-2-1-2-1">
+    <link rel="stylesheet" href="css/skeleton.css?v=20260520-2-1-2-1">
+    <link rel="stylesheet" href="css/try-on.css?v=20260520-2-1-2-1">
     
     <!-- 引入性能优化配置 -->
     <script src="js/performance-config.js"></script>
@@ -65,7 +68,7 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 // 注册Service Worker（不要添加时间戳，让浏览器自然缓存）
-                navigator.serviceWorker.register('/sw.js')
+                navigator.serviceWorker.register('/sw.js?v=' + encodeURIComponent(window.APP_RELEASE_VERSION || Date.now()))
                     .then(registration => {
                         // 标记是否已经处理过更新提示
                         let updatePromptShown = false;
@@ -133,18 +136,48 @@
                         console.error('Service Worker注册失败:', error);
                     });
                 
-                // 监听Service Worker更新（自动刷新，不提示）
+                // 监听 Service Worker 推送的版本更新：清理各类缓存后刷新
+                navigator.serviceWorker.addEventListener('message', (event) => {
+                    if (event.data && event.data.type === 'SW_UPDATED') {
+                        clearClientCachesForRelease().finally(() => {
+                            sessionStorage.removeItem('sw_update_prompted');
+                            window.location.reload();
+                        });
+                    }
+                });
+
+                // 监听Service Worker更新（自动刷新）
                 let refreshing = false;
                 navigator.serviceWorker.addEventListener('controllerchange', () => {
                     if (!refreshing) {
                         refreshing = true;
-                        // 清除更新提示标记
-                        sessionStorage.removeItem('sw_update_prompted');
-                        // 自动刷新，不提示用户
-                        window.location.reload();
+                        clearClientCachesForRelease().finally(() => {
+                            sessionStorage.removeItem('sw_update_prompted');
+                            window.location.reload();
+                        });
                     }
                 });
             });
+        }
+
+        /** 发布新版本时清理：localStorage 业务缓存 + Cache API + 图片预加载缓存 */
+        async function clearClientCachesForRelease() {
+            try {
+                if (window.cacheManager && typeof window.cacheManager.clearAllCache === 'function') {
+                    window.cacheManager.clearAllCache();
+                }
+            } catch (e) { /* ignore */ }
+            try {
+                if (window.imagePreloader && typeof window.imagePreloader.clearCache === 'function') {
+                    window.imagePreloader.clearCache();
+                }
+            } catch (e) { /* ignore */ }
+            try {
+                if (typeof caches !== 'undefined') {
+                    const names = await caches.keys();
+                    await Promise.all(names.map((n) => caches.delete(n)));
+                }
+            } catch (e) { /* ignore */ }
         }
     </script>
     
@@ -165,7 +198,8 @@
     
     <!-- 引入API客户端 -->
     <!-- 恢复使用正式API文件 -->
-    <script src="js/api.js?v=20260124-2"></script>
+    <script src="js/api.js?v=20260520-2-1-2-1"></script>
+    <script src="js/auth-session.js?v=20260520-2-1-2-1"></script>
     <script>
         // 确保API已加载并验证方法存在
         (function() {
@@ -432,7 +466,7 @@
                 <!-- 品牌网格 -->
                 <div v-else-if="filteredBrands.length > 0" class="brands-grid">
                     <div 
-                        v-for="brand in filteredBrands" 
+                        v-for="brand in paginatedDisplayBrands" 
                         :key="brand.name"
                         class="brand-card"
                         @click="openBrandDetail(brand)"
@@ -470,58 +504,84 @@
                                           class="meta-tag" 
                                           @click.stop="filterByTag('print_type', brand.print_type)">{{ brand.print_type }}</span>
                                 </div>
-                                <div class="like-display" @click.stop="toggleHomeLike(brand)" :class="{ liked: brand.user_liked }">
-                                    <i class="fas fa-thumbs-up"></i>
-                                    <span>{{ brand.like_count || 0 }}</span>
-                                </div>
-
-                                <!-- 卡片底部：试穿 + 分享（分享逻辑与详情页「生成布料卡片」一致） -->
-                                <div class="brand-card-actions" @click.stop>
-                                    <button
-                                        type="button"
-                                        class="try-on-card-btn"
-                                        @click="openTryOnModalFromCard(brand)"
-                                        title="试穿"
-                                    >
-                                        <i class="fas fa-tshirt"></i>
-                                        <span>试穿</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        class="share-card-btn"
-                                        @click="openShareCardForBrand(brand)"
-                                        title="生成布料卡片并分享"
-                                    >
-                                        <i class="fas fa-share-alt"></i>
-                                        <span>分享</span>
-                                    </button>
+                                <div class="brand-card-footer">
+                                    <!-- 卡片底部：试穿 + 分享并排 -->
+                                    <div class="brand-card-actions" @click.stop>
+                                        <button
+                                            type="button"
+                                            class="try-on-card-btn"
+                                            @click="openTryOnModalFromCard(brand)"
+                                            title="试穿"
+                                        >
+                                            <i class="fas fa-tshirt"></i>
+                                            <span>试穿</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="share-card-btn"
+                                            @click="openShareCardForBrand(brand)"
+                                            title="生成布料卡片并分享"
+                                        >
+                                            <i class="fas fa-share-alt"></i>
+                                            <span>分享</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="review-card-btn"
+                                            @click="openReviewModal(brand)"
+                                            title="评价"
+                                        >
+                                            <i class="fas fa-star"></i>
+                                            <span>评价</span>
+                                        </button>
+                                    </div>
+                                    <div class="like-display" @click.stop="toggleHomeLike(brand)" :class="{ liked: brand.user_liked }">
+                                        <i class="fas fa-thumbs-up"></i>
+                                        <span>{{ brand.like_count || 0 }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 加载更多按钮 -->
-                <div v-if="filteredBrands.length > 0 && pagination.hasNext && !isLoadingMore" class="load-more-section">
-                    <button @click="loadMore" class="load-more-btn">
-                        <i class="fas fa-plus"></i>
-                        加载更多 (第{{ pagination.currentPage + 1 }}页)
-                    </button>
-                    <div class="pagination-info">
-                        已显示 {{ filteredBrands.length }} / {{ pagination.totalBrands }} 个品牌
-                    </div>
-                </div>
-
-                <!-- 加载中状态 -->
-                <div v-if="isLoadingMore" class="loading-more">
-                    <div class="loading-spinner"></div>
-                    <span>正在加载更多...</span>
-                </div>
-
-                <!-- 全部加载完成 -->
-                <div v-if="filteredBrands.length > 0 && !pagination.hasNext && !isLoadingMore && pagination.totalBrands > 0" class="all-loaded">
-                    <i class="fas fa-check-circle"></i>
-                    <span>已显示全部 {{ pagination.totalBrands }} 个品牌</span>
+                <!-- 首页分页：右下角展示 -->
+                <div v-if="filteredBrands.length > 0 && totalDisplayPages > 1" class="list-pagination-wrap">
+                    <nav class="list-pagination" aria-label="品牌列表分页">
+                        <button
+                            type="button"
+                            class="page-nav-btn"
+                            :disabled="displayPage <= 1"
+                            @click="goToDisplayPage(displayPage - 1)"
+                            aria-label="上一页"
+                        >
+                            <i class="fas fa-chevron-left"></i>
+                            <span class="page-nav-text">上一页</span>
+                        </button>
+                        <div class="page-numbers">
+                            <button
+                                v-for="p in displayPageList"
+                                :key="'p-' + p"
+                                type="button"
+                                :class="['page-num-btn', { active: p === displayPage, ellipsis: p === '...' }]"
+                                :disabled="p === '...'"
+                                :aria-current="p === displayPage ? 'page' : null"
+                                @click="p !== '...' && goToDisplayPage(p)"
+                            >
+                                {{ p }}
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            class="page-nav-btn"
+                            :disabled="displayPage >= totalDisplayPages"
+                            @click="goToDisplayPage(displayPage + 1)"
+                            aria-label="下一页"
+                        >
+                            <span class="page-nav-text">下一页</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </nav>
                 </div>
 
                 <!-- 空状态 -->
@@ -857,6 +917,106 @@
                 </div>
             </div>
         </div>
+
+        <!-- 品牌评价模态框 -->
+        <div v-if="showReviewModal" class="review-modal-overlay" @click="closeReviewModal">
+            <div class="review-modal-content" @click.stop>
+                <div class="review-modal-header">
+                    <h2 class="review-modal-title">
+                        <i class="fas fa-star"></i>
+                        评价 · {{ reviewBrandName }}
+                    </h2>
+                    <button type="button" @click="closeReviewModal" class="review-close-btn" aria-label="关闭">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="review-modal-body">
+                    <!-- 统计摘要 -->
+                    <div v-if="reviewStats.count > 0" class="review-stats-bar">
+                        <span class="review-stats-avg" v-if="reviewStats.avg_rating">
+                            <i class="fas fa-star"></i> {{ reviewStats.avg_rating }}
+                        </span>
+                        <span class="review-stats-count">共 {{ reviewStats.count }} 条评价</span>
+                    </div>
+
+                    <!-- 提交表单 -->
+                    <div class="review-form-section">
+                        <p class="review-form-label">您的评分（可选）</p>
+                        <div class="review-star-input" role="group" aria-label="选择评分">
+                            <button
+                                v-for="n in 5"
+                                :key="'star-in-' + n"
+                                type="button"
+                                class="review-star-btn"
+                                :class="{ active: reviewFormRating >= n }"
+                                @click="reviewFormRating = n"
+                                :aria-label="n + ' 星'"
+                            >
+                                <i class="fas fa-star"></i>
+                            </button>
+                            <button
+                                v-if="reviewFormRating"
+                                type="button"
+                                class="review-clear-rating"
+                                @click="reviewFormRating = 0"
+                            >清除</button>
+                        </div>
+                        <textarea
+                            v-model="reviewFormContent"
+                            class="review-textarea"
+                            rows="3"
+                            maxlength="2000"
+                            placeholder="写下您对这款布料的感受（可选）…"
+                        ></textarea>
+                        <p class="review-anon-hint">
+                            <i class="fas fa-user-secret"></i> 评价将以「匿名用户」展示
+                        </p>
+                        <button
+                            type="button"
+                            class="review-submit-btn"
+                            :disabled="reviewSubmitting || (!reviewFormRating && !reviewFormContent.trim())"
+                            @click="submitBrandReview"
+                        >
+                            <i class="fas fa-paper-plane"></i>
+                            {{ reviewSubmitting ? '提交中…' : '提交评价' }}
+                        </button>
+                    </div>
+
+                    <!-- 评价列表 -->
+                    <div class="review-list-section">
+                        <h3 class="review-list-title">用户评价</h3>
+                        <div v-if="reviewListLoading" class="review-list-loading">
+                            <div class="loading-spinner"></div>
+                            <span>加载中…</span>
+                        </div>
+                        <div v-else-if="!reviewList.length" class="review-list-empty">
+                            暂无评价，快来写下第一条吧
+                        </div>
+                        <ul v-else class="review-list">
+                            <li v-for="item in reviewList" :key="item.id" class="review-list-item">
+                                <div class="review-item-head">
+                                    <span class="review-item-user">{{ item.display_name || '匿名用户' }}</span>
+                                    <span v-if="item.rating" class="review-item-stars">
+                                        <i v-for="s in item.rating" :key="'rs-' + item.id + '-' + s" class="fas fa-star"></i>
+                                    </span>
+                                </div>
+                                <p v-if="item.content" class="review-item-content">{{ item.content }}</p>
+                                <time class="review-item-time">{{ formatReviewTime(item.created_at) }}</time>
+                            </li>
+                        </ul>
+                        <button
+                            v-if="reviewPagination.has_more && !reviewListLoading"
+                            type="button"
+                            class="review-load-more-btn"
+                            :disabled="reviewListLoadingMore"
+                            @click="loadMoreBrandReviews"
+                        >
+                            {{ reviewListLoadingMore ? '加载中…' : '加载更多' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -892,10 +1052,13 @@
                     previewImage: null,
                     preloadTimer: null, // 预加载定时器
                     
-                    // 分页相关数据
+                    // 首页列表展示分页（每页条数，仅控制 DOM 渲染数量）
+                    displayPage: 1,
+                    pageSize: 20,
+                    // API 分页（首次 load_all 拉全量元数据供筛选）
                     pagination: {
                         currentPage: 1,
-                        perPage: 12,
+                        perPage: 20,
                         totalBrands: 0,
                         totalPages: 0,
                         hasNext: false,
@@ -940,7 +1103,19 @@
                         liked: false,
                         count: 0,
                         loading: false
-                    }
+                    },
+
+                    // 品牌评价
+                    showReviewModal: false,
+                    reviewBrandName: '',
+                    reviewFormRating: 0,
+                    reviewFormContent: '',
+                    reviewSubmitting: false,
+                    reviewList: [],
+                    reviewListLoading: false,
+                    reviewListLoadingMore: false,
+                    reviewStats: { count: 0, avg_rating: null, rated_count: 0 },
+                    reviewPagination: { page: 1, limit: 10, total: 0, has_more: false }
                 };
             },
             
@@ -963,11 +1138,14 @@
                     
                     await this.loadData();
 
+                    // 登录态：本地 JWT 静默续期并拉取 /api/me（回访不重复走微信授权）
+                    if (window.NanyiAuth && typeof window.NanyiAuth.bootstrap === 'function') {
+                        window.NanyiAuth.bootstrap().catch(function () {});
+                    }
+
                     // 恢复未完成的试衣任务（页面刷新/重开后继续追踪）
                     this.restoreTryOnTaskState();
                     
-                    // 添加滚动监听用于自动加载更多
-                    window.addEventListener('scroll', this.checkAutoLoad);
                     // 回到前台时立即补查任务状态
                     document.addEventListener('visibilitychange', this.handleTryOnVisibilityChange);
                     
@@ -996,12 +1174,45 @@
             },
 
             computed: {
-                // 已移除hasActiveFilters计算属性，因为不再需要清除筛选功能
+                /** 筛选后的总页数 */
+                totalDisplayPages() {
+                    const total = this.filteredBrands.length;
+                    return Math.max(1, Math.ceil(total / this.pageSize));
+                },
+                /** 当前页要渲染的品牌卡片（每页 pageSize 个） */
+                paginatedDisplayBrands() {
+                    const page = Math.min(this.displayPage, this.totalDisplayPages);
+                    const start = (page - 1) * this.pageSize;
+                    return this.filteredBrands.slice(start, start + this.pageSize);
+                },
+                /** 分页按钮列表（含省略号） */
+                displayPageList() {
+                    const total = this.totalDisplayPages;
+                    const current = Math.min(this.displayPage, total);
+                    if (total <= 7) {
+                        return Array.from({ length: total }, (_, i) => i + 1);
+                    }
+                    const pages = [1];
+                    if (current > 3) pages.push('...');
+                    const start = Math.max(2, current - 1);
+                    const end = Math.min(total - 1, current + 1);
+                    for (let p = start; p <= end; p++) {
+                        if (!pages.includes(p)) pages.push(p);
+                    }
+                    if (current < total - 2) pages.push('...');
+                    if (!pages.includes(total)) pages.push(total);
+                    return pages;
+                }
             },
 
             watch: {
                 searchQuery() {
                     this.filterBrands();
+                },
+                totalDisplayPages(newTotal) {
+                    if (this.displayPage > newTotal) {
+                        this.displayPage = newTotal;
+                    }
                 }
             },
 
@@ -1262,9 +1473,23 @@
                     });
 
                     this.filteredBrands = filtered;
+                    this.displayPage = 1;
                     
                     // 更新筛选后的统计数量
                     this.updateFilterCounts(filtered);
+                },
+
+                /** 切换首页列表页码并滚到列表顶部 */
+                goToDisplayPage(page) {
+                    const target = Math.max(1, Math.min(page, this.totalDisplayPages));
+                    if (target === this.displayPage) return;
+                    this.displayPage = target;
+                    this.$nextTick(() => {
+                        const grid = document.querySelector('.brands-grid');
+                        if (grid) {
+                            grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    });
                 },
                 
                 // 更新筛选后的统计数量
@@ -1626,6 +1851,13 @@
 
                 getImageURL(image) {
                     try {
+                        const appendReleaseVersion = (url) => {
+                            if (!url || !window.APP_RELEASE_VERSION) return url;
+                            if (!url.startsWith('/static/images/')) return url;
+                            const sep = url.includes('?') ? '&' : '?';
+                            return `${url}${sep}v=${encodeURIComponent(window.APP_RELEASE_VERSION)}`;
+                        };
+
                         // 优先使用OSS图片URL（如果存在）
                         if (image.medium_url && image.medium_url.startsWith('http')) {
                             return image.medium_url;
@@ -1640,15 +1872,20 @@
                         if (image.relative_path) {
                             // 使用前端静态文件路径，正确编码中文字符
                             const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
-                            return `/static/images/${encodedPath}`;
+                            return appendReleaseVersion(`/static/images/${encodedPath}`);
                         }
                         
                         // 最后的降级处理
-                        return `/static/images/${image.filename || 'placeholder.jpg'}`;
+                        return appendReleaseVersion(`/static/images/${image.filename || 'placeholder.jpg'}`);
                     } catch (error) {
                         console.warn('图片URL处理失败:', error, image);
                         // 降级处理：直接使用原始路径
-                        return `/static/images/${image.relative_path || image.filename || 'placeholder.jpg'}`;
+                        const fallback = `/static/images/${image.relative_path || image.filename || 'placeholder.jpg'}`;
+                        if (window.APP_RELEASE_VERSION && fallback.startsWith('/static/images/')) {
+                            const sep = fallback.includes('?') ? '&' : '?';
+                            return `${fallback}${sep}v=${encodeURIComponent(window.APP_RELEASE_VERSION)}`;
+                        }
+                        return fallback;
                     }
                 },
 
@@ -2515,6 +2752,139 @@
                         // 使用本地数据作为默认值
                         this.brandLikeStatus.liked = false;
                         this.brandLikeStatus.count = this.selectedBrand?.like_count || 0;
+                    }
+                },
+
+                // ========== 品牌评价 ==========
+
+                /** 从品牌对象解析完整款名 */
+                _brandFullName(brand) {
+                    if (!brand) return '';
+                    return (brand.name || brand.brand_name || '').trim();
+                },
+
+                /** 打开评价弹窗并加载列表 */
+                async openReviewModal(brand) {
+                    const fullName = this._brandFullName(brand);
+                    if (!fullName) {
+                        this.showToast('无法识别该卡片的品牌信息');
+                        return;
+                    }
+                    if (!window.api || typeof window.api.getBrandReviews !== 'function') {
+                        this.showToast('评价功能未就绪，请刷新页面重试');
+                        return;
+                    }
+                    this.reviewBrandName = fullName;
+                    this.reviewFormRating = 0;
+                    this.reviewFormContent = '';
+                    this.reviewList = [];
+                    this.reviewPagination = { page: 1, limit: 10, total: 0, has_more: false };
+                    this.reviewStats = { count: 0, avg_rating: null, rated_count: 0 };
+                    this.showReviewModal = true;
+                    document.body.style.overflow = 'hidden';
+                    await this.fetchBrandReviews(1, false);
+                },
+
+                closeReviewModal() {
+                    this.showReviewModal = false;
+                    document.body.style.overflow = '';
+                },
+
+                async fetchBrandReviews(page, append) {
+                    if (!this.reviewBrandName) return;
+                    if (append) {
+                        this.reviewListLoadingMore = true;
+                    } else {
+                        this.reviewListLoading = true;
+                    }
+                    try {
+                        const res = await window.api.getBrandReviews(
+                            this.reviewBrandName,
+                            page,
+                            this.reviewPagination.limit
+                        );
+                        const payload = res.data || res;
+                        const list = payload.reviews || [];
+                        if (append) {
+                            this.reviewList = this.reviewList.concat(list);
+                        } else {
+                            this.reviewList = list;
+                        }
+                        if (payload.stats) {
+                            this.reviewStats = payload.stats;
+                        }
+                        if (payload.pagination) {
+                            this.reviewPagination = {
+                                ...this.reviewPagination,
+                                ...payload.pagination,
+                                page: page
+                            };
+                        }
+                    } catch (e) {
+                        console.error('加载评价失败', e);
+                        if (!append) {
+                            this.showToast('加载评价失败，请稍后重试');
+                        }
+                    } finally {
+                        this.reviewListLoading = false;
+                        this.reviewListLoadingMore = false;
+                    }
+                },
+
+                async loadMoreBrandReviews() {
+                    if (!this.reviewPagination.has_more || this.reviewListLoadingMore) return;
+                    const next = (this.reviewPagination.page || 1) + 1;
+                    await this.fetchBrandReviews(next, true);
+                },
+
+                async submitBrandReview() {
+                    if (!this.reviewBrandName) return;
+                    const content = (this.reviewFormContent || '').trim();
+                    const rating = this.reviewFormRating || null;
+                    if (!rating && !content) {
+                        this.showToast('请至少选择评分或填写文字');
+                        return;
+                    }
+                    if (!window.api || typeof window.api.submitReview !== 'function') {
+                        this.showToast('评价功能未就绪，请刷新页面重试');
+                        return;
+                    }
+                    this.reviewSubmitting = true;
+                    try {
+                        const res = await window.api.submitReview({
+                            brand_name: this.reviewBrandName,
+                            rating: rating || undefined,
+                            content: content || undefined,
+                            is_anonymous: true
+                        });
+                        if (res.success) {
+                            this.showToast(res.message || '评价提交成功');
+                            this.reviewFormRating = 0;
+                            this.reviewFormContent = '';
+                            await this.fetchBrandReviews(1, false);
+                            this.closeReviewModal();
+                        } else {
+                            this.showToast(res.message || res.error || '提交失败');
+                        }
+                    } catch (e) {
+                        console.error('提交评价失败', e);
+                        this.showToast(e.message || '提交评价失败，请稍后重试');
+                    } finally {
+                        this.reviewSubmitting = false;
+                    }
+                },
+
+                formatReviewTime(iso) {
+                    if (!iso) return '';
+                    try {
+                        const d = new Date(iso);
+                        if (Number.isNaN(d.getTime())) return iso;
+                        const y = d.getFullYear();
+                        const m = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        return `${y}-${m}-${day}`;
+                    } catch (e) {
+                        return iso;
                     }
                 },
 

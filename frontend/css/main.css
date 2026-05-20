@@ -567,8 +567,21 @@ body {
     align-items: flex-start;
     min-height: 60px; /* 确保有足够空间 */
     position: relative;
-    /* 为右下角「试穿+分享」纵向按钮预留空间，避免与标签文字叠在一起 */
-    padding-bottom: 52px;
+    /* 为底部一行「试穿+分享 + 点赞」预留空间 */
+    padding-bottom: 40px;
+}
+
+/* 卡片底部：试穿/分享并排 + 点赞 */
+.brand-card-footer {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 6px;
+    z-index: 2;
 }
 
 /* 产品卡片标签区域 - 支持2排显示 */
@@ -604,9 +617,8 @@ body {
 
 /* 点赞功能 - 点击后显示黄色 */
 .like-display {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
+    position: static;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 0.3rem;
@@ -653,27 +665,27 @@ body {
     color: #dc3545;  /* 悬停时改为红色 */
 }
 
-/* 首页布料卡片底部：试穿 + 分享（纵向排列，与点赞区错开） */
+/* 首页布料卡片底部：试穿 + 分享强制同一行并排 */
 .brand-card-actions {
-    position: absolute;
-    bottom: 8px;
-    right: 86px; /* 给 .like-display 留出空间，避免重叠 */
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 6px;
-    z-index: 2;
+    align-items: stretch;
+    min-width: 0;
+    width: 100%;
 }
 
 /* 试穿功能按钮（首页卡片） */
 .try-on-card-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.25rem;
+    width: 100%;
+    min-width: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 0.18rem 0.45rem;
+    padding: 0.18rem 0.35rem;
     border-radius: 12px;
     font-size: 0.6rem;
     font-weight: 600;
@@ -696,13 +708,15 @@ body {
 
 /* 分享卡片按钮（与详情页「生成布料卡片」同源逻辑，样式与试穿区分） */
 .share-card-btn {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.25rem;
+    width: 100%;
+    min-width: 0;
     background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
     color: white;
-    padding: 0.18rem 0.45rem;
+    padding: 0.18rem 0.35rem;
     border-radius: 12px;
     font-size: 0.6rem;
     font-weight: 600;
@@ -723,6 +737,261 @@ body {
     box-shadow: 0 2px 6px rgba(17, 153, 142, 0.4);
 }
 
+/* 评价按钮（首页卡片，与试穿/分享同排） */
+.review-card-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    width: 100%;
+    min-width: 0;
+    background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+    color: #5c3d00;
+    padding: 0.18rem 0.35rem;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(247, 151, 30, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.review-card-btn i {
+    font-size: 0.55rem;
+}
+
+.review-card-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(247, 151, 30, 0.45);
+}
+
+/* 评价模态框 */
+.review-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+}
+
+.review-modal-content {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.review-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eee;
+    flex-shrink: 0;
+}
+
+.review-modal-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.review-modal-title i {
+    color: #f7971e;
+}
+
+.review-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: #888;
+    cursor: pointer;
+    padding: 4px 8px;
+}
+
+.review-modal-body {
+    padding: 14px 16px 18px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.review-stats-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.review-stats-avg {
+    color: #e6a800;
+    font-weight: 600;
+}
+
+.review-stats-avg i {
+    margin-right: 2px;
+}
+
+.review-form-section {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.review-form-label {
+    margin: 0 0 8px;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.review-star-input {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.review-star-btn {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    color: #ddd;
+    font-size: 1.35rem;
+    line-height: 1;
+}
+
+.review-star-btn.active {
+    color: #ffc107;
+}
+
+.review-clear-rating {
+    margin-left: 8px;
+    font-size: 0.75rem;
+    color: #888;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.review-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.9rem;
+    resize: vertical;
+    min-height: 72px;
+    font-family: inherit;
+}
+
+.review-anon-hint {
+    margin: 8px 0 12px;
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.review-submit-btn {
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+    color: #5c3d00;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.review-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.review-list-title {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: #444;
+}
+
+.review-list-loading,
+.review-list-empty {
+    text-align: center;
+    color: #888;
+    font-size: 0.85rem;
+    padding: 16px 0;
+}
+
+.review-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.review-list-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.review-item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.review-item-user {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.review-item-stars {
+    color: #ffc107;
+    font-size: 0.7rem;
+}
+
+.review-item-content {
+    margin: 6px 0 4px;
+    font-size: 0.88rem;
+    color: #333;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+.review-item-time {
+    font-size: 0.72rem;
+    color: #aaa;
+}
+
+.review-load-more-btn {
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    background: #fafafa;
+    color: #555;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
 /* 移动端优化 - 主流手机适配 */
 @media (max-width: 768px) {
     .meta-tags {
@@ -738,9 +1007,20 @@ body {
         line-height: 1.4;
     }
     
-    .like-display {
-        bottom: 6px;
+    .brand-card-footer {
+        left: 6px;
         right: 6px;
+        bottom: 6px;
+        gap: 5px;
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .brand-card-actions {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 5px;
+    }
+
+    .like-display {
         padding: 0.15rem 0.4rem;
         font-size: 0.55rem;
     }
@@ -749,28 +1029,17 @@ body {
         font-size: 0.55rem;
     }
 
-    /* 给小屏更紧凑的右侧间距，避免与 .like-display 重叠 */
-    .brand-card-actions {
-        bottom: 6px;
-        right: 72px;
+    .try-on-card-btn,
+    .share-card-btn,
+    .review-card-btn {
+        padding: 0.2rem 0.25rem;
+        font-size: 0.52rem;
     }
 
-    .try-on-card-btn {
-        padding: 0.15rem 0.4rem;
-        font-size: 0.55rem;
-    }
-
-    .try-on-card-btn i {
-        font-size: 0.55rem;
-    }
-
-    .share-card-btn {
-        padding: 0.15rem 0.4rem;
-        font-size: 0.55rem;
-    }
-
-    .share-card-btn i {
-        font-size: 0.55rem;
+    .try-on-card-btn i,
+    .share-card-btn i,
+    .review-card-btn i {
+        font-size: 0.52rem;
     }
 }
 
@@ -796,26 +1065,16 @@ body {
         font-size: 0.5rem;
     }
 
-    /* 超小屏进一步缩小，保证视觉紧凑且避免冲突 */
-    .brand-card-actions {
-        right: 60px;
-    }
-
-    .try-on-card-btn {
-        padding: 0.1rem 0.3rem;
+    .try-on-card-btn,
+    .share-card-btn,
+    .review-card-btn {
+        padding: 0.18rem 0.2rem;
         font-size: 0.5rem;
     }
 
-    .try-on-card-btn i {
-        font-size: 0.5rem;
-    }
-
-    .share-card-btn {
-        padding: 0.1rem 0.3rem;
-        font-size: 0.5rem;
-    }
-
-    .share-card-btn i {
+    .try-on-card-btn i,
+    .share-card-btn i,
+    .review-card-btn i {
         font-size: 0.5rem;
     }
 }
@@ -1643,6 +1902,131 @@ body {
     color: #666;
     font-size: 0.9rem;
     margin-top: 0.5rem;
+}
+
+/* 首页列表分页：右下角浮层 */
+.list-pagination-wrap {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    margin: 1.75rem 0 2.5rem;
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+}
+
+.list-pagination {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    padding: 0.45rem 0.6rem;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(102, 126, 234, 0.18);
+    border-radius: 14px;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.12);
+    backdrop-filter: blur(8px);
+}
+
+.page-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.85rem;
+    border: 1px solid #d0d7de;
+    border-radius: 10px;
+    background: #fff;
+    color: #333;
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.page-nav-btn:hover:not(:disabled) {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.page-nav-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.page-numbers {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.page-num-btn {
+    min-width: 2.25rem;
+    height: 2.25rem;
+    padding: 0 0.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: #fff;
+    color: #555;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-num-btn:hover:not(:disabled):not(.active) {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.page-num-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 600;
+}
+
+.page-num-btn.ellipsis {
+    border: none;
+    background: transparent;
+    cursor: default;
+    min-width: auto;
+}
+
+@media (max-width: 768px) {
+    .list-pagination-wrap {
+        justify-content: flex-end;
+        margin: 1.25rem 0 2rem;
+        padding: 0 0.25rem;
+    }
+
+    .list-pagination {
+        gap: 0.35rem;
+        padding: 0.5rem 0.55rem;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .page-nav-btn {
+        min-height: 44px;
+        padding: 0.65rem 1.1rem;
+        font-size: 0.95rem;
+        border-radius: 12px;
+    }
+
+    .page-nav-btn i {
+        font-size: 1rem;
+    }
+
+    .page-num-btn {
+        min-width: 2.35rem;
+        height: 2.35rem;
+        font-size: 0.88rem;
+    }
 }
 
 .loading-more {
