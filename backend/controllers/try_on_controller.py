@@ -139,7 +139,7 @@ class TryOnController:
                 style_key = brand_name
                 
                 if style_key not in styles_map:
-                    # 获取该款式的预览图（优先使用布料图或成衣图）
+                    # 获取该款式的预览图（设计图/概念图按数量择优，见 _get_preview_image_for_brand）
                     preview_image = self._get_preview_image_for_brand(brand_name)
                     
                     styles_map[style_key] = {
@@ -168,6 +168,30 @@ class TryOnController:
                 'error': f'获取款式列表失败: {str(e)}'
             }
     
+    def _resolve_image_type(self, img: Dict) -> str:
+        """
+        解析图片类型（与前端 getCategorizedImages 逻辑一致）。
+        优先使用 image_type 字段，缺失时从文件名推断。
+        """
+        if img.get('image_type'):
+            return img['image_type']
+        filename = img.get('filename') or ''
+        if '-概念图-' in filename or '概念图' in filename:
+            return '概念图'
+        if '-设计图-' in filename or '设计图' in filename:
+            return '设计图'
+        if '-成衣图-' in filename or '成衣图' in filename:
+            return '成衣图'
+        if '-布料图-' in filename or '布料图' in filename:
+            return '布料图'
+        return '其他'
+
+    def _pick_first_by_filename(self, images: List[Dict]) -> Optional[Dict]:
+        """从列表中按文件名排序后取第一张代表图。"""
+        if not images:
+            return None
+        return sorted(images, key=lambda x: x.get('filename') or '')[0]
+
     def _get_preview_image_for_brand(self, brand_name: str) -> Optional[str]:
         """
         获取指定品牌的预览图URL
@@ -185,30 +209,41 @@ class TryOnController:
             if not brand_images:
                 return None
             
-            # 按优先级选择：设计图 -> 布料图 -> 成衣图
-            # 这样可以保证模态框里预览图与实际试穿输入的参考图类型一致。
-            preview_image = next(
-                (img for img in brand_images if img.get('image_type') == '设计图'),
-                None
-            )
-            
-            # 如果没有设计图，使用布料图
+            # 款式卡片预览：在「设计图」与「概念图」中选数量更多的类型；并列时优先设计图
+            design_images = [
+                img for img in brand_images if self._resolve_image_type(img) == '设计图'
+            ]
+            concept_images = [
+                img for img in brand_images if self._resolve_image_type(img) == '概念图'
+            ]
+            design_count = len(design_images)
+            concept_count = len(concept_images)
+
+            preview_image = None
+            if design_count > 0 or concept_count > 0:
+                if design_count > concept_count:
+                    preview_image = self._pick_first_by_filename(design_images)
+                elif concept_count > design_count:
+                    preview_image = self._pick_first_by_filename(concept_images)
+                else:
+                    # 数量相同：优先设计图，若无则概念图
+                    preview_image = self._pick_first_by_filename(
+                        design_images if design_images else concept_images
+                    )
+
+            # 兜底：布料图 -> 成衣图 -> 任意第一张
             if not preview_image:
-                preview_image = next(
-                    (img for img in brand_images if img.get('image_type') == '布料图'),
-                    None
-                )
-            
-            # 如果没有布料图，使用成衣图
+                for fallback_type in ('布料图', '成衣图'):
+                    candidates = [
+                        img for img in brand_images
+                        if self._resolve_image_type(img) == fallback_type
+                    ]
+                    preview_image = self._pick_first_by_filename(candidates)
+                    if preview_image:
+                        break
+
             if not preview_image:
-                preview_image = next(
-                    (img for img in brand_images if img.get('image_type') == '成衣图'),
-                    None
-                )
-            
-            # 如果还没有，使用第一张图片
-            if not preview_image:
-                preview_image = brand_images[0]
+                preview_image = self._pick_first_by_filename(brand_images)
             
             # 返回图片URL
             if preview_image.get('url'):

@@ -52,10 +52,10 @@
     <script src="js/app-version.js"></script>
     
     <!-- 引入样式文件 -->
-    <link rel="stylesheet" href="css/main.css?v=20260520-2-1-2-1">
-    <link rel="stylesheet" href="static/css/responsive.css?v=20260520-2-1-2-1">
-    <link rel="stylesheet" href="css/skeleton.css?v=20260520-2-1-2-1">
-    <link rel="stylesheet" href="css/try-on.css?v=20260520-2-1-2-1">
+    <link rel="stylesheet" href="css/main.css?v=20260521-2-1-4-3-2-1-2-1">
+    <link rel="stylesheet" href="static/css/responsive.css?v=20260521-2-1-4-3-2-1-2-1">
+    <link rel="stylesheet" href="css/skeleton.css?v=20260521-2-1-4-3-2-1-2-1">
+    <link rel="stylesheet" href="css/try-on.css?v=20260521-2-1-4-3-2-1-2-1">
     
     <!-- 引入性能优化配置 -->
     <script src="js/performance-config.js"></script>
@@ -198,8 +198,8 @@
     
     <!-- 引入API客户端 -->
     <!-- 恢复使用正式API文件 -->
-    <script src="js/api.js?v=20260520-2-1-2-1"></script>
-    <script src="js/auth-session.js?v=20260520-2-1-2-1"></script>
+    <script src="js/api.js?v=20260521-2-1-4-3-2-1-2-1"></script>
+    <script src="js/auth-session.js?v=20260521-2-1-4-3-2-1-2-1"></script>
     <script>
         // 确保API已加载并验证方法存在
         (function() {
@@ -650,7 +650,7 @@
                     </div>
 
                     <!-- 设计灵感 -->
-                    <div v-if="selectedBrand.inspiration_origin" class="detail-section">
+                    <div v-if="selectedBrand.inspiration_origin" class="detail-section inspiration-section">
                         <h3 class="section-title">设计灵感</h3>
                         <div class="inspiration-text" v-html="formatMarkdown(selectedBrand.inspiration_origin)"></div>
                     </div>
@@ -673,6 +673,8 @@
                                         :src="getImageURL(image)" 
                                         :alt="image.filename"
                                         class="gallery-image"
+                                        loading="lazy"
+                                        decoding="async"
                                         @error="handleImageError"
                                     >
                                     <div class="image-actions">
@@ -1051,6 +1053,7 @@
                     showModal: false,
                     previewImage: null,
                     preloadTimer: null, // 预加载定时器
+                    detailFetchGeneration: 0, // 详情请求代次，用于忽略过期响应
                     
                     // 首页列表展示分页（每页条数，仅控制 DOM 渲染数量）
                     displayPage: 1,
@@ -1632,59 +1635,97 @@
                     return fallback ? this.getImageURL(fallback) : null;
                 },
 
-                async openBrandDetail(brand) {
-                    if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                        // 移除调试日志
+                /** 过滤并同步详情中的品牌信息与图片列表 */
+                applyBrandDetailData(brandInfo, images) {
+                    const filtered = (images || []).filter(img => img && !this.isGeneratedImageSource(img));
+                    const info = { ...(brandInfo || {}), images: filtered };
+                    this.selectedBrand = info;
+                    this.brandImages = filtered;
+                },
+
+                /** 空闲时预加载详情图，不阻塞弹窗打开 */
+                scheduleDetailImagePreload(images) {
+                    if (!window.imagePreloader || !images || images.length === 0) return;
+                    const urls = images.slice(0, 12).map(img => this.getImageURL(img)).filter(Boolean);
+                    const run = () => {
+                        if (window.imagePreloader.preloadImages) {
+                            window.imagePreloader.preloadImages(urls);
+                        } else {
+                            urls.forEach(url => window.imagePreloader.preloadImage(url));
+                        }
+                    };
+                    if (typeof requestIdleCallback === 'function') {
+                        requestIdleCallback(run, { timeout: 2000 });
+                    } else {
+                        setTimeout(run, 0);
                     }
-                    
-                    // 使用智能缓存管理器获取品牌详情
-                    const brandDetail = await window.cacheManager.getOrFetch(
+                },
+
+                async fetchBrandDetailPayload(brand) {
+                    const brandName = brand.name || brand.brand_name;
+                    return window.cacheManager.getOrFetch(
                         'brand_detail',
                         async () => {
-                            if (PerformanceConfig.performanceMonitoring.verboseLogging) {
-                                // 移除调试日志
-                            }
                             try {
-                                const response = await window.api.getBrandDetail(brand.name);
-                                if (response && response.success && response.images) {
+                                const response = await window.api.getBrandDetail(brandName);
+                                if (response && response.success) {
                                     return {
-                                        brand_info: response.brand_info,
-                                        images: response.images
+                                        brand_info: response.brand_info || brand,
+                                        images: response.images || response.brand_info?.images || []
                                     };
                                 }
                             } catch (error) {
                                 console.warn('API获取品牌详情失败:', error);
                             }
-                            
-                            // 如果API失败，使用本地数据
                             return {
                                 brand_info: brand,
                                 images: brand.images || []
                             };
                         },
-                        brand.name
+                        brandName
                     );
-                    
-                    // 设置品牌详情数据
-                    this.selectedBrand = brandDetail.brand_info;
-                    // 过滤掉 AI 试穿生成目录图片，避免出现在详情/封面里
-                    this.brandImages = (brandDetail.images || []).filter(img => !this.isGeneratedImageSource(img));
-                    
-                    // 预加载品牌详情中的所有图片
-                    if (window.imagePreloader && this.brandImages.length > 0) {
-                        const imageUrls = this.brandImages.map(img => this.getImageURL(img));
-                        window.imagePreloader.preloadImages(imageUrls);
-                    }
-                    
-                    // 获取点赞状态
-                    const brandName = this.selectedBrand.name || this.selectedBrand.brand_name;
-                    if (brandName) {
-                        await this.getLikeStatus(brandName);
-                    }
-                    
-                    // 显示模态框
+                },
+
+                async openBrandDetail(brand) {
+                    const brandName = brand.name || brand.brand_name;
+                    const generation = ++this.detailFetchGeneration;
+
+                    // 乐观 UI：先用列表已有数据立即打开弹窗
+                    this.applyBrandDetailData(brand, brand.images || []);
+                    this.brandLikeStatus.liked = false;
+                    this.brandLikeStatus.count = brand.like_count || 0;
+                    this.brandLikeStatus.loading = false;
                     this.showModal = true;
                     document.body.style.overflow = 'hidden';
+
+                    if (brandName) {
+                        this.getLikeStatus(brandName);
+                    }
+
+                    try {
+                        const brandDetail = await this.fetchBrandDetailPayload(brand);
+                        if (generation !== this.detailFetchGeneration || !this.showModal) return;
+
+                        const mergedInfo = {
+                            ...brand,
+                            ...(brandDetail.brand_info || {}),
+                            name: brandName
+                        };
+                        const apiImages = brandDetail.images || brandDetail.brand_info?.images || [];
+                        const useApiImages = apiImages.length >= (brand.images || []).length;
+                        this.applyBrandDetailData(
+                            mergedInfo,
+                            useApiImages ? apiImages : (brand.images || apiImages)
+                        );
+
+                        if (brandDetail.brand_info?.like_count != null) {
+                            this.brandLikeStatus.count = brandDetail.brand_info.like_count;
+                        }
+
+                        this.scheduleDetailImagePreload(this.brandImages);
+                    } catch (error) {
+                        console.warn('后台加载品牌详情失败，已使用列表数据:', error);
+                    }
                 },
 
                 /**
@@ -1702,31 +1743,26 @@
                             // 预加载品牌详情API
                             const brandName = brand.name || brand.brand_name;
                             
-                            // 如果已经在缓存中，跳过
-                            if (window.cacheManager && window.cacheManager.cache) {
-                                const cacheKey = `brand_detail_${brandName}`;
-                                if (window.cacheManager.cache.has(cacheKey)) {
-                                    return;
-                                }
+                            if (window.cacheManager && window.cacheManager.get('brand_detail', brandName)) {
+                                return;
                             }
                             
-                            // 静默预加载品牌详情
-                            const response = await window.api.getBrandDetail(brandName);
-                            if (response && response.success && response.images) {
-                                // 预加载品牌图片（优先预加载概念图和设计图）
-                                if (window.imagePreloader && response.images.length > 0) {
-                                    const priorityImages = response.images
-                                        .filter(img => img.image_type === '概念图' || img.image_type === '设计图')
-                                        .filter(img => !this.isGeneratedImageSource(img))
-                                        .slice(0, 3); // 只预加载前3张优先级图片
-                                    
-                                    priorityImages.forEach(img => {
-                                        const imageUrl = this.getImageURL(img);
-                                        if (imageUrl) {
-                                            window.imagePreloader.preloadImage(imageUrl);
-                                        }
-                                    });
-                                }
+                            const payload = await this.fetchBrandDetailPayload(brand);
+                            if (payload && window.cacheManager) {
+                                window.cacheManager.set('brand_detail', payload, brandName);
+                            }
+                            const images = payload?.images || [];
+                            if (window.imagePreloader && images.length > 0) {
+                                const priorityImages = images
+                                    .filter(img => img.image_type === '概念图' || img.image_type === '设计图')
+                                    .filter(img => !this.isGeneratedImageSource(img))
+                                    .slice(0, 3);
+                                priorityImages.forEach(img => {
+                                    const imageUrl = this.getImageURL(img);
+                                    if (imageUrl) {
+                                        window.imagePreloader.preloadImage(imageUrl);
+                                    }
+                                });
                             }
                         } catch (error) {
                             // 静默失败，不影响用户体验
@@ -1743,7 +1779,8 @@
                         clearTimeout(this.preloadTimer);
                         this.preloadTimer = null;
                     }
-                    
+                    this.detailFetchGeneration++;
+
                     this.showModal = false;
                     document.body.style.overflow = 'auto';
                     setTimeout(() => {
@@ -1753,13 +1790,16 @@
                 },
 
                 getCategorizedImages() {
-                    if (!this.selectedBrand || !this.selectedBrand.images) {
+                    const sourceImages = (this.brandImages && this.brandImages.length > 0)
+                        ? this.brandImages
+                        : (this.selectedBrand?.images || []);
+                    if (!sourceImages.length) {
                         return {};
                     }
                     
                     const categories = {};
                     
-                    this.selectedBrand.images.forEach(img => {
+                    sourceImages.forEach(img => {
                         // 不展示 AI 试穿生成目录的图片（该目录用于生成结果/内部用途）
                         if (this.isGeneratedImageSource(img)) return;
 

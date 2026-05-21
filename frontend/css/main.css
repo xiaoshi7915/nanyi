@@ -1314,14 +1314,67 @@ body {
     box-shadow: 0 2px 6px rgba(74, 144, 226, 0.3);
 }
 
+/* 设计灵感区块：标题下装饰线与正文粉调排版 */
+.detail-section.inspiration-section .section-title {
+    padding-bottom: 0.35rem;
+}
+
+.detail-section.inspiration-section .section-title::after {
+    content: '';
+    display: block;
+    width: 2.5rem;
+    height: 2px;
+    margin-top: 0.4rem;
+    background: linear-gradient(90deg, #f87171 0%, #fecaca 100%);
+    border-radius: 1px;
+}
+
 .inspiration-text {
-    background: #f9fafb;
-    padding: 1rem;
-    border-radius: 8px;
-    line-height: 1.6;
-    color: #374151;
-    border-left: 4px solid #667eea;
-    font-size: 0.9rem;  /* 调小黄框中设计灵感内容的字体 */
+    position: relative;
+    margin-top: 0.5rem;
+    padding: 1.25rem 1.35rem 1.25rem 1.5rem;
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 1rem;
+    line-height: 1.85;
+    letter-spacing: 0.03em;
+    color: #5c4f4f;
+    background: linear-gradient(135deg, #fffbfb 0%, #fef8f8 55%, #fdf4f4 100%);
+    border-radius: 10px;
+    border: 1px solid rgba(248, 113, 113, 0.12);
+    box-shadow: 0 2px 12px rgba(248, 113, 113, 0.06);
+}
+
+/* 左侧渐变装饰条，呼应站点粉红主色 */
+.inspiration-text::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 1rem;
+    bottom: 1rem;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: linear-gradient(180deg, #f87171 0%, #fecaca 100%);
+}
+
+.inspiration-text p {
+    margin: 0 0 1em;
+    text-align: justify;
+    text-justify: inter-ideograph;
+}
+
+.inspiration-text p:last-child {
+    margin-bottom: 0;
+}
+
+.inspiration-text strong {
+    color: #9d4444;
+    font-weight: 600;
+}
+
+.inspiration-text em {
+    color: #7d5a5a;
+    font-style: normal;
+    border-bottom: 1px dashed rgba(248, 113, 113, 0.35);
 }
 
 /* 颜色分组样式 */
@@ -1704,6 +1757,18 @@ body {
 
     .modal-body {
         padding: 1rem;
+    }
+
+    .inspiration-text {
+        font-size: 0.95rem;
+        line-height: 1.8;
+        padding: 1rem 1rem 1rem 1.15rem;
+        letter-spacing: 0.02em;
+    }
+
+    .inspiration-text::before {
+        top: 0.85rem;
+        bottom: 0.85rem;
     }
 
     .image-gallery {
