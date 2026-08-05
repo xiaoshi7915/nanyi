@@ -10,6 +10,7 @@ from backend.utils.decorators import handle_errors
 from backend.services.cache_service import cache_service
 from backend.utils.response import APIResponse
 from backend.utils.validators import validate_cache_clear_pattern
+from backend.utils.admin_auth import require_admin_api_token
 
 # 创建蓝图 - 添加API版本控制
 # 注意：为了向后兼容，同时支持 /api 和 /api/v1
@@ -27,6 +28,7 @@ def health_check():
 
 
 @api_bp.route('/cache/stats')
+@require_admin_api_token
 @handle_errors
 def get_cache_stats():
     """获取缓存统计信息"""
@@ -38,6 +40,7 @@ def get_cache_stats():
 
 
 @api_bp.route('/cache/clear', methods=['POST'])
+@require_admin_api_token
 @handle_errors
 def clear_cache():
     """清理缓存"""
@@ -53,6 +56,7 @@ def clear_cache():
 
 
 @api_bp.route('/logs/access/stats')
+@require_admin_api_token
 @handle_errors
 def get_access_log_stats():
     """获取访问日志统计"""

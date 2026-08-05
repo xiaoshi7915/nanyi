@@ -5,6 +5,7 @@
 """
 
 import os
+from urllib.parse import quote, unquote
 import re
 from typing import List, Dict, Optional
 
@@ -120,9 +121,9 @@ class ImageService(BaseService):
                         'has_color': parsed_info['has_color'],
                         'size': os.path.getsize(filepath),
                         # 本地图片URL
-                        'url': f"/static/images/{filename}",
-                        'thumbnail': f"/static/images/{filename}",
-                        'original': f"/static/images/{filename}"
+                        'url': self.encode_static_image_url(filename),
+                        'thumbnail': self.encode_static_image_url(filename),
+                        'original': self.encode_static_image_url(filename)
                     })
         
         # 扫描子文件夹中的图片
@@ -144,9 +145,9 @@ class ImageService(BaseService):
                                 'has_color': parsed_info['has_color'],
                                 'size': os.path.getsize(filepath),
                                 # 本地图片URL
-                                'url': f"/static/images/{relative_path}",
-                                'thumbnail': f"/static/images/{relative_path}",
-                                'original': f"/static/images/{relative_path}"
+                                'url': self.encode_static_image_url(relative_path),
+                                'thumbnail': self.encode_static_image_url(relative_path),
+                                'original': self.encode_static_image_url(relative_path)
                             })
         
         self.log_info(f"本地图片扫描完成: 共{len(images)}张图片")
@@ -223,6 +224,26 @@ class ImageService(BaseService):
         
         return sorted(images, key=get_priority)
     
+
+    @staticmethod
+    def encode_static_image_url(relative_path: str) -> str:
+        """将 relative_path 按路径段编码为 /static/images/...（与前端 encodeURIComponent 分段一致）。"""
+        if not relative_path:
+            return '/static/images/'
+        raw = str(relative_path).replace('\\', '/').lstrip('/')
+        # 若已是完整 /static/images/ URL，先取出相对路径再编码，避免双重前缀
+        if raw.startswith('static/images/'):
+            raw = raw[len('static/images/'):]
+        elif raw.startswith('/static/images/'):
+            raw = raw[len('/static/images/'):]
+        segments = []
+        for part in raw.split('/'):
+            if part == '':
+                continue
+            # 先 unquote 再 quote，避免已编码段被二次编码
+            segments.append(quote(unquote(part), safe=''))
+        return '/static/images/' + '/'.join(segments)
+
     def get_image_by_path(self, relative_path: str) -> Optional[str]:
         """根据相对路径获取图片的绝对路径"""
         full_path = os.path.join(self.images_dir, relative_path)
@@ -248,7 +269,7 @@ class ImageService(BaseService):
             if self.get_image_by_path(candidate):
                 fixed = dict(img)
                 fixed['relative_path'] = candidate
-                fixed['url'] = f"/static/images/{candidate}"
+                fixed['url'] = self.encode_static_image_url(candidate)
                 fixed['thumbnail'] = fixed['url']
                 fixed['original'] = fixed['url']
                 return fixed

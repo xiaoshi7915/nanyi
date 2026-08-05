@@ -72,13 +72,34 @@ class TestTryOnAccessToken:
 
 
 class TestCacheClearPattern:
-    """POST /api/cache/clear 的 pattern 校验。"""
+    """POST /api/cache/clear 的鉴权与 pattern 校验。"""
+
+    _admin_headers = {"X-Admin-Token": "test-admin-token"}
+
+    def test_clear_rejects_unauthenticated(self, client):
+        r = client.post(
+            "/api/cache/clear",
+            data=json.dumps({"pattern": "images/brands_"}),
+            content_type="application/json",
+        )
+        assert r.status_code in (401, 503)
+        body = json.loads(r.data)
+        assert body.get("success") is False
+
+    def test_stats_rejects_unauthenticated(self, client):
+        r = client.get("/api/cache/stats")
+        assert r.status_code in (401, 503)
+
+    def test_access_log_stats_rejects_unauthenticated(self, client):
+        r = client.get("/api/logs/access/stats")
+        assert r.status_code in (401, 503)
 
     def test_clear_rejects_oversized_pattern(self, client):
         r = client.post(
             "/api/cache/clear",
             data=json.dumps({"pattern": "a" * 201}),
             content_type="application/json",
+            headers=self._admin_headers,
         )
         assert r.status_code == 400
 
@@ -87,6 +108,7 @@ class TestCacheClearPattern:
             "/api/cache/clear",
             data=json.dumps({"pattern": ".*(a+)+$"}),
             content_type="application/json",
+            headers=self._admin_headers,
         )
         assert r.status_code == 400
 
@@ -96,6 +118,7 @@ class TestCacheClearPattern:
                 "/api/cache/clear",
                 data=json.dumps({"pattern": "images/brands_"}),
                 content_type="application/json",
+                headers=self._admin_headers,
             )
             assert r.status_code == 200
             clear.assert_called_once_with("images/brands_")
@@ -176,3 +199,25 @@ class TestSSEConcurrencySmoke:
                 assert r.status_code == 200, (i, r.status_code)
                 # 消费生成器，避免测试客户端悬挂
                 _ = r.get_data()
+
+
+
+class TestEncodeStaticImageUrl:
+    """后端出站图片 URL 应对路径段做编码（含括号）。"""
+
+    def test_parentheses_encoded(self):
+        from backend.services.image_service import ImageService
+
+        url = ImageService.encode_static_image_url(
+            "牡丹亭(灰紫)/牡丹亭(灰紫)-布料图-01.jpg"
+        )
+        assert url.startswith("/static/images/")
+        assert "(" not in url and ")" not in url
+        assert "%28" in url and "%29" in url
+
+    def test_no_double_encode(self):
+        from backend.services.image_service import ImageService
+
+        once = ImageService.encode_static_image_url("a(b)/c.jpg")
+        twice = ImageService.encode_static_image_url(once.replace("/static/images/", "", 1))
+        assert once == twice

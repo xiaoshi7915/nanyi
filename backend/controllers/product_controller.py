@@ -9,6 +9,7 @@ import re
 from typing import Dict, List, Optional
 from flask import request
 from backend.services.product_service import ProductService
+from backend.services.image_service import ImageService
 from backend.models import db, init_models
 from backend.models.product import Product
 from backend.utils.logger import logger
@@ -299,13 +300,19 @@ class ProductController:
             share_card_order = ['概念图', '设计图', '布料图', '成衣图', '买家秀图', '模特图']
 
             def append_card_image(img: Dict, img_type: str) -> None:
-                img_url = ''
-                if img.get('url'):
-                    img_url = img['url']
-                elif img.get('relative_path'):
-                    img_url = f"/static/images/{img['relative_path']}"
+                # 出站 URL 按路径段编码（括号花色等），与前端 encodeURIComponent 分段一致
+                if img.get('relative_path'):
+                    img_url = ImageService.encode_static_image_url(img['relative_path'])
+                elif img.get('filename'):
+                    img_url = ImageService.encode_static_image_url(img['filename'])
+                elif img.get('url'):
+                    url = str(img['url'])
+                    if url.startswith('/static/images/'):
+                        img_url = ImageService.encode_static_image_url(url[len('/static/images/'):])
+                    else:
+                        img_url = url
                 else:
-                    img_url = f"/static/images/{img.get('filename', 'placeholder.jpg')}"
+                    img_url = ImageService.encode_static_image_url('placeholder.jpg')
                 card_data['images'].append({
                     'image_type': img_type,
                     'url': img_url,

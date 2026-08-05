@@ -11,8 +11,17 @@ if [ ! -f "$APP_VERSION_FILE" ]; then
   exit 1
 fi
 
-sed -i "s/var APP_RELEASE_VERSION = '[^']*'/var APP_RELEASE_VERSION = '${VERSION}'/" "$APP_VERSION_FILE"
-sed -i "s/?v=[0-9][0-9]*/?v=${VERSION}/g" "$INDEX_FILE"
+python3 - "$APP_VERSION_FILE" "$INDEX_FILE" "$VERSION" <<'PY'
+import re, sys
+app_file, index_file, version = sys.argv[1], sys.argv[2], sys.argv[3]
+app = open(app_file, encoding='utf-8').read()
+app = re.sub(r"var APP_RELEASE_VERSION = '[^']*'", f"var APP_RELEASE_VERSION = '{version}'", app)
+open(app_file, 'w', encoding='utf-8').write(app)
+idx = open(index_file, encoding='utf-8').read()
+idx, n = re.subn(r'\?v=[^"\'\s>&]+', f'?v={version}', idx)
+open(index_file, 'w', encoding='utf-8').write(idx)
+print(f'normalized {n} ?v= params')
+PY
 
 echo "已更新发布版本号为: ${VERSION}"
 echo "  - $APP_VERSION_FILE"

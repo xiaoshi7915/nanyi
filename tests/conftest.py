@@ -26,6 +26,7 @@ def app():
     os.environ['DB_PASSWORD'] = 'test'
     os.environ['DB_NAME'] = 'test_db'
     os.environ['CORS_ORIGINS'] = 'http://localhost:8500'
+    os.environ['ADMIN_API_TOKEN'] = 'test-admin-token'
     
     app = create_app('testing')
     app.config['TESTING'] = True
