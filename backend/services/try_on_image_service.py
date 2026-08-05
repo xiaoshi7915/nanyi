@@ -19,7 +19,11 @@ from backend.config.config import Config
 from backend.utils.logger import logger
 from backend.services.try_on_db_service import TryOnDatabaseService
 from backend.services.try_on_storage_service import TryOnStorageService
-from backend.services.try_on_ai_service import TryOnSeedreamModel, GenerateParams
+from backend.services.try_on_ai_service import (
+    TryOnSeedreamModel,
+    TryOnMockAIModel,
+    GenerateParams,
+)
 
 # 导入异常类
 try:
@@ -81,6 +85,7 @@ class Task:
         status: TaskStatus = TaskStatus.PENDING,
         fabric_image_filename: Optional[str] = None,
         access_token: Optional[str] = None,
+        user_id: Optional[int] = None,
     ):
         """
         初始化任务
@@ -91,12 +96,14 @@ class Task:
             status: 任务状态
             fabric_image_filename: 成衣图原始文件名（用于生成结果文件名）
             access_token: 查询状态/SSE 所需的密钥（仅创建任务时下发给客户端）
+            user_id: 登录用户 ID（可选；匿名试衣为空）
         """
         self.task_id = task_id
         self.params = params
         self.status = status
         self.fabric_image_filename = fabric_image_filename  # 保存成衣图原始文件名
         self.access_token = access_token
+        self.user_id = user_id
         self.result_image_url: Optional[str] = None
         self.local_path: Optional[str] = None
         self.error_message: Optional[str] = None
@@ -108,6 +115,7 @@ class Task:
         return {
             "task_id": self.task_id,
             "access_token": self.access_token,
+            "user_id": self.user_id,
             "status": self.status.value,
             "model_type": self.params.model_type,
             "shot_type": self.params.shot_type,
@@ -142,14 +150,13 @@ class TryOnImageService:
         self.config = config
         self.app = app  # 保存 Flask 应用实例，用于在后台线程中创建应用上下文
         
-        # 根据环境变量选择AI模型
-        # 如果设置了 USE_MOCK_AI=true，使用Mock模型（测试模式，不调用真实API）
+        # USE_MOCK_AI=true → TryOnMockAIModel（不调火山引擎；供本地/联调）
+        # 遗留 try_on/.../mock.py 依赖独立 app 包，主站不可直接 import，故用适配版 Mock。
         use_mock = os.getenv("USE_MOCK_AI", "false").lower() == "true"
         
         if use_mock:
-            logger.info("使用Mock AI模型（测试模式，不调用真实API）")
-            # 注意：Mock模型需要单独实现，这里先使用真实模型
-            self.ai_model = TryOnSeedreamModel(config)
+            logger.info("使用 Mock AI 模型（USE_MOCK_AI=true，不调用真实 API）")
+            self.ai_model = TryOnMockAIModel(config)
         else:
             logger.info("使用Seedream AI模型（生产模式）")
             self.ai_model = TryOnSeedreamModel(config)
@@ -203,6 +210,58 @@ class TryOnImageService:
         content = file.read()
         file.seek(0)  # 再次重置，以便后续使用
         return content
+
+    def _persist_user_asset_on_success(self, task: "Task") -> None:
+        """
+        F4：试衣成功且已登录时，将结果元数据写入 user_assets。
+        无完整「我的作品」相册 UI；仅服务端落库，供后续列表接口使用。
+        须在 Flask app_context 内调用。
+        """
+        if not task or not task.user_id or not task.result_image_url:
+            return
+        try:
+            from backend.models import UserAsset, db as _db
+
+            existing = (
+                UserAsset.query.filter_by(
+                    user_id=task.user_id,
+                    task_id=task.task_id,
+                    type="try_on_result",
+                ).first()
+            )
+            if existing:
+                existing.url = task.result_image_url
+                existing.storage_key = task.local_path
+                _db.session.commit()
+                return
+
+            asset = UserAsset(
+                user_id=task.user_id,
+                type="try_on_result",
+                task_id=task.task_id,
+                storage_key=task.local_path,
+                url=task.result_image_url,
+                mime="image/jpeg",
+            )
+            _db.session.add(asset)
+            _db.session.commit()
+            logger.info(
+                "试衣结果已写入 user_assets: user_id=%s task_id=%s",
+                task.user_id,
+                task.task_id,
+            )
+        except Exception as e:
+            try:
+                from backend.models import db as _db
+
+                _db.session.rollback()
+            except Exception:
+                pass
+            logger.warning(
+                "写入 user_assets 失败（不影响试衣主流程）: task_id=%s err=%s",
+                getattr(task, "task_id", None),
+                e,
+            )
     
     def _prepare_generate_params(
         self,
@@ -282,6 +341,7 @@ class TryOnImageService:
         ai_model_id: Optional[str] = None,
         real_person_image: Optional[Any] = None,
         model_provider: str = "seedream",
+        user_id: Optional[int] = None,
         **kwargs
     ) -> Tuple[str, str]:
         """
@@ -323,6 +383,7 @@ class TryOnImageService:
             status=TaskStatus.PENDING,
             fabric_image_filename=fabric_image_filename,
             access_token=access_token,
+            user_id=user_id,
         )
         
         # 保存任务到内存
@@ -618,11 +679,13 @@ class TryOnImageService:
                     if self.app:
                         with self.app.app_context():
                             save_result = self.db_service.save_task(task_dict)
+                            self._persist_user_asset_on_success(task)
                     else:
                         # 如果没有应用实例，尝试从 current_app 获取
                         from flask import has_app_context, current_app
                         if has_app_context():
                             save_result = self.db_service.save_task(task_dict)
+                            self._persist_user_asset_on_success(task)
                         else:
                             logger.error(f"无法获取 Flask 应用上下文，无法保存任务到数据库: task_id={task_id}")
                             save_result = False

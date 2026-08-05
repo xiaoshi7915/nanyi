@@ -68,6 +68,7 @@
     <!-- 引入图片预加载管理器 -->
     <script src="js/image-preloader.js"></script>
     <script src="js/share-card.js"></script>
+    <script src="js/try-on-helpers.js?v=20260805-1"></script>
     
     <!-- 注册Service Worker (PWA) -->
     <script>
@@ -1132,7 +1133,7 @@
                     tryOnResultImageLoaded: false, // 结果图片加载成功
                     tryOnAutoDownloadAfterExit: false, // 退出弹窗后任务完成时自动保存/下载结果
                     tryOnSaveHelperWindow: null, // 退出时由用户手势打开的保存辅助窗口（规避移动端自动下载拦截）
-                    tryOnTaskStorageKey: 'nanyi_try_on_task_state_v2', // 含 access_token，与后端鉴权一致
+                    tryOnTaskStorageKey: (window.NanyiTryOnHelpers && window.NanyiTryOnHelpers.STORAGE_KEY) || 'nanyi_try_on_task_state_v2',
                     tryOnBackgroundMode: false, // 退出后后台执行模式（前台补查但不强制弹窗）
                     tryOnLastVisibilityCheckAt: 0, // visibility 补查节流
                     tryOnTrackingStartedTaskId: null, // 当前任务是否已经建立了状态追踪连接（避免重复 SSE/轮询）
@@ -3363,13 +3364,11 @@
                         return;
                     }
 
-                    // 提取基础品牌名用于筛选款式（去掉颜色/括号后缀）
-                    let baseBrandName = fullBrandName.trim();
-                    if (baseBrandName.includes('(')) {
-                        baseBrandName = baseBrandName.split('(')[0].trim();
-                    } else if (baseBrandName.includes('（')) {
-                        baseBrandName = baseBrandName.split('（')[0].trim();
-                    }
+                    // 提取基础品牌名用于筛选款式（去掉颜色/括号后缀；见 js/try-on-helpers.js）
+                    const H = window.NanyiTryOnHelpers;
+                    const baseBrandName = H
+                        ? H.extractBaseBrandName(fullBrandName)
+                        : fullBrandName.split(/[（(]/)[0].trim();
 
                     // 加载款式列表（只加载当前基础品牌的款式）
                     await this.loadTryOnStyles(baseBrandName);
@@ -3548,11 +3547,14 @@
                     if (!this.tryOnAutoDownloadAfterExit) return;
 
                     // 计算绝对地址（wx 接口通常需要绝对 URL）
-                    const absUrl = url.startsWith('http://') || url.startsWith('https://')
-                        ? url
-                        : `${window.location.origin}${url}`;
+                    const H = window.NanyiTryOnHelpers;
+                    const absUrl = H ? H.toAbsoluteUrl(url) : (
+                        url.startsWith('http://') || url.startsWith('https://')
+                            ? url
+                            : `${window.location.origin}${url}`
+                    );
 
-                    const filename = (url.split('/').pop() || 'tryon.jpg').replace(/\\?.*$/, '');
+                    const filename = H ? H.filenameFromUrl(url) : ((url.split('/').pop() || 'tryon.jpg').replace(/\\?.*$/, ''));
                     const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 
                     const fallbackDownload = () => {
@@ -4248,106 +4250,78 @@
                 },
 
                 /**
-                 * 状态标准化：pending 统一映射为 processing
+                 * 状态标准化：pending 统一映射为 processing（实现见 js/try-on-helpers.js）
                  */
                 normalizeTryOnStatus(status) {
-                    return status === 'pending' ? 'processing' : (status || 'processing');
+                    const H = window.NanyiTryOnHelpers;
+                    return H ? H.normalizeTryOnStatus(status) : (status === 'pending' ? 'processing' : (status || 'processing'));
                 },
 
                 /**
                  * 持久化当前试衣任务状态到 localStorage（便于刷新/重开恢复）
                  */
                 persistTryOnTaskState() {
-                    try {
-                        if (!this.tryOnTaskId) return;
-                        const payload = {
-                            task_id: this.tryOnTaskId,
-                            access_token: this.tryOnAccessToken,
-                            status: this.tryOnStatus,
-                            result_image_url: this.tryOnResultUrl,
-                            error_message: this.tryOnError,
-                            progress: this.tryOnProgress || 0,
-                            updated_at: Date.now()
-                        };
-                        localStorage.setItem(this.tryOnTaskStorageKey, JSON.stringify(payload));
-                    } catch (e) {
-                        // localStorage 异常不阻塞主流程
-                    }
+                    const H = window.NanyiTryOnHelpers;
+                    if (!H || !this.tryOnTaskId) return;
+                    H.persistTaskState({
+                        task_id: this.tryOnTaskId,
+                        access_token: this.tryOnAccessToken,
+                        status: this.tryOnStatus,
+                        result_image_url: this.tryOnResultUrl,
+                        error_message: this.tryOnError,
+                        progress: this.tryOnProgress || 0
+                    }, this.tryOnTaskStorageKey);
                 },
 
                 /**
                  * 清理本地任务状态
                  */
                 clearTryOnTaskState() {
-                    try {
-                        localStorage.removeItem(this.tryOnTaskStorageKey);
-                    } catch (e) {
-                        // ignore
-                    }
+                    const H = window.NanyiTryOnHelpers;
+                    if (H) H.clearTaskState(this.tryOnTaskStorageKey);
                 },
 
                 /**
                  * 若内存中尚无任务 ID，则从 localStorage 拉回进行中的试衣任务（避免退出后从卡片再进被误清空）
                  */
                 hydrateTryOnTaskFromStorageIfNeeded() {
-                    try {
-                        if (this.tryOnTaskId) {
-                            return;
-                        }
-                        const raw = localStorage.getItem(this.tryOnTaskStorageKey);
-                        if (!raw) {
-                            return;
-                        }
-                        const state = JSON.parse(raw);
-                        if (!state || !state.task_id || !state.access_token) {
-                            this.clearTryOnTaskState();
-                            return;
-                        }
-                        const st = this.normalizeTryOnStatus(state.status);
-                        this.tryOnTaskId = state.task_id;
-                        this.tryOnAccessToken = state.access_token;
-                        this.tryOnStatus = st;
-                        this.tryOnProgress = state.progress || 0;
-                        this.tryOnResultUrl = state.result_image_url || null;
-                        this.tryOnError = state.error_message || null;
-                    } catch (e) {
-                        this.clearTryOnTaskState();
-                    }
+                    if (this.tryOnTaskId) return;
+                    const H = window.NanyiTryOnHelpers;
+                    if (!H) return;
+                    const state = H.loadTaskState(this.tryOnTaskStorageKey);
+                    if (!state) return;
+                    this.tryOnTaskId = state.task_id;
+                    this.tryOnAccessToken = state.access_token;
+                    this.tryOnStatus = state.status;
+                    this.tryOnProgress = state.progress || 0;
+                    this.tryOnResultUrl = state.result_image_url || null;
+                    this.tryOnError = state.error_message || null;
                 },
 
                 /**
                  * 页面刷新/重开时恢复任务并继续轮询
                  */
                 restoreTryOnTaskState() {
-                    try {
-                        const raw = localStorage.getItem(this.tryOnTaskStorageKey);
-                        if (!raw) return;
-                        const state = JSON.parse(raw);
-                        if (!state || !state.task_id) return;
+                    const H = window.NanyiTryOnHelpers;
+                    if (!H) return;
+                    const state = H.loadTaskState(this.tryOnTaskStorageKey);
+                    if (!state) return;
 
-                        const restoredStatus = this.normalizeTryOnStatus(state.status);
+                    this.tryOnTaskId = state.task_id;
+                    this.tryOnAccessToken = state.access_token || null;
+                    this.tryOnStatus = state.status;
+                    this.tryOnProgress = state.progress || 0;
+                    this.tryOnResultUrl = state.result_image_url || null;
+                    this.tryOnError = state.error_message || null;
 
-                        this.tryOnTaskId = state.task_id;
-                        this.tryOnAccessToken = state.access_token || null;
-                        this.tryOnStatus = restoredStatus;
-                        this.tryOnProgress = state.progress || 0;
-                        this.tryOnResultUrl = state.result_image_url || null;
-                        this.tryOnError = state.error_message || null;
-
-                        if (!this.tryOnAccessToken) {
-                            this.clearTryOnTaskState();
-                            return;
-                        }
-
-                        // 恢复任务状态时不强制弹窗，避免页面闪烁
-                        // 用户可主动进入试衣弹窗查看进度
-
-                        // 刷新后立即静默补查并继续追踪（仅非终态）
-                        if (restoredStatus !== 'completed' && restoredStatus !== 'failed') {
-                            this.checkTaskResult(true);
-                        }
-                    } catch (e) {
+                    if (!this.tryOnAccessToken) {
                         this.clearTryOnTaskState();
+                        return;
+                    }
+
+                    // 恢复任务状态时不强制弹窗；非终态则静默补查
+                    if (state.status !== 'completed' && state.status !== 'failed') {
+                        this.checkTaskResult(true);
                     }
                 },
 

@@ -38,21 +38,22 @@ class TryOnDatabaseService:
         return nullcontext()
 
     def save_task(self, task_dict: Dict[str, Any]) -> bool:
-        """保存任务到数据库"""
+        """保存任务到数据库（含可选 user_id，供配额统计与相册落库）"""
         ctx = self._app_context_if_needed()
         try:
             with ctx:
                 sql = text("""
                 INSERT INTO tasks (
-                    id, access_token, status, model_type, shot_type, aspect_ratio, style,
+                    id, access_token, user_id, status, model_type, shot_type, aspect_ratio, style,
                     resolution, ai_model_id, prompt, result_image_url, local_path,
                     error_message, created_at, updated_at
                 ) VALUES (
-                    :task_id, :access_token, :status, :model_type, :shot_type, :aspect_ratio, :style,
+                    :task_id, :access_token, :user_id, :status, :model_type, :shot_type, :aspect_ratio, :style,
                     :resolution, :ai_model_id, :prompt, :result_image_url, :local_path,
                     :error_message, :created_at, :updated_at
                 ) ON DUPLICATE KEY UPDATE
                     status = VALUES(status),
+                    user_id = COALESCE(VALUES(user_id), user_id),
                     result_image_url = VALUES(result_image_url),
                     local_path = VALUES(local_path),
                     error_message = VALUES(error_message),
@@ -62,6 +63,7 @@ class TryOnDatabaseService:
                 sql_params = {
                     "task_id": task_dict.get("task_id"),
                     "access_token": task_dict.get("access_token"),
+                    "user_id": task_dict.get("user_id"),
                     "status": task_dict.get("status"),
                     "model_type": task_dict.get("model_type"),
                     "shot_type": task_dict.get("shot_type"),
@@ -194,3 +196,33 @@ class TryOnDatabaseService:
         except Exception as e:
             logger.error(f"从数据库列出任务异常: {str(e)}", exc_info=True)
             return []
+
+    def count_user_tasks_in_month(self, user_id: int, year_month: str) -> int:
+        """
+        统计用户在指定自然月（UTC，格式 YYYY-MM）创建的试衣任务数（含失败）。
+        用于 /api/me try_on_quota.used；无 user_id 的历史任务不计入。
+        """
+        if not user_id or not year_month:
+            return 0
+        ctx = self._app_context_if_needed()
+        try:
+            with ctx:
+                with db.engine.connect() as conn:
+                    sql = text("""
+                    SELECT COUNT(*) AS cnt
+                    FROM tasks
+                    WHERE user_id = :user_id
+                      AND DATE_FORMAT(created_at, '%Y-%m') = :year_month
+                    """)
+                    row = conn.execute(
+                        sql, {"user_id": int(user_id), "year_month": year_month}
+                    ).fetchone()
+                    return int(row[0]) if row else 0
+        except Exception as e:
+            logger.warning(
+                "统计用户试衣配额失败 user_id=%s period=%s: %s",
+                user_id,
+                year_month,
+                e,
+            )
+            return 0

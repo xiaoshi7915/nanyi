@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>南意秋棠 · 管理</title>
+  <style>
+    :root {
+      --bg: #f6f3ee;
+      --ink: #1c1917;
+      --muted: #78716c;
+      --line: #e7e5e4;
+      --accent: #0f766e;
+      --danger: #b91c1c;
+      --card: #fff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Source Han Sans SC", "Noto Sans SC", "PingFang SC", sans-serif;
+      background: linear-gradient(165deg, #efe8df 0%, var(--bg) 40%, #e8eef0 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    main { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+    h1 { font-size: 1.35rem; margin: 0 0 0.25rem; font-weight: 650; }
+    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 1.25rem; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      margin-bottom: 1rem;
+    }
+    section h2 { font-size: 1.05rem; margin: 0 0 0.75rem; }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 0.35rem; }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      max-width: 420px;
+      padding: 0.55rem 0.7rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font: inherit;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.6rem 0; }
+    button {
+      font: inherit;
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 0.9rem;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+    }
+    button.secondary { background: #44403c; }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .msg { font-size: 0.85rem; margin-top: 0.5rem; white-space: pre-wrap; }
+    .msg.err { color: var(--danger); }
+    .msg.ok { color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { border-bottom: 1px solid var(--line); padding: 0.45rem 0.35rem; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    .content-cell { max-width: 280px; word-break: break-word; }
+    .pager { display: flex; gap: 0.5rem; align-items: center; margin-top: 0.75rem; }
+    code { font-size: 0.8em; background: #f5f5f4; padding: 0.1em 0.35em; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>南意秋棠 · 最小管理页</h1>
+    <p class="sub">评价列表（<code>GET /api/admin/reviews</code>）与缓存清理（<code>POST /api/cache/clear</code>）。令牌存 localStorage，勿在公共设备上长期保留。</p>
+
+    <section>
+      <h2>鉴权</h2>
+      <label for="token">ADMIN_API_TOKEN（请求头 X-Admin-Token）</label>
+      <input id="token" type="password" autocomplete="off" placeholder="粘贴管理令牌" />
+      <div class="row">
+        <button type="button" id="btnSaveToken">保存到本机</button>
+        <button type="button" class="secondary" id="btnClearToken">清除</button>
+      </div>
+      <div id="authMsg" class="msg"></div>
+    </section>
+
+    <section>
+      <h2>评价审核列表</h2>
+      <div class="row">
+        <input id="brandFilter" type="text" placeholder="品牌名（可选，模糊）" style="max-width:220px" />
+        <button type="button" id="btnLoadReviews">加载</button>
+      </div>
+      <div id="reviewsMsg" class="msg"></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>品牌</th>
+              <th>评分</th>
+              <th>内容</th>
+              <th>user_id</th>
+              <th>openid</th>
+              <th>时间</th>
+            </tr>
+          </thead>
+          <tbody id="reviewsBody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <button type="button" class="secondary" id="btnPrev">上一页</button>
+        <span id="pageInfo">page 1</span>
+        <button type="button" class="secondary" id="btnNext">下一页</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>清理缓存</h2>
+      <label for="pattern">pattern（安全子集，如 <code>images/brands_</code> 或 <code>.*</code>）</label>
+      <input id="pattern" type="text" value=".*" />
+      <div class="row">
+        <button type="button" id="btnClearCache">执行清理</button>
+      </div>
+      <div id="cacheMsg" class="msg"></div>
+    </section>
+  </main>
+
+  <script>
+(function () {
+  var TOKEN_KEY = 'nanyi_admin_api_token';
+  var page = 1;
+  var hasMore = false;
+
+  function apiBase() {
+    // 同域相对路径；本地直连前端时可改此值
+    return '';
+  }
+
+  function getToken() {
+    return (document.getElementById('token').value || '').trim();
+  }
+
+  function setMsg(id, text, ok) {
+    var el = document.getElementById(id);
+    el.textContent = text || '';
+    el.className = 'msg ' + (ok === true ? 'ok' : ok === false ? 'err' : '');
+  }
+
+  function headers() {
+    var t = getToken();
+    var h = { 'Accept': 'application/json' };
+    if (t) h['X-Admin-Token'] = t;
+    return h;
+  }
+
+  document.getElementById('token').value = localStorage.getItem(TOKEN_KEY) || '';
+
+  document.getElementById('btnSaveToken').onclick = function () {
+    var t = getToken();
+    if (!t) { setMsg('authMsg', '请先填写令牌', false); return; }
+    localStorage.setItem(TOKEN_KEY, t);
+    setMsg('authMsg', '已保存到 localStorage', true);
+  };
+
+  document.getElementById('btnClearToken').onclick = function () {
+    localStorage.removeItem(TOKEN_KEY);
+    document.getElementById('token').value = '';
+    setMsg('authMsg', '已清除', true);
+  };
+
+  function renderReviews(data) {
+    var body = document.getElementById('reviewsBody');
+    body.innerHTML = '';
+    var list = (data && data.reviews) || [];
+    var pag = (data && data.pagination) || {};
+    page = pag.page || page;
+    hasMore = !!pag.has_more;
+    document.getElementById('pageInfo').textContent =
+      'page ' + page + ' / total ' + (pag.total != null ? pag.total : '?');
+
+    if (!list.length) {
+      body.innerHTML = '<tr><td colspan="7">暂无数据</td></tr>';
+      return;
+    }
+    list.forEach(function (r) {
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td>' + (r.id != null ? r.id : '') + '</td>' +
+        '<td>' + escapeHtml(r.brand_name || '') + '</td>' +
+        '<td>' + (r.rating != null ? r.rating : '') + '</td>' +
+        '<td class="content-cell">' + escapeHtml(r.content || '') + '</td>' +
+        '<td>' + (r.user_id != null ? r.user_id : '') + '</td>' +
+        '<td>' + escapeHtml(r.user_openid || '') + '</td>' +
+        '<td>' + escapeHtml(formatTime(r.created_at)) + '</td>';
+      body.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function formatTime(v) {
+    if (!v) return '';
+    if (typeof v === 'string') return v;
+    return String(v);
+  }
+
+  async function loadReviews() {
+    if (!getToken()) {
+      setMsg('reviewsMsg', '请先填写并保存管理令牌', false);
+      return;
+    }
+    setMsg('reviewsMsg', '加载中…');
+    var brand = (document.getElementById('brandFilter').value || '').trim();
+    var qs = '?page=' + page + '&limit=20';
+    if (brand) qs += '&brand_name=' + encodeURIComponent(brand);
+    try {
+      var res = await fetch(apiBase() + '/api/admin/reviews' + qs, { headers: headers() });
+      var json = await res.json();
+      if (!res.ok || json.success === false) {
+        setMsg('reviewsMsg', (json && (json.error || json.message)) || ('HTTP ' + res.status), false);
+        return;
+      }
+      renderReviews(json.data || json);
+      setMsg('reviewsMsg', '加载成功', true);
+    } catch (e) {
+      setMsg('reviewsMsg', String(e.message || e), false);
+    }
+  }
+
+  document.getElementById('btnLoadReviews').onclick = function () {
+    page = 1;
+    loadReviews();
+  };
+  document.getElementById('btnPrev').onclick = function () {
+    if (page > 1) { page -= 1; loadReviews(); }
+  };
+  document.getElementById('btnNext').onclick = function () {
+    if (hasMore) { page += 1; loadReviews(); }
+  };
+
+  document.getElementById('btnClearCache').onclick = async function () {
+    if (!getToken()) {
+      setMsg('cacheMsg', '请先填写并保存管理令牌', false);
+      return;
+    }
+    var pattern = (document.getElementById('pattern').value || '.*').trim();
+    if (!confirm('确认清理缓存 pattern=' + pattern + ' ?')) return;
+    setMsg('cacheMsg', '请求中…');
+    try {
+      var res = await fetch(apiBase() + '/api/cache/clear', {
+        method: 'POST',
+        headers: Object.assign({ 'Content-Type': 'application/json' }, headers()),
+        body: JSON.stringify({ pattern: pattern })
+      });
+      var json = await res.json();
+      if (!res.ok || json.success === false) {
+        setMsg('cacheMsg', (json && (json.error || json.message)) || ('HTTP ' + res.status), false);
+        return;
+      }
+      setMsg('cacheMsg', json.message || '清理成功', true);
+    } catch (e) {
+      setMsg('cacheMsg', String(e.message || e), false);
+    }
+  };
+})();
+  </script>
+</body>
+</html>

@@ -157,6 +157,18 @@ def me():
     period = datetime.utcnow().strftime("%Y-%m")
     monthly_limit = current_app.config.get("TRY_ON_USER_MONTHLY_QUOTA", 30)
 
+    # 按 tasks.user_id + 自然月统计；无 user_id 的历史/匿名任务不计入
+    used = 0
+    try:
+        from backend.services.try_on_db_service import TryOnDatabaseService
+
+        used = TryOnDatabaseService(current_app.config).count_user_tasks_in_month(
+            user.id, period
+        )
+    except Exception as e:
+        logger.warning("统计试衣配额失败 user_id=%s: %s", user.id, e)
+        used = 0
+
     return jsonify(
         {
             "user": user.to_public_dict(),
@@ -167,7 +179,7 @@ def me():
             },
             "try_on_quota": {
                 "monthly_limit": monthly_limit,
-                "used": None,
+                "used": used,
                 "period": period,
             },
         }

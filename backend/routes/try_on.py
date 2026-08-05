@@ -158,11 +158,17 @@ def start_try_on():
         from backend.utils.logger import logger
         logger.info(f"收到试衣任务请求: brand_name={brand_name}, filename={user_image_filename}, size={len(user_image_data)} bytes")
         
+        # 登录用户写入 tasks.user_id（匿名试衣仍允许，配额 used 不计）
+        from backend.routes.auth import get_bearer_user_id
+
+        user_id = get_bearer_user_id()
+
         # 调用控制器处理业务逻辑
         result = try_on_controller.start_try_on_task(
             brand_name=brand_name,
             user_image_file=user_image_data,
-            user_image_filename=user_image_filename
+            user_image_filename=user_image_filename,
+            user_id=user_id,
         )
         
         # 使用APIResponse统一响应格式

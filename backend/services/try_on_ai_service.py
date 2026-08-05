@@ -629,3 +629,84 @@ class TryOnSeedreamModel:
                 "自定义分辨率"
             ]
         }
+
+
+class TryOnMockAIModel:
+    """
+    主站 Mock AI（USE_MOCK_AI=true）。
+    逻辑对齐 backend/try_on/app/services/ai_models/mock.py，但使用本模块
+    GenerateParams / 异常，避免依赖遗留 try_on 包内的 app.* 导入路径。
+    """
+
+    def __init__(self, config: Optional[Config] = None):
+        self.config = config
+        self.mock_delay = float(os.getenv("MOCK_AI_DELAY_SECONDS", "0.5"))
+        logger.info(
+            "TryOnMockAIModel 初始化完成（测试模式，delay=%.2fs）", self.mock_delay
+        )
+
+    async def validate_input(self, params: GenerateParams) -> bool:
+        if not params.fabric_images:
+            raise ValidationError("至少需要提供一张布料/成衣图片")
+        if len(params.fabric_images) > 5:
+            raise ValidationError("最多支持5张布料/成衣图片")
+        if params.model_type == "real" and not params.real_person_image:
+            raise ValidationError("model_type为'real'时，必须提供real_person_image")
+        return True
+
+    async def generate(self, params: GenerateParams) -> bytes:
+        """生成纯色占位图（JPEG），不调用真实 API。"""
+        import asyncio
+
+        try:
+            await self.validate_input(params)
+            if self.mock_delay > 0:
+                await asyncio.sleep(self.mock_delay)
+
+            width, height = 576, 1024
+            if params.aspect_ratio == "16:9":
+                width, height = 1024, 576
+            elif params.aspect_ratio == "1:1":
+                width, height = 768, 768
+            if params.resolution and "x" in params.resolution:
+                try:
+                    parts = params.resolution.lower().split("x")
+                    width, height = int(parts[0]), int(parts[1])
+                except (ValueError, IndexError):
+                    pass
+
+            color = (100, 150, 255) if params.model_type == "ai" else (100, 200, 140)
+            image = Image.new("RGB", (width, height), color=color)
+            try:
+                from PIL import ImageDraw, ImageFont
+
+                draw = ImageDraw.Draw(image)
+                text = f"Mock Try-On\n{params.shot_type}\n{params.aspect_ratio}"
+                font = ImageFont.load_default()
+                draw.multiline_text((24, 24), text, fill=(255, 255, 255), font=font)
+            except Exception:
+                pass
+
+            buf = io.BytesIO()
+            image.save(buf, format="JPEG", quality=85)
+            data = buf.getvalue()
+            logger.info(
+                "Mock 图片生成成功: size=%s bytes, %sx%s", len(data), width, height
+            )
+            return data
+        except ValidationError:
+            raise
+        except Exception as e:
+            logger.error("Mock 图片生成失败: %s", e, exc_info=True)
+            raise AIModelError(f"Mock 图片生成失败: {str(e)}")
+
+    def get_model_info(self) -> Dict[str, Any]:
+        return {
+            "name": "Mock AI Model",
+            "version": "1.0.0",
+            "provider": "mock",
+            "is_mock": True,
+            "supported_model_types": ["ai", "real"],
+            "supported_shot_types": ["full_body", "half_body"],
+            "supported_aspect_ratios": ["9:16", "16:9", "1:1"],
+        }

@@ -263,7 +263,8 @@ class TryOnController:
         self,
         brand_name: str,
         user_image_file: bytes,
-        user_image_filename: str
+        user_image_filename: str,
+        user_id: Optional[int] = None,
     ) -> Dict:
         """
         启动AI试衣任务（使用集成的服务，不再使用 HTTP 调用）
@@ -272,6 +273,7 @@ class TryOnController:
             brand_name: 选定的款式名称（品牌+颜色，如"丹若(玉绿)"）
             user_image_file: 用户上传的照片文件内容（bytes）
             user_image_filename: 用户上传的照片文件名
+            user_id: 登录用户 ID（可选；写入 tasks.user_id 供配额/相册）
         
         Returns:
             dict: 包含task_id和状态信息的字典
@@ -345,7 +347,8 @@ class TryOnController:
                 style='portrait_photography',  # 人像摄影风格
                 real_person_image=user_image_file_obj,  # 用户上传的真人照片
                 prompt=fixed_prompt,  # 图生图固定 prompt（来自环境变量）
-                model_provider='seedream'  # 模型提供商
+                model_provider='seedream',  # 模型提供商
+                user_id=user_id,
             )
             
             logger.info(f"AI试衣任务创建成功: task_id={task_id}")
