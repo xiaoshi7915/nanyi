@@ -160,6 +160,14 @@ sudo systemctl status nanyi-frontend.service
 
 ## 服务管理
 
+运维以 **systemd** 与 `./deploy.sh` 为准（仓库无 `manage.sh`）。
+
+### 发版三步
+
+1. **Bump 版本**：运行 `scripts/bump-release-version.sh`，或手动改 `frontend/js/app-version.js` 的 `APP_RELEASE_VERSION`（并同步静态 `?v=`）。
+2. **重启服务**：`sudo systemctl restart nanyi-backend nanyi-frontend`（必要时 `nginx -s reload`）。
+3. **可选清缓存**（需 `ADMIN_API_TOKEN`）：`curl -X POST -H "X-Admin-Token: $ADMIN_API_TOKEN" http://127.0.0.1:5432/api/cache/clear`（目录改名后建议执行）。
+
 ### Systemd命令
 
 ```bash
@@ -170,7 +178,7 @@ sudo systemctl status nanyi-frontend.service
 # 启动/停止/重启
 sudo systemctl start nanyi-backend.service
 sudo systemctl stop nanyi-backend.service
-sudo systemctl restart nanyi-backend.service
+sudo systemctl restart nanyi-backend nanyi-frontend
 
 # 查看日志
 sudo journalctl -u nanyi-backend.service -f

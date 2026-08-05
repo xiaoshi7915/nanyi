@@ -201,44 +201,14 @@ class BrandController:
             }
             
         except Exception as db_error:
+            # 禁止 DB 失败后写内存计数：会与库内 like_count 分叉
             logger.error(f"数据库点赞失败: {db_error}")
-            # 数据库失败时回退到缓存
-            from backend.services.cache_service import cache_service
-            
-            cache_key = f"like_{unique_id}"
-            cache_count_key = f"like_count_{base_brand_name}"
-            
-            # 检查是否已经点赞过
-            has_liked = bool(cache_service.get(cache_key))
-            
-            if has_liked:
-                # 取消点赞
-                cache_service.delete(cache_key)
-                current_count = cache_service.get(cache_count_key) or 0
-                new_count = max(current_count - 1, 0)
-                cache_service.set(cache_count_key, new_count, ttl=86400*365)
-                
-                # 返回成功字典（路由层会使用APIResponse包装）
-                return {
-                    'success': True,
-                    'message': '取消点赞成功！',
-                    'liked': False,
-                    'like_count': new_count
-                }
-            else:
-                # 点赞
-                cache_service.set(cache_key, True, ttl=86400*30)
-                current_count = cache_service.get(cache_count_key) or 0
-                new_count = current_count + 1
-                cache_service.set(cache_count_key, new_count, ttl=86400*365)
-                
-                # 返回成功字典（路由层会使用APIResponse包装）
-                return {
-                    'success': True,
-                    'message': '点赞成功！',
-                    'liked': True,
-                    'like_count': new_count
-                }
+            return {
+                'success': False,
+                'message': '点赞服务暂时不可用，请稍后重试',
+                'liked': False,
+                'like_count': 0,
+            }
     
     def get_like_status(self, brand_name: str, unique_id: str) -> Dict:
         """

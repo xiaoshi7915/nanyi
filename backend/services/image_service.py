@@ -83,8 +83,8 @@ class ImageService(BaseService):
         self.log_debug("扫描本地图片目录...")
         images = self._scan_local_images()
         
-        # 缓存结果（15分钟）
-        self.set_cache(cache_key, images, ttl=900)
+        # 缓存约 10 分钟；目录改名后请 POST /api/cache/clear（需 admin token）失效
+        self.set_cache(cache_key, images, ttl=600)
         self.log_debug(f"图片数据已缓存: {len(images)}张图片")
         
         return images

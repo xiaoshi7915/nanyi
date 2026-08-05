@@ -5,6 +5,8 @@
 """
 
 import os
+from urllib.parse import quote_plus
+
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -39,7 +41,13 @@ class Config:
         if not self.DB_NAME:
             raise ValueError("DB_NAME环境变量未设置，请在.env文件中配置")
         
-        self.SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?charset=utf8mb4'
+        # 密码与用户名需 quote_plus，避免 @ : / 等特殊字符破坏 URI
+        _user = quote_plus(self.DB_USER)
+        _password = quote_plus(self.DB_PASSWORD)
+        self.SQLALCHEMY_DATABASE_URI = (
+            f'mysql+pymysql://{_user}:{_password}'
+            f'@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?charset=utf8mb4'
+        )
         self.SQLALCHEMY_TRACK_MODIFICATIONS = False
         self.SQLALCHEMY_ENGINE_OPTIONS = {
             'pool_pre_ping': True,

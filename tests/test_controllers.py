@@ -250,6 +250,18 @@ class TestBrandController:
             
             assert result['success'] is False
             assert result['like_count'] == 10
+
+    def test_toggle_like_db_exception_returns_error(self, brand_controller):
+        """DB 异常时不得回退内存计数（避免与库分叉）"""
+        with patch('backend.controllers.brand_controller.BrandLike') as mock_brand_like:
+            mock_brand_like.toggle_like.side_effect = RuntimeError('db down')
+
+            result = brand_controller.toggle_like(
+                '江南春', 'unique_id_123', '127.0.0.1', 'test-agent'
+            )
+
+            assert result['success'] is False
+            assert '不可用' in result['message'] or '失败' in result['message']
     
     def test_get_like_status_success(self, brand_controller):
         """测试成功获取点赞状态"""

@@ -213,17 +213,16 @@ start_services() {
     
     cd $PROJECT_DIR
     
-    # 使用新的启动脚本
-    if [ -f "start_services.sh" ]; then
+    # 生产以 systemd 为准；本地可用 start_services.sh
+    if systemctl list-unit-files nanyi-backend.service &>/dev/null; then
+        systemctl restart nanyi-backend nanyi-frontend
+        log_success "已通过 systemd 重启 nanyi-backend / nanyi-frontend"
+    elif [ -f "start_services.sh" ]; then
         chmod +x start_services.sh
         ./start_services.sh
-        log_success "服务启动完成"
-    elif [ -f "manage.sh" ]; then
-        chmod +x manage.sh
-        ./manage.sh restart
-        log_success "服务启动完成"
+        log_success "服务启动完成（start_services.sh）"
     else
-        log_error "启动脚本不存在"
+        log_error "未找到 systemd 单元或 start_services.sh，请手动: systemctl restart nanyi-backend nanyi-frontend"
         exit 1
     fi
 }
@@ -263,21 +262,20 @@ show_deployment_info() {
     echo "  后端API:  http://localhost:$BACKEND_PORT"
     echo "  健康检查: http://localhost:$BACKEND_PORT/health"
     echo ""
-    echo "服务管理:"
-    echo "  启动服务: ./manage.sh start"
-    echo "  停止服务: ./manage.sh stop"
-    echo "  重启服务: ./manage.sh restart"
-    echo "  查看状态: ./manage.sh status"
+    echo "服务管理（systemd，无 manage.sh）:"
+    echo "  重启: systemctl restart nanyi-backend nanyi-frontend"
+    echo "  状态: systemctl status nanyi-backend nanyi-frontend"
+    echo "  部署: ./deploy.sh"
     echo ""
     echo "日志查看:"
-    echo "  后端日志: tail -f logs/app.log"
-    echo "  前端日志: tail -f logs/frontend.log"
+    echo "  sudo journalctl -u nanyi-backend.service -f"
+    echo "  sudo journalctl -u nanyi-frontend.service -f"
+    echo "  tail -f logs/backend.log logs/frontend.log"
     echo ""
-    echo "前端发版（提示用户自动更新）:"
-    echo "  1. 修改 frontend/js/app-version.js 中的 APP_RELEASE_VERSION（如 20260701-4）"
-    echo "  2. 同步 index.html 里 app-version.js 的 ?v= 参数"
-    echo "  3. 执行: systemctl restart nanyi-frontend.service && nginx -s reload"
-    echo "  4. 用户下次打开页面会自动清缓存并刷新（无需手动操作）"
+    echo "发版三步:"
+    echo "  1. bump APP_RELEASE_VERSION（scripts/bump-release-version.sh 或改 frontend/js/app-version.js）"
+    echo "  2. systemctl restart nanyi-backend nanyi-frontend && nginx -s reload"
+    echo "  3. 可选清缓存: curl -X POST -H \"X-Admin-Token: \$ADMIN_API_TOKEN\" http://127.0.0.1:5432/api/cache/clear"
     echo ""
     log_info "部署完成！请检查上述访问地址确认服务正常运行。"
 }
