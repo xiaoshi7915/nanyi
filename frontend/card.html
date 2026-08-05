@@ -7,7 +7,7 @@
     
     <!-- 微信分享优化 -->
     <meta property="og:title" content="南意秋棠 - 传统美学设计" />
-    <meta property="og:description" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
+    <meta property="og:description" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="" />
     <meta property="og:image" content="https://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
@@ -18,17 +18,17 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="南意秋棠 - 传统美学设计" />
-    <meta name="twitter:description" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
+    <meta name="twitter:description" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
     <meta name="twitter:image" content="https://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     
     <!-- 微信分享专用 -->
     <meta itemprop="name" content="南意秋棠 - 传统美学设计" />
-    <meta itemprop="description" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
+    <meta itemprop="description" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
     <meta itemprop="image" content="https://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     
     <!-- 微信分享配置 -->
     <meta name="wechat:title" content="南意秋棠 - 传统美学设计" />
-    <meta name="wechat:desc" content="传承经典，美美与共 - 古典美学设计，望君着美于裳" />
+    <meta name="wechat:desc" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
     <meta name="wechat:imgUrl" content="https://products.nanyiqiutang.cn/static/images/牡丹亭概念图.jpg" />
     <meta name="wechat:link" content="" />
     
@@ -365,8 +365,10 @@
     
     <!-- 微信JS-SDK -->
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <script src="js/share-card.js"></script>
 </head>
 <body>
+    <div id="wx-share-summary" aria-hidden="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;"></div>
     <div class="share-card" id="shareCard">
         <div class="card-header">
             <div class="watermark">南意秋棠</div>
@@ -447,20 +449,20 @@
     
     <!-- 分享按钮 -->
     <div class="share-actions">
-        <button class="share-btn" onclick="shareToWechat()" title="分享到微信">
-            <i class="fab fa-weixin" style="color: #07c160;"></i>
+        <button class="share-btn" onclick="shareCardPageAction()" title="分享卡片">
+            <i class="fas fa-share-alt" style="color: #07c160;"></i>
         </button>
         <button class="share-btn" onclick="downloadCard()" title="保存图片">
             <i class="fas fa-download" style="color: #667eea;"></i>
         </button>
-        <button class="share-btn" onclick="copyLink()" title="复制链接">
-            <i class="fas fa-link" style="color: #667eea;"></i>
+        <button class="share-btn" onclick="shareToWechat()" title="微信分享">
+            <i class="fab fa-weixin" style="color: #07c160;"></i>
         </button>
     </div>
     
     <!-- 长按提示 -->
     <div class="share-hint" id="shareHint">
-        长按图片保存或分享到朋友圈
+        请点击右上角「…」→「转发给朋友」，勿复制链接粘贴（粘贴只会显示网址）
     </div>
     
     <script>
@@ -551,11 +553,42 @@
             }
         };
 
+        // 读取首页/详情页传入的 session 级 bootstrap 或预取结果（30 秒内有效）
+        function readSessionCardPayload(brandName) {
+            const keys = [
+                'share_card_prefetch_' + brandName,
+                'share_card_bootstrap_' + brandName
+            ];
+            for (let i = 0; i < keys.length; i++) {
+                try {
+                    const raw = sessionStorage.getItem(keys[i]);
+                    if (!raw) continue;
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.value && Date.now() - parsed.timestamp < 30000) {
+                        return parsed.value;
+                    }
+                    sessionStorage.removeItem(keys[i]);
+                } catch (e) { /* ignore */ }
+            }
+            return null;
+        }
+
         // 从API获取品牌数据（优化版）
         function fetchBrandData(brandName) {
-            // 移除调试日志
-            
-            // 先检查缓存
+            // session bootstrap / 预取：秒开卡片骨架
+            const sessionPayload = readSessionCardPayload(brandName);
+            if (sessionPayload) {
+                cardData = { ...cardData, ...sessionPayload };
+                updatePageContent();
+                initializeImages();
+                if (typeof sessionPayload.like_count !== 'undefined') {
+                    document.getElementById('likeCount').textContent = sessionPayload.like_count;
+                }
+                loadLikeStatus();
+                schedulePreloadImages();
+            }
+
+            // 先检查 localStorage 缓存
             const cachedData = cardCache.get(brandName);
             if (cachedData) {
                 // 移除调试日志
@@ -572,11 +605,14 @@
                 // 异步更新点赞状态
                 loadLikeStatus();
                 // 预加载图片
-                preloadImages();
-                return;
+                schedulePreloadImages();
+                // 有 session 数据时仍后台刷新 API，保证选图规则与点赞数最新
+                if (!sessionPayload) {
+                    return;
+                }
             }
             
-            // 缓存未命中，从API加载
+            // 缓存未命中或需后台刷新，从 API 加载
             loadFromAPI(brandName);
         }
         
@@ -650,9 +686,7 @@
                         }
                         
                         loadLikeStatus();
-                        
-                        // 预加载图片
-                        preloadImages();
+                        schedulePreloadImages();
                         
                         // 每30秒刷新一次点赞状态，确保数据实时性
                         setInterval(loadLikeStatus, 30000);
@@ -679,10 +713,19 @@
                 });
         }
         
+        // 空闲时预加载图片，避免阻塞首屏渲染
+        function schedulePreloadImages() {
+            const run = () => preloadImages();
+            if (typeof requestIdleCallback === 'function') {
+                requestIdleCallback(run, { timeout: 2500 });
+            } else {
+                setTimeout(run, 80);
+            }
+        }
+
         // 预加载图片
         function preloadImages() {
             if (cardData.images && cardData.images.length > 0) {
-                // 移除调试日志
                 cardData.images.forEach((image, index) => {
                     let imageUrl = '';
                     if (image.medium_url && image.medium_url.startsWith('http')) {
@@ -746,7 +789,7 @@
         // 初始化图片展示（支持布料图多张）
         function initializeImages() {
             const imagesGrid = document.getElementById('imagesGrid');
-            const imageTypes = ['概念图', '设计图', '布料图', '成衣图', '模特图'];
+            const imageTypes = ['概念图', '设计图', '布料图', '成衣图', '买家秀图', '模特图'];
             
             // 清空现有图片
             imagesGrid.innerHTML = '';
@@ -762,12 +805,10 @@
                 }
             });
             
-            // 按指定顺序显示图片
+            // 按指定顺序显示图片（数量由后端 /api/share/card 已筛选）
             imageTypes.forEach(type => {
                 if (typeImageMap[type] && typeImageMap[type].length > 0) {
-                    // 对于布料图，显示最多2张；其他类型显示1张
-                    const maxImages = type === '布料图' ? 2 : 1;
-                    const imagesToShow = typeImageMap[type].slice(0, maxImages);
+                    const imagesToShow = typeImageMap[type];
                     
                     imagesToShow.forEach((image, index) => {
                         const imageItem = document.createElement('div');
@@ -786,8 +827,7 @@
                             imageUrl = `/static/images/${image.filename || 'placeholder.jpg'}`;
                         }
                         
-                        // 为布料图添加序号
-                        const displayType = type === '布料图' && imagesToShow.length > 1 ? 
+                        const displayType = imagesToShow.length > 1 ?
                             `${type} ${index + 1}` : type;
                         
                         imageItem.innerHTML = `
@@ -838,26 +878,21 @@
             });
         }
         
-        // 分享到微信
+        // 分享到微信 / 系统分享（卡片预览，非裸链接）
         function shareToWechat() {
-            if (/MicroMessenger/i.test(navigator.userAgent)) {
-                // 在微信中，提示用户点击右上角分享
-                showToast('请点击右上角"..."按钮分享');
-            } else {
-                // 尝试使用Web Share API
-                if (navigator.share) {
-                    navigator.share({
-                        title: cardData.brand_name + ' - 南意秋棠',
-                        text: cardData.inspiration_origin,
-                        url: cardData.card_url
-                    }).catch(err => {
-                        console.log('分享失败:', err);
-                        copyLink();
-                    });
-                } else {
-                    copyLink();
-                }
+            shareCardPageAction();
+        }
+
+        function shareCardPageAction() {
+            if (window.ShareCardHelper && typeof window.ShareCardHelper.shareCardPage === 'function') {
+                window.ShareCardHelper.shareCardPage(cardData, showToast);
+                return;
             }
+            if (/MicroMessenger/i.test(navigator.userAgent)) {
+                showToast('请点击右上角「…」分享，对方将看到卡片预览');
+                return;
+            }
+            showToast('请使用浏览器分享功能转发本页');
         }
         
         // 下载卡片（移动端优化版）
@@ -992,30 +1027,7 @@
         
         // 复制链接
         function copyLink() {
-            if (navigator.clipboard) {
-                navigator.clipboard.writeText(cardData.card_url).then(() => {
-                    showToast('链接已复制到剪贴板');
-                }).catch(() => {
-                    fallbackCopyLink();
-                });
-            } else {
-                fallbackCopyLink();
-            }
-        }
-        
-        // 降级复制链接
-        function fallbackCopyLink() {
-            const textArea = document.createElement('textarea');
-            textArea.value = cardData.card_url;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showToast('链接已复制到剪贴板');
-            } catch (err) {
-                showToast('复制失败，请手动复制链接');
-            }
-            document.body.removeChild(textArea);
+            shareCardPageAction();
         }
         
         // 显示提示信息
@@ -1278,7 +1290,7 @@
             
             if (wx.updateTimelineShareData) {
                 wx.updateTimelineShareData({
-                    title: shareData.title,
+                    title: shareData.timelineTitle || shareData.title,
                     link: shareData.link,
                     imgUrl: shareData.imgUrl,
                     success: function() {
@@ -1304,10 +1316,30 @@
             }
         }
         
-        // 获取分享数据
+        const BRAND_SHARE_SLOGAN = '传承经典 美美与共';
+
+        // 获取分享数据（品牌卡片：摘要始终带站点标语）
         function getShareData() {
+            if (window.ShareCardHelper && typeof window.ShareCardHelper.buildSharePreview === 'function') {
+                const preview = window.ShareCardHelper.buildSharePreview(cardData);
+                return {
+                    title: preview.title,
+                    desc: preview.desc,
+                    timelineTitle: preview.timelineTitle || preview.title,
+                    link: preview.link,
+                    imgUrl: preview.imgUrl
+                };
+            }
             const brandName = cardData.brand_name || '南意秋棠布料';
-            const inspiration = cardData.inspiration || cardData.inspiration_origin || '传承经典，美美与共 - 古典美学设计，望君着美于裳';
+            const rawInspiration = cardData.inspiration || cardData.inspiration_origin || '古典美学设计，望君着美于裳';
+            const plain = String(rawInspiration).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+            let body = plain.length > 80 ? plain.substring(0, 80) + '...' : plain;
+            if (!body) {
+                body = '古典美学设计，望君着美于裳';
+            }
+            if (!body.includes(BRAND_SHARE_SLOGAN)) {
+                body = BRAND_SHARE_SLOGAN + ' · ' + body;
+            }
             
             // 获取第一张图片作为分享图片
             // 使用当前协议，避免混合内容问题
@@ -1328,7 +1360,8 @@
             
             return {
                 title: `${brandName} - 南意秋棠`,
-                desc: inspiration.substring(0, 100) + (inspiration.length > 100 ? '...' : ''),
+                desc: body,
+                timelineTitle: `${brandName} - 南意秋棠 · ${BRAND_SHARE_SLOGAN}`,
                 link: window.location.href,
                 imgUrl: shareImage,
                 success: function() {
@@ -1366,7 +1399,12 @@
                 { name: 'wechat:title', content: shareData.title },
                 { name: 'wechat:desc', content: shareData.desc },
                 { name: 'wechat:imgUrl', content: shareData.imgUrl },
-                { name: 'wechat:link', content: shareData.link }
+                { name: 'wechat:link', content: shareData.link },
+                { name: 'weixin:appmsg_title', content: shareData.title },
+                { name: 'weixin:appmsg_desc', content: shareData.desc },
+                { name: 'weixin:timeline_title', content: shareData.timelineTitle || shareData.title },
+                { name: 'weixin:timeline_desc', content: shareData.desc },
+                { name: 'weixin:img_url', content: shareData.imgUrl }
             ];
             
             metaTags.forEach(tag => {

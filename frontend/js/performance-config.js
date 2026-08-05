@@ -276,8 +276,13 @@ class OptimizedCacheManager {
                 priority: 'medium'
             },
             'brand_detail': {
-                ttl: 60 * 1000,               // 1分钟 - 品牌详情
+                ttl: 30 * 60 * 1000,          // 30分钟 - 品牌详情（与后端长缓存对齐）
                 checkUpdate: false,               // 不主动检查更新
+                priority: 'high'
+            },
+            'brand_images': {
+                ttl: 30 * 60 * 1000,          // 30分钟 - 品牌图片轻量接口
+                checkUpdate: false,
                 priority: 'high'
             }
         };
@@ -301,13 +306,33 @@ class OptimizedCacheManager {
     checkAppVersion() {
         const currentVersion = this.getAppVersion();
         const cachedVersion = localStorage.getItem(this.versionKey);
-        
+
         if (cachedVersion && cachedVersion !== currentVersion) {
-            // 移除调试日志
             this.clearAllCache();
+            this._onAppVersionChanged(currentVersion);
+            return;
         }
-        
+
         localStorage.setItem(this.versionKey, currentVersion);
+    }
+
+    /** 发布号变更：清 SW/Cache API 并自动刷新一次，避免旧缓存继续展示错误图片 */
+    _onAppVersionChanged(currentVersion) {
+        localStorage.setItem(this.versionKey, currentVersion);
+        const onceKey = `nanyi_version_reload_${currentVersion}`;
+        if (sessionStorage.getItem(onceKey)) {
+            return;
+        }
+        sessionStorage.setItem(onceKey, '1');
+
+        const finishReload = () => window.location.reload();
+        if (typeof caches !== 'undefined') {
+            caches.keys()
+                .then((names) => Promise.all(names.map((name) => caches.delete(name))))
+                .finally(finishReload);
+            return;
+        }
+        finishReload();
     }
     
     /**

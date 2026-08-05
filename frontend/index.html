@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>南意秋棠 - 传统美学设计</title>
+    <title>南意秋棠 - 传承经典 美美与共</title>
     
     <!-- 微信分享优化 -->
     <meta name="description" content="传承经典 美美与共 - 古典美学设计，望君着美于裳，专业的汉服面料设计与制作">
@@ -13,7 +13,7 @@
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="http://products.nanyiqiutang.cn/" />
-    <meta property="og:title" content="南意秋棠 - 传统美学设计" />
+    <meta property="og:title" content="南意秋棠 - 传承经典 美美与共" />
     <meta property="og:description" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
     <meta property="og:image" content="http://products.nanyiqiutang.cn/static/images/牡丹亭/牡丹亭-概念图-01.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -32,12 +32,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
-    <!-- 微信分享配置 -->
-    <meta name="weixin:timeline_title" content="南意秋棠 - 传统美学设计" />
-    <meta name="weixin:appmsg_title" content="南意秋棠 - 传统美学设计" />
+    <!-- 微信分享配置（静态 HTML 供爬虫抓取，JS 会同步更新） -->
+    <meta itemprop="name" content="南意秋棠 - 传承经典 美美与共" />
+    <meta itemprop="description" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
+    <meta itemprop="image" content="https://products.nanyiqiutang.cn/static/images/牡丹亭/牡丹亭-概念图-01.jpg" />
+    <meta name="wechat:title" content="南意秋棠 - 传承经典 美美与共" />
+    <meta name="wechat:desc" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
+    <meta name="weixin:timeline_title" content="南意秋棠 - 传承经典 美美与共" />
+    <meta name="weixin:appmsg_title" content="南意秋棠 - 传承经典 美美与共" />
     <meta name="weixin:appmsg_desc" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
     <meta name="weixin:timeline_desc" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
-    <meta name="weixin:img_url" content="http://products.nanyiqiutang.cn/static/images/牡丹亭/牡丹亭-概念图-01.jpg" />
+    <meta name="weixin:img_url" content="https://products.nanyiqiutang.cn/static/images/牡丹亭/牡丹亭-概念图-01.jpg" />
     
     <!-- 微信JS-SDK -->
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
@@ -49,19 +54,20 @@
     <link rel="stylesheet" href="static/lib/all.min.css">
     
     <!-- 发布版本号（发布时与 js/app-version.js 同步修改） -->
-    <script src="js/app-version.js"></script>
+    <script src="js/app-version.js?v=20260701-4"></script>
     
     <!-- 引入样式文件 -->
-    <link rel="stylesheet" href="css/main.css?v=20260521-2-1-4-3-2-1-2-1">
-    <link rel="stylesheet" href="static/css/responsive.css?v=20260521-2-1-4-3-2-1-2-1">
-    <link rel="stylesheet" href="css/skeleton.css?v=20260521-2-1-4-3-2-1-2-1">
-    <link rel="stylesheet" href="css/try-on.css?v=20260521-2-1-4-3-2-1-2-1">
+    <link rel="stylesheet" href="css/main.css?v=20260722-icp-beian">
+    <link rel="stylesheet" href="static/css/responsive.css?v=20260524-1-4-3-3-2-1-2-1-12-11-10-9-8-7-6-3-2-1-4-3-2-1-2-1">
+    <link rel="stylesheet" href="css/skeleton.css?v=20260524-1-4-3-3-2-1-2-1-12-11-10-9-8-detail-skel">
+    <link rel="stylesheet" href="css/try-on.css?v=20260524-save-notice-detail-btn">
     
     <!-- 引入性能优化配置 -->
     <script src="js/performance-config.js"></script>
     
     <!-- 引入图片预加载管理器 -->
     <script src="js/image-preloader.js"></script>
+    <script src="js/share-card.js"></script>
     
     <!-- 注册Service Worker (PWA) -->
     <script>
@@ -198,8 +204,8 @@
     
     <!-- 引入API客户端 -->
     <!-- 恢复使用正式API文件 -->
-    <script src="js/api.js?v=20260521-2-1-4-3-2-1-2-1"></script>
-    <script src="js/auth-session.js?v=20260521-2-1-4-3-2-1-2-1"></script>
+    <script src="js/api.js?v=20260524-1-4-3-3-2-1-2-1-12-detail-images-1"></script>
+    <script src="js/auth-session.js?v=20260524-1-4-3-3-2-1-2-1-12-11-10-9-8-7-6-3-2-1-4-3-2-1-2-1"></script>
     <script>
         // 确保API已加载并验证方法存在
         (function() {
@@ -292,6 +298,10 @@
                     <h1 class="hero-title">传承经典 美美与共</h1>
                     <p class="hero-subtitle">古典美学设计，望君着美于裳</p>
                 </div>
+                <!-- 供微信爬虫读取的分享摘要（勿删） -->
+                <div id="wx-share-summary" aria-hidden="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
+                    传承经典 美美与共 · 古典美学设计，望君着美于裳
+                </div>
             </div>
         </section>
 
@@ -305,7 +315,8 @@
                         <input 
                             v-model="searchQuery" 
                             type="text" 
-                            placeholder="搜索品牌名称、布料材质、主题系列、年份..."
+                            placeholder="搜索品牌名称、布料材质和主题系列"
+                            title="搜索品牌名称、布料材质和主题系列"
                             class="search-input"
                             @input="filterBrands"
                         >
@@ -469,8 +480,10 @@
                         v-for="brand in paginatedDisplayBrands" 
                         :key="brand.name"
                         class="brand-card"
+                        :data-brand-name="brand.name"
                         @click="openBrandDetail(brand)"
                         @mouseenter="preloadBrandData(brand)"
+                        @mousedown="preloadBrandData(brand, true)"
                     >
                         <div class="brand-image-container">
                             <img 
@@ -687,6 +700,19 @@
                         </div>
                     </div>
 
+                    <!-- 其余分类加载占位（列表仅封面时立即展示结构） -->
+                    <div
+                        v-if="detailImagesLoading"
+                        v-for="type in getPendingCategorySkeletons()"
+                        :key="'skel-' + type"
+                        class="detail-section detail-section-skeleton"
+                    >
+                        <h3 class="section-title">{{ type }} <span class="detail-loading-hint">加载中…</span></h3>
+                        <div class="skeleton-image-grid modal-category-skeleton-grid">
+                            <div v-for="n in 4" :key="n" class="skeleton skeleton-image-item"></div>
+                        </div>
+                    </div>
+
                     <!-- 生成布料卡片按钮区域 -->
                     <div class="modal-actions">
                         <div class="action-buttons">
@@ -841,6 +867,10 @@
                     <!-- 步骤4: 结果展示 -->
                     <div v-if="tryOnStatus === 'completed' && tryOnResultUrl" class="try-on-step">
                         <h3 class="step-title">试衣效果</h3>
+                        <div class="try-on-save-notice">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <span>试衣结果仅本次可见，请及时保存到相册；关闭弹窗后将无法再次查看。</span>
+                        </div>
                         <div class="result-container">
                             <img 
                                 :src="encodeImageURL(tryOnResultUrl)" 
@@ -864,6 +894,10 @@
                                 打开原图
                             </a>
                             <div class="result-actions">
+                                <button @click="saveTryOnResult" class="result-btn save-btn">
+                                    <i class="fas fa-download"></i>
+                                    保存图片
+                                </button>
                                 <button @click="openTryOnOriginal" class="result-btn share-btn">
                                     <i class="fas fa-external-link-alt"></i>
                                     打开原图
@@ -1054,6 +1088,8 @@
                     previewImage: null,
                     preloadTimer: null, // 预加载定时器
                     detailFetchGeneration: 0, // 详情请求代次，用于忽略过期响应
+                    detailImagesLoading: false, // 详情全量图尚未就绪（列表仅含封面）
+                    _brandDetailInflight: {}, // 品牌详情请求去重
                     
                     // 首页列表展示分页（每页条数，仅控制 DOM 渲染数量）
                     displayPage: 1,
@@ -1140,6 +1176,7 @@
                     }
                     
                     await this.loadData();
+                    this.setupBrandCardViewportPrefetch();
 
                     // 登录态：本地 JWT 静默续期并拉取 /api/me（回访不重复走微信授权）
                     if (window.NanyiAuth && typeof window.NanyiAuth.bootstrap === 'function') {
@@ -1297,6 +1334,7 @@
                             }
                             
                             this.dataLoaded = true;
+                            this.observeNewBrandCards();
                             if (PerformanceConfig.performanceMonitoring.verboseLogging) {
                                 // 移除调试日志
                             }
@@ -1635,6 +1673,101 @@
                     return fallback ? this.getImageURL(fallback) : null;
                 },
 
+                /** 按 filename / relative_path 合并详情图，避免列表封面覆盖 API 全量图 */
+                mergeDetailImages(...imageLists) {
+                    const merged = [];
+                    const seen = new Set();
+                    imageLists.forEach(list => {
+                        (list || []).forEach(img => {
+                            if (!img) return;
+                            const key = img.filename || img.relative_path || img.url || img.medium_url;
+                            if (!key || seen.has(key)) return;
+                            seen.add(key);
+                            merged.push(img);
+                        });
+                    });
+                    return merged;
+                },
+
+                /** 判断详情 payload 是否包含完整图片集（相对列表 imageCount / preview_images） */
+                isCompleteDetailPayload(payload, expectedCount = 0, brand = null) {
+                    const images = payload?.images || payload?.brand_info?.images || [];
+                    if (!images.length) return false;
+                    const expected = Number(expectedCount) || 0;
+                    if (expected > 0 && images.length < expected) return false;
+                    // 列表 preview_images 每类最多一张；缓存张数未超过预览规模时视为未拉全量
+                    const previewLen = (brand?.preview_images || []).length;
+                    if (previewLen > 0 && images.length <= previewLen) {
+                        if (expected > previewLen || expected === 0) return false;
+                    }
+                    return true;
+                },
+
+                /** 统一详情 payload 结构 */
+                normalizeBrandDetailPayload(raw, brand) {
+                    if (!raw) return null;
+                    return {
+                        brand_info: raw.brand_info || brand,
+                        images: raw.images || raw.brand_info?.images || []
+                    };
+                },
+
+                /** 同步读取已缓存的完整品牌详情（悬停预取命中时点击即全量展示） */
+                getCachedBrandDetailPayload(brand) {
+                    const brandName = brand.name || brand.brand_name;
+                    if (!brandName || !window.cacheManager) return null;
+                    let cached = window.cacheManager.get('brand_detail', brandName);
+                    if (!cached) {
+                        const imagesOnly = window.cacheManager.get('brand_images', brandName);
+                        if (imagesOnly && imagesOnly.images) {
+                            cached = { brand_info: brand, images: imagesOnly.images };
+                        }
+                    }
+                    const payload = this.normalizeBrandDetailPayload(cached, brand);
+                    const expectedCount = Number(brand.imageCount) || 0;
+                    if (payload && this.isCompleteDetailPayload(payload, expectedCount, brand)) {
+                        return payload;
+                    }
+                    return null;
+                },
+
+                /** 列表携带的预览图（每分类最多一张） */
+                getBrandPreviewImages(brand) {
+                    if (!brand) return [];
+                    if (brand.preview_images && brand.preview_images.length) {
+                        return brand.preview_images;
+                    }
+                    return brand.images || [];
+                },
+
+                /** 预览图已足够多，可减少「加载中」骨架 */
+                hasSubstantialPreview(brand) {
+                    const previews = this.getBrandPreviewImages(brand);
+                    const expected = Number(brand?.imageCount) || 0;
+                    if (previews.length >= 3) return true;
+                    if (expected > 0 && previews.length >= Math.min(expected, 5)) return true;
+                    return false;
+                },
+
+                /** 列表项是否仍需请求全量图片 */
+                brandNeedsDetailFetch(brand) {
+                    const expected = Number(brand?.imageCount) || 0;
+                    const current = this.getBrandPreviewImages(brand).length;
+                    if (expected > current) return true;
+                    // 列表带 preview_images 时，张数等于预览规模仍可能缺同分类多图
+                    if (brand?.preview_images?.length && expected > 0 && current <= brand.preview_images.length) {
+                        return true;
+                    }
+                    return false;
+                },
+
+                /** 未加载完成的分类占位（除已展示分类外） */
+                getPendingCategorySkeletons() {
+                    const loadedTypes = Object.keys(this.getCategorizedImages());
+                    const order = ['概念图', '设计图', '布料图', '成衣图', '模特图', '买家秀图'];
+                    return order.filter(type => !loadedTypes.includes(type));
+                },
+
                 /** 过滤并同步详情中的品牌信息与图片列表 */
                 applyBrandDetailData(brandInfo, images) {
                     const filtered = (images || []).filter(img => img && !this.isGeneratedImageSource(img));
@@ -1643,19 +1776,31 @@
                     this.brandImages = filtered;
                 },
 
+                /** 预加载详情图 URL（按分类优先级，不阻塞弹窗） */
+                preloadDetailImageUrls(images, limit = 24) {
+                    if (!window.imagePreloader || !images || images.length === 0) return;
+                    const typeOrder = ['概念图', '设计图', '布料图', '成衣图', '模特图', '买家秀图', '其他'];
+                    const safe = images.filter(img => img && !this.isGeneratedImageSource(img));
+                    const sorted = [...safe].sort((a, b) => {
+                        const ai = typeOrder.indexOf(a.image_type || '其他');
+                        const bi = typeOrder.indexOf(b.image_type || '其他');
+                        return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+                    });
+                    const urls = sorted.slice(0, limit).map(img => this.getImageURL(img)).filter(Boolean);
+                    if (urls.length === 0) return;
+                    if (window.imagePreloader.preloadImages) {
+                        window.imagePreloader.preloadImages(urls);
+                    } else {
+                        urls.forEach(url => window.imagePreloader.preloadImage(url));
+                    }
+                },
+
                 /** 空闲时预加载详情图，不阻塞弹窗打开 */
                 scheduleDetailImagePreload(images) {
-                    if (!window.imagePreloader || !images || images.length === 0) return;
-                    const urls = images.slice(0, 12).map(img => this.getImageURL(img)).filter(Boolean);
-                    const run = () => {
-                        if (window.imagePreloader.preloadImages) {
-                            window.imagePreloader.preloadImages(urls);
-                        } else {
-                            urls.forEach(url => window.imagePreloader.preloadImage(url));
-                        }
-                    };
+                    if (!images || images.length === 0) return;
+                    const run = () => this.preloadDetailImageUrls(images, 24);
                     if (typeof requestIdleCallback === 'function') {
-                        requestIdleCallback(run, { timeout: 2000 });
+                        requestIdleCallback(run, { timeout: 1500 });
                     } else {
                         setTimeout(run, 0);
                     }
@@ -1663,35 +1808,104 @@
 
                 async fetchBrandDetailPayload(brand) {
                     const brandName = brand.name || brand.brand_name;
-                    return window.cacheManager.getOrFetch(
-                        'brand_detail',
-                        async () => {
-                            try {
+                    const expectedCount = Number(brand.imageCount) || 0;
+
+                    const cachedPayload = this.getCachedBrandDetailPayload(brand);
+                    if (cachedPayload) {
+                        return cachedPayload;
+                    }
+
+                    if (!this._brandDetailInflight) {
+                        this._brandDetailInflight = {};
+                    }
+                    if (this._brandDetailInflight[brandName]) {
+                        return this._brandDetailInflight[brandName];
+                    }
+
+                    const fetchPromise = (async () => {
+                        try {
+                            // 优先轻量图片接口（跳过 DB/点赞，响应更小更快）
+                            let images = [];
+                            let imageCount = 0;
+                            const imagesResp = await window.api.getBrandImages(brandName);
+                            const imagesData = (imagesResp && imagesResp.data && typeof imagesResp.data === 'object')
+                                ? imagesResp.data
+                                : imagesResp;
+                            if (imagesData && imagesData.success !== false && imagesData.images) {
+                                images = imagesData.images;
+                                imageCount = imagesData.imageCount || images.length;
+                            } else {
                                 const response = await window.api.getBrandDetail(brandName);
-                                if (response && response.success) {
-                                    return {
-                                        brand_info: response.brand_info || brand,
-                                        images: response.images || response.brand_info?.images || []
-                                    };
+                                const detail = (response && response.data && typeof response.data === 'object')
+                                    ? response.data
+                                    : response;
+                                if (detail && detail.success !== false && (detail.images || detail.brand_info)) {
+                                    images = detail.images || detail.brand_info?.images || [];
+                                    imageCount = detail.imageCount || images.length;
                                 }
-                            } catch (error) {
-                                console.warn('API获取品牌详情失败:', error);
                             }
-                            return {
-                                brand_info: brand,
-                                images: brand.images || []
-                            };
-                        },
-                        brandName
-                    );
+
+                            if (images.length) {
+                                const payload = {
+                                    brand_info: brand,
+                                    images,
+                                    imageCount
+                                };
+                                if (window.cacheManager) {
+                                    window.cacheManager.set('brand_detail', payload, brandName);
+                                    window.cacheManager.set('brand_images', { images, imageCount }, brandName);
+                                }
+                                return payload;
+                            }
+                        } catch (error) {
+                            console.warn('API获取品牌图片失败:', error);
+                        }
+
+                        return {
+                            brand_info: brand,
+                            images: []
+                        };
+                    })();
+
+                    this._brandDetailInflight[brandName] = fetchPromise;
+                    try {
+                        return await fetchPromise;
+                    } finally {
+                        delete this._brandDetailInflight[brandName];
+                    }
                 },
 
                 async openBrandDetail(brand) {
                     const brandName = brand.name || brand.brand_name;
                     const generation = ++this.detailFetchGeneration;
+                    const needsFetch = this.brandNeedsDetailFetch(brand);
 
-                    // 乐观 UI：先用列表已有数据立即打开弹窗
-                    this.applyBrandDetailData(brand, brand.images || []);
+                    // 优先使用已缓存的全量详情；否则用 preview_images（每类最多一张）乐观展示
+                    const cachedPayload = this.getCachedBrandDetailPayload(brand);
+                    const expectedImageCount = Number(brand.imageCount) || 0;
+                    const cachedImageCount = cachedPayload?.images?.length || 0;
+                    const stillNeedsFullImages = needsFetch
+                        || !cachedPayload
+                        || (expectedImageCount > 0 && cachedImageCount < expectedImageCount);
+
+                    if (cachedPayload) {
+                        const mergedInfo = {
+                            ...brand,
+                            ...(cachedPayload.brand_info || {}),
+                            name: brandName
+                        };
+                        this.applyBrandDetailData(mergedInfo, cachedPayload.images);
+                        this.detailImagesLoading = stillNeedsFullImages;
+                        this.scheduleDetailImagePreload(cachedPayload.images);
+                    } else {
+                        const optimisticImages = this.getBrandPreviewImages(brand);
+                        this.applyBrandDetailData(brand, optimisticImages);
+                        this.detailImagesLoading = needsFetch && !this.hasSubstantialPreview(brand);
+                        if (optimisticImages.length) {
+                            this.scheduleDetailImagePreload(optimisticImages);
+                        }
+                    }
+
                     this.brandLikeStatus.liked = false;
                     this.brandLikeStatus.count = brand.like_count || 0;
                     this.brandLikeStatus.loading = false;
@@ -1700,6 +1914,11 @@
 
                     if (brandName) {
                         this.getLikeStatus(brandName);
+                    }
+
+                    // 即使命中缓存也后台拉全量图（新上传图、缓存过期场景）
+                    if (!stillNeedsFullImages && cachedPayload) {
+                        return;
                     }
 
                     try {
@@ -1712,11 +1931,16 @@
                             name: brandName
                         };
                         const apiImages = brandDetail.images || brandDetail.brand_info?.images || [];
-                        const useApiImages = apiImages.length >= (brand.images || []).length;
+                        const mergedImages = this.mergeDetailImages(
+                            this.brandImages,
+                            apiImages,
+                            this.getBrandPreviewImages(brand)
+                        );
                         this.applyBrandDetailData(
                             mergedInfo,
-                            useApiImages ? apiImages : (brand.images || apiImages)
+                            mergedImages.length > 0 ? mergedImages : (brand.images || apiImages)
                         );
+                        this.detailImagesLoading = false;
 
                         if (brandDetail.brand_info?.like_count != null) {
                             this.brandLikeStatus.count = brandDetail.brand_info.like_count;
@@ -1724,53 +1948,93 @@
 
                         this.scheduleDetailImagePreload(this.brandImages);
                     } catch (error) {
+                        this.detailImagesLoading = false;
                         console.warn('后台加载品牌详情失败，已使用列表数据:', error);
                     }
                 },
 
                 /**
-                 * 预加载品牌数据（鼠标悬停时）
+                 * 预加载品牌详情（悬停 / 按下卡片时）
                  * @param {Object} brand - 品牌对象
+                 * @param {boolean} immediate - 为 true 时跳过防抖（mousedown）
                  */
-                preloadBrandData(brand) {
-                    // 延迟预加载，避免频繁触发
+                preloadBrandData(brand, immediate = false) {
                     if (this.preloadTimer) {
                         clearTimeout(this.preloadTimer);
+                        this.preloadTimer = null;
                     }
-                    
-                    this.preloadTimer = setTimeout(async () => {
+
+                    const run = async () => {
                         try {
-                            // 预加载品牌详情API
                             const brandName = brand.name || brand.brand_name;
-                            
-                            if (window.cacheManager && window.cacheManager.get('brand_detail', brandName)) {
+                            if (!brandName) return;
+
+                            if (this.getCachedBrandDetailPayload(brand)) {
+                                const cached = window.cacheManager.get('brand_detail', brandName);
+                                const payload = this.normalizeBrandDetailPayload(cached, brand);
+                                this.preloadDetailImageUrls(payload?.images || [], 24);
                                 return;
                             }
-                            
+
                             const payload = await this.fetchBrandDetailPayload(brand);
-                            if (payload && window.cacheManager) {
+                            const expectedCount = Number(brand.imageCount) || 0;
+                            if (payload && window.cacheManager && this.isCompleteDetailPayload(payload, expectedCount, brand)) {
                                 window.cacheManager.set('brand_detail', payload, brandName);
                             }
-                            const images = payload?.images || [];
-                            if (window.imagePreloader && images.length > 0) {
-                                const priorityImages = images
-                                    .filter(img => img.image_type === '概念图' || img.image_type === '设计图')
-                                    .filter(img => !this.isGeneratedImageSource(img))
-                                    .slice(0, 3);
-                                priorityImages.forEach(img => {
-                                    const imageUrl = this.getImageURL(img);
-                                    if (imageUrl) {
-                                        window.imagePreloader.preloadImage(imageUrl);
-                                    }
-                                });
-                            }
+                            this.preloadDetailImageUrls(payload?.images || [], 24);
+                            this.prefetchShareCardInBackground(brandName, this.getShareCardApiUrl(brandName));
                         } catch (error) {
-                            // 静默失败，不影响用户体验
                             if (PerformanceConfig && PerformanceConfig.performanceMonitoring && PerformanceConfig.performanceMonitoring.verboseLogging) {
-                                // 移除调试日志
+                                // 静默失败
                             }
                         }
-                    }, 300); // 300ms延迟，避免鼠标快速移动时频繁请求
+                    };
+
+                    if (immediate) {
+                        run();
+                        return;
+                    }
+
+                    this.preloadTimer = setTimeout(run, 30);
+                },
+
+                /** 视口内卡片预取详情（比悬停更早命中缓存） */
+                setupBrandCardViewportPrefetch() {
+                    if (!('IntersectionObserver' in window)) return;
+                    if (this._brandViewportObserver) {
+                        this._brandViewportObserver.disconnect();
+                    }
+                    this._brandViewportObserver = new IntersectionObserver((entries) => {
+                        entries.forEach((entry) => {
+                            if (!entry.isIntersecting) return;
+                            const brandName = entry.target.dataset.brandName;
+                            if (!brandName) return;
+                            const brand = this.brandData[brandName]
+                                || this.filteredBrands.find(b => b.name === brandName);
+                            if (brand) {
+                                this.preloadBrandData(brand, true);
+                            }
+                            this._brandViewportObserver.unobserve(entry.target);
+                        });
+                    }, { rootMargin: '160px 0px', threshold: 0.01 });
+
+                    this.$nextTick(() => {
+                        document.querySelectorAll('.brand-card[data-brand-name]').forEach((el) => {
+                            this._brandViewportObserver.observe(el);
+                        });
+                    });
+                },
+
+                observeNewBrandCards() {
+                    if (!this._brandViewportObserver) return;
+                    this.$nextTick(() => {
+                        document.querySelectorAll('.brand-card[data-brand-name]').forEach((el) => {
+                            if (!el._viewportPrefetchObserved) {
+                                el._viewportPrefetchObserved = true;
+                                this._brandViewportObserver.observe(el);
+                            }
+                        });
+                    });
                 },
 
                 closeModal() {
@@ -1780,6 +2044,7 @@
                         this.preloadTimer = null;
                     }
                     this.detailFetchGeneration++;
+                    this.detailImagesLoading = false;
 
                     this.showModal = false;
                     document.body.style.overflow = 'auto';
@@ -1790,9 +2055,10 @@
                 },
 
                 getCategorizedImages() {
-                    const sourceImages = (this.brandImages && this.brandImages.length > 0)
-                        ? this.brandImages
-                        : (this.selectedBrand?.images || []);
+                    const sourceImages = this.mergeDetailImages(
+                        this.brandImages,
+                        this.selectedBrand?.images || []
+                    );
                     if (!sourceImages.length) {
                         return {};
                     }
@@ -1891,6 +2157,14 @@
 
                 getImageURL(image) {
                     try {
+                        const encodeStaticPath = (relativePath) => {
+                            if (!relativePath) return '';
+                            return relativePath
+                                .split('/')
+                                .map((part) => encodeURIComponent(decodeURIComponent(part)))
+                                .join('/');
+                        };
+
                         const appendReleaseVersion = (url) => {
                             if (!url || !window.APP_RELEASE_VERSION) return url;
                             if (!url.startsWith('/static/images/')) return url;
@@ -1907,25 +2181,39 @@
                         if (image.url && image.url.startsWith('http')) {
                             return image.url;
                         }
+
+                        if (image.url && image.url.startsWith('/static/images/')) {
+                            const rel = image.url.replace(/^\/static\/images\//, '');
+                            return appendReleaseVersion(`/static/images/${encodeStaticPath(rel)}`);
+                        }
                         
                         // 本地图片路径处理
                         if (image.relative_path) {
-                            // 使用前端静态文件路径，正确编码中文字符
-                            const encodedPath = image.relative_path.split('/').map(part => encodeURIComponent(part)).join('/');
-                            return appendReleaseVersion(`/static/images/${encodedPath}`);
+                            const parts = image.relative_path.split('/');
+                            const folder = parts[0] || '';
+                            const brandFolder = image.brand_name || image.brand || '';
+                            // 旧缓存可能目录名与品牌名不一致（如 斐玉 vs 翡玉），优先用品牌名+文件名
+                            if (brandFolder && image.filename && folder !== brandFolder) {
+                                const corrected = encodeStaticPath(`${brandFolder}/${image.filename}`);
+                                return appendReleaseVersion(`/static/images/${corrected}`);
+                            }
+                            return appendReleaseVersion(`/static/images/${encodeStaticPath(image.relative_path)}`);
+                        }
+                        
+                        if (image.brand_name && image.filename) {
+                            return appendReleaseVersion(
+                                `/static/images/${encodeStaticPath(`${image.brand_name}/${image.filename}`)}`
+                            );
                         }
                         
                         // 最后的降级处理
-                        return appendReleaseVersion(`/static/images/${image.filename || 'placeholder.jpg'}`);
+                        if (image.filename) {
+                            return appendReleaseVersion(`/static/images/${encodeURIComponent(image.filename)}`);
+                        }
+                        return appendReleaseVersion('/static/images/placeholder.svg');
                     } catch (error) {
                         console.warn('图片URL处理失败:', error, image);
-                        // 降级处理：直接使用原始路径
-                        const fallback = `/static/images/${image.relative_path || image.filename || 'placeholder.jpg'}`;
-                        if (window.APP_RELEASE_VERSION && fallback.startsWith('/static/images/')) {
-                            const sep = fallback.includes('?') ? '&' : '?';
-                            return `${fallback}${sep}v=${encodeURIComponent(window.APP_RELEASE_VERSION)}`;
-                        }
-                        return fallback;
+                        return '/static/images/placeholder.svg';
                     }
                 },
 
@@ -2044,81 +2332,46 @@
                 },
 
                 shareCard() {
-                    try {
-                        const brandName = this.selectedBrand.name || this.selectedBrand.brand_name || '未知品牌';
-                        const shareData = {
-                            title: `南意秋棠 - ${brandName}`,
-                            text: `查看这个漂亮的传统美学设计：${brandName}`,
-                            url: window.location.href
-                        };
-
-                        if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-                            navigator.share(shareData).catch(err => {
-                                // 移除调试日志
-                                this.fallbackShare();
-                            });
-                        } else {
-                            this.fallbackShare();
-                        }
-                    } catch (error) {
-                        console.error('分享错误:', error);
-                        this.fallbackShare();
+                    if (!this.selectedBrand) {
+                        this.showToast('请先选择一个品牌');
+                        return;
                     }
+                    this.openShareCardForBrand(this.selectedBrand);
                 },
 
                 fallbackShare() {
-                    if (navigator.clipboard) {
-                        navigator.clipboard.writeText(window.location.href).then(() => {
-                            alert('链接已复制到剪贴板，您可以手动分享');
-                        }).catch(() => {
-                            this.showShareOptions();
-                        });
-                    } else {
-                        this.showShareOptions();
-                    }
+                    if (!this.selectedBrand) return;
+                    this.openShareCardForBrand(this.selectedBrand);
                 },
 
                 showShareOptions() {
-                    const brandName = this.selectedBrand.name || this.selectedBrand.brand_name || '未知品牌';
-                    const message = `南意秋棠 - ${brandName}\n${window.location.href}`;
-                    
-                    // 尝试打开微信分享（仅在微信浏览器中有效）
-                    if (/MicroMessenger/i.test(navigator.userAgent)) {
-                        alert('请点击右上角分享按钮分享到微信');
-                    } else {
-                        // 创建一个临时文本区域来复制文本
-                        const textArea = document.createElement('textarea');
-                        textArea.value = message;
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        try {
-                            document.execCommand('copy');
-                            alert('分享内容已复制，您可以粘贴到微信或其他平台分享');
-                        } catch (err) {
-                            alert(`请手动复制以下内容分享：\n${message}`);
-                        }
-                        document.body.removeChild(textArea);
-                    }
+                    if (!this.selectedBrand) return;
+                    this.openShareCardForBrand(this.selectedBrand);
                 },
 
                 handleImageError(event) {
-                    // 图片加载失败时的处理
                     const img = event.target;
                     console.warn('图片加载失败:', img.src);
-                    
-                    // 尝试重新加载一次（去掉编码）
+
                     if (!img.dataset.retried) {
                         img.dataset.retried = 'true';
-                        const originalSrc = img.src;
-                        // 尝试解码URL再重新加载
                         try {
-                            const decodedSrc = decodeURIComponent(originalSrc);
-                            if (decodedSrc !== originalSrc) {
-                                img.src = decodedSrc;
-                                return;
+                            const parsed = new URL(img.src, window.location.origin);
+                            if (parsed.pathname.startsWith('/static/images/')) {
+                                const rel = decodeURIComponent(parsed.pathname.replace(/^\/static\/images\//, ''));
+                                const reencoded = rel
+                                    .split('/')
+                                    .map((part) => encodeURIComponent(part))
+                                    .join('/');
+                                const fixed = `${parsed.origin}/static/images/${reencoded}${parsed.search}`;
+                                if (fixed !== img.src) {
+                                    img.style.display = '';
+                                    img.src = fixed;
+                                    return;
+                                }
                             }
                         } catch (e) {
-                            // 解码失败，继续原逻辑
+                            // ignore
                         }
                     }
                     
@@ -2557,8 +2810,156 @@
                     this.openShareCardForBrand(this.selectedBrand);
                 },
 
+                /** 分享卡片 API 地址 */
+                getShareCardApiUrl(brandName) {
+                    const currentHost = window.location.hostname;
+                    const protocol = window.location.protocol;
+                    let apiBaseUrl = '';
+                    if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+                        apiBaseUrl = `${protocol}//${currentHost}:5432`;
+                    } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
+                        apiBaseUrl = '';
+                    } else {
+                        apiBaseUrl = `${protocol}//${currentHost}:5432`;
+                    }
+                    return window.api
+                        ? `${window.api.baseURL}/share/card/${encodeURIComponent(brandName)}`
+                        : `${apiBaseUrl}/api/share/card/${encodeURIComponent(brandName)}`;
+                },
+
+                /** 与后端一致的分享卡片选图规则 */
+                resolveShareImageType(img) {
+                    if (img && img.image_type) return img.image_type;
+                    const fn = (img && img.filename) || '';
+                    if (fn.includes('概念图')) return '概念图';
+                    if (fn.includes('设计图')) return '设计图';
+                    if (fn.includes('成衣图')) return '成衣图';
+                    if (fn.includes('布料图')) return '布料图';
+                    if (fn.includes('买家秀')) return '买家秀图';
+                    if (fn.includes('模特图')) return '模特图';
+                    return '其他';
+                },
+
+                extractShareImageColor(img) {
+                    if (img && img.color) return String(img.color).trim();
+                    for (const field of ['filename', 'relative_path', 'brand_name']) {
+                        const text = String((img && img[field]) || '');
+                        const match = text.match(/\(([^)]+)\)/);
+                        if (match) return match[1].trim();
+                    }
+                    return '默认色';
+                },
+
+                shareImageSortKey(img) {
+                    const fn = (img && img.filename) || '';
+                    const match = fn.match(/-(\d+)\./);
+                    return match ? parseInt(match[1], 10) : 0;
+                },
+
+                pickShareCardImagesByType(images, imgType, options = {}) {
+                    const { limit = null, perColorLimit = null } = options;
+                    const matched = (images || [])
+                        .filter((img) => img && this.resolveShareImageType(img) === imgType)
+                        .sort((a, b) => this.shareImageSortKey(a) - this.shareImageSortKey(b));
+
+                    if (perColorLimit != null) {
+                        const byColor = {};
+                        matched.forEach((img) => {
+                            const color = this.extractShareImageColor(img);
+                            if (!byColor[color]) byColor[color] = [];
+                            byColor[color].push(img);
+                        });
+                        const picked = [];
+                        Object.keys(byColor).sort().forEach((color) => {
+                            picked.push(...byColor[color].slice(0, perColorLimit));
+                        });
+                        return picked;
+                    }
+
+                    if (limit != null) return matched.slice(0, limit);
+                    return matched;
+                },
+
+                /** 用列表/详情已有数据组装卡片 bootstrap，供 card.html 秒开 */
+                buildShareCardBootstrapFromBrand(brand) {
+                    const brandName = brand.name || brand.brand_name;
+                    const shareCardOrder = ['概念图', '设计图', '布料图', '成衣图', '买家秀图', '模特图'];
+                    const sourceImages = (brand.images || []).filter((img) => img && !this.isGeneratedImageSource(img));
+                    const images = [];
+
+                    shareCardOrder.forEach((imgType) => {
+                        let selected = [];
+                        if (imgType === '概念图' || imgType === '设计图') {
+                            selected = this.pickShareCardImagesByType(sourceImages, imgType);
+                        } else if (imgType === '布料图' || imgType === '模特图') {
+                            selected = this.pickShareCardImagesByType(sourceImages, imgType, { perColorLimit: 2 });
+                        } else {
+                            selected = this.pickShareCardImagesByType(sourceImages, imgType, { limit: 2 });
+                        }
+
+                        selected.forEach((img) => {
+                            let imgUrl = '';
+                            if (img.url) {
+                                imgUrl = img.url;
+                            } else if (img.relative_path) {
+                                imgUrl = `/static/images/${img.relative_path}`;
+                            } else if (img.filename) {
+                                imgUrl = `/static/images/${img.filename}`;
+                            }
+                            images.push({
+                                image_type: imgType,
+                                url: imgUrl,
+                                relative_path: img.relative_path,
+                                filename: img.filename,
+                                medium_url: img.medium_url
+                            });
+                        });
+                    });
+
+                    return {
+                        brand_name: brandName,
+                        year: brand.year || 2024,
+                        material: brand.material || '棉麻',
+                        theme_series: brand.theme_series || '经典系列',
+                        print_size: brand.print_size || '循环印花料',
+                        inspiration_origin: brand.inspiration_origin
+                            || `${brandName}的设计灵感来源于传统文化与现代美学的融合。`,
+                        images,
+                        like_count: brand.like_count || 0
+                    };
+                },
+
+                writeShareCardSessionBootstrap(brandName, payload) {
+                    try {
+                        sessionStorage.setItem(
+                            'share_card_bootstrap_' + brandName,
+                            JSON.stringify({ value: payload, timestamp: Date.now() })
+                        );
+                    } catch (e) { /* 存储满时忽略 */ }
+                },
+
+                /** 后台预取分享卡片 API，不阻塞打开新页 */
+                prefetchShareCardInBackground(brandName, apiUrl) {
+                    fetch(apiUrl)
+                        .then((response) => {
+                            if (!response.ok) throw new Error('HTTP ' + response.status);
+                            return response.json();
+                        })
+                        .then((data) => {
+                            const cardData = data.data || data.card_data;
+                            if (!data.success || !cardData) return;
+                            try {
+                                sessionStorage.setItem(
+                                    'share_card_prefetch_' + brandName,
+                                    JSON.stringify({ value: cardData, timestamp: Date.now() })
+                                );
+                            } catch (e) { /* ignore */ }
+                        })
+                        .catch(() => {});
+                },
+
                 /**
-                 * 为指定品牌生成分享卡片数据并打开 card.html（与详情页 generateShareCard 完全相同流程）
+                 * 为指定品牌打开 card.html：先写 session bootstrap 并立即开窗，API 后台刷新
                  * @param {object} brand - 列表项品牌对象，需含 name 或 brand_name
                  */
                 openShareCardForBrand(brand) {
@@ -2572,50 +2973,22 @@
                         return;
                     }
 
-                    this.showToast('正在生成卡片...');
-
-                    const currentHost = window.location.hostname;
-                    const protocol = window.location.protocol;
-                    let apiBaseUrl = '';
-
-                    if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-                        apiBaseUrl = `${protocol}//${currentHost}:5432`;
-                    } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
-                        apiBaseUrl = '';
-                    } else {
-                        apiBaseUrl = `${protocol}//${currentHost}:5432`;
+                    const bootstrap = this.buildShareCardBootstrapFromBrand(brand);
+                    const helper = window.ShareCardHelper;
+                    if (!helper || typeof helper.shareBrandCard !== 'function') {
+                        this.writeShareCardSessionBootstrap(brandName, bootstrap);
+                        window.open(`card.html?brand=${encodeURIComponent(brandName)}`, '_blank');
+                        return;
                     }
 
-                    const apiUrl = window.api
-                        ? `${window.api.baseURL}/share/card/${encodeURIComponent(brandName)}`
-                        : `${apiBaseUrl}/api/share/card/${encodeURIComponent(brandName)}`;
-
-                    fetch(apiUrl)
-                        .then((response) => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                            }
-                            return response.json();
-                        })
-                        .then((data) => {
-                            if (data.success) {
-                                const cardUrl = `card.html?brand=${encodeURIComponent(brandName)}`;
-                                window.open(cardUrl, '_blank');
-                                this.showToast('卡片生成成功！');
-                            } else {
-                                this.showToast('生成卡片失败: ' + (data.error || '未知错误'));
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('生成卡片失败:', error);
-                            if (error.message.includes('Failed to fetch')) {
-                                this.showToast('网络连接失败，请检查网络后重试');
-                            } else if (error.message.includes('HTTP')) {
-                                this.showToast('服务器错误: ' + error.message);
-                            } else {
-                                this.showToast('生成卡片失败，请稍后重试');
-                            }
-                        });
+                    helper.shareBrandCard(brand, {
+                        cardData: bootstrap,
+                        showToast: (msg) => this.showToast(msg),
+                        beforeShare: (name) => {
+                            this.writeShareCardSessionBootstrap(name, bootstrap);
+                            this.prefetchShareCardInBackground(name, this.getShareCardApiUrl(name));
+                        }
+                    });
                 },
 
                 showToast(message, duration = 2000) {
@@ -3111,6 +3484,10 @@
                     if (this.tryOnTaskId && this.tryOnStatus !== 'completed' && this.tryOnStatus !== 'failed') {
                         this.exitTryOnModalAndContinue();
                         return;
+                    }
+
+                    if (this.tryOnStatus === 'completed' && this.tryOnResultUrl) {
+                        this.showToast('试衣结果关闭后将无法再次查看，请确认已保存到相册');
                     }
 
                     this.showTryOnModal = false;
@@ -4218,11 +4595,21 @@
                                 return;
                             }
 
-                            // 若不支持文件分享，尝试直接分享链接
+                            // 若不支持文件分享，改为分享品牌卡片页（链接卡片预览）
+                            if (this.selectedStyle && this.selectedStyle.brand_name && window.ShareCardHelper) {
+                                await window.ShareCardHelper.shareBrandCard(
+                                    { name: this.selectedStyle.brand_name },
+                                    { showToast: (msg) => this.showToast(msg) }
+                                );
+                                return;
+                            }
+
                             await navigator.share({
                                 title: `AI试衣效果 - ${safeBrandName}`,
                                 text: `看看我的AI试衣效果：${safeBrandName}`,
-                                url: this.encodeImageURL(this.tryOnResultUrl)
+                                url: window.ShareCardHelper
+                                    ? window.ShareCardHelper.getShareCardPageUrl(safeBrandName)
+                                    : window.location.href
                             });
                             this.showToast('分享成功');
                             return;
@@ -4246,35 +4633,30 @@
                         }
 
                         // 最终降级方案：显示分享选项
-                        this.showShareOptions();
+                        this.showTryOnShareFallback();
                     } catch (error) {
                         console.error('分享失败:', error);
                         if (error.name !== 'AbortError') {
                             // 用户取消分享不显示错误
-                            this.showShareOptions();
+                            this.showTryOnShareFallback();
                         }
                     }
                 },
 
                 /**
-                 * 显示分享选项（降级方案）
+                 * 试衣结果分享降级：优先分享品牌卡片，否则保存图片
                  */
-                showShareOptions() {
-                    const safeBrandName = (this.selectedStyle && this.selectedStyle.brand_name) ? this.selectedStyle.brand_name : '试衣效果';
-                    const shareText = `AI试衣效果 - ${safeBrandName}\n${window.location.href}`;
-                    
-                    // 尝试复制链接到剪贴板
-                    if (navigator.clipboard && window.isSecureContext) {
-                        navigator.clipboard.writeText(shareText).then(() => {
-                            this.showToast('链接已复制到剪贴板，可以分享给好友');
-                        }).catch(() => {
-                            // 如果复制失败，显示提示
-                            alert(`分享链接：\n${shareText}\n\n请手动复制链接分享`);
-                        });
-                    } else {
-                        // 降级方案：显示提示框
-                        alert(`分享链接：\n${shareText}\n\n请手动复制链接分享`);
+                showTryOnShareFallback() {
+                    const safeBrandName = (this.selectedStyle && this.selectedStyle.brand_name) ? this.selectedStyle.brand_name : '';
+                    if (safeBrandName && window.ShareCardHelper) {
+                        window.ShareCardHelper.shareBrandCard(
+                            { name: safeBrandName },
+                            { showToast: (msg) => this.showToast(msg) }
+                        );
+                        return;
                     }
+                    this.saveTryOnResult();
+                    this.showToast('请保存图片后发送给好友');
                 },
 
                 /**
@@ -4537,15 +4919,24 @@
             return /micromessenger/i.test(navigator.userAgent);
         }
         
+        const SITE_SHARE_SLOGAN = '传承经典 美美与共';
+        const SITE_SHARE_DESC = SITE_SHARE_SLOGAN + ' - 古典美学设计，望君着美于裳';
+
         // 微信分享配置
         function setupWeChatShare() {
-            // 设置分享内容
+            const origin = window.location.origin;
+            const shareImage = origin + '/static/images/牡丹亭/牡丹亭-概念图-01.jpg';
             const shareConfig = {
-                title: '南意秋棠 - 传统美学设计',
-                desc: '传承经典 美美与共 - 古典美学设计，望君着美于裳',
-                link: window.location.href.split('?')[0], // 移除查询参数
-                                        imgUrl: window.location.origin + '/static/images/牡丹亭/牡丹亭-概念图-01.jpg'
+                title: '南意秋棠 - ' + SITE_SHARE_SLOGAN,
+                desc: SITE_SHARE_DESC,
+                link: window.location.href.split('#')[0].split('?')[0],
+                imgUrl: shareImage
             };
+
+            const wxSummary = document.getElementById('wx-share-summary');
+            if (wxSummary) {
+                wxSummary.textContent = SITE_SHARE_DESC;
+            }
             
             // 确保页面title正确
             document.title = shareConfig.title;
@@ -4556,6 +4947,8 @@
             updateMetaTag('og:url', shareConfig.link);
             updateMetaTag('og:image', shareConfig.imgUrl);
             updateMetaTag('description', shareConfig.desc);
+            updateMetaTag('wechat:title', shareConfig.title);
+            updateMetaTag('wechat:desc', shareConfig.desc);
             
             // 如果在微信浏览器中且有微信JS-SDK
             if (isWeChatBrowser() && typeof wx !== 'undefined') {
@@ -4590,7 +4983,7 @@
                         }
                     });
                     
-                    // 分享到朋友圈
+                    // 分享到朋友圈（无 desc 字段，标题需包含标语）
                     wx.updateTimelineShareData({
                         title: shareConfig.title,
                         link: shareConfig.link,
@@ -4627,6 +5020,11 @@
             addMetaTag('description', shareConfig.desc);
             
             // 微信专用标签
+            addMetaTag('wechat:title', shareConfig.title);
+            addMetaTag('wechat:desc', shareConfig.desc);
+            addMetaTag('itemprop:name', shareConfig.title);
+            addMetaTag('itemprop:description', shareConfig.desc);
+            addMetaTag('itemprop:image', shareConfig.imgUrl);
             addMetaTag('weixin:timeline_title', shareConfig.title);
             addMetaTag('weixin:appmsg_title', shareConfig.title);
             addMetaTag('weixin:appmsg_desc', shareConfig.desc);
@@ -4634,30 +5032,32 @@
             addMetaTag('weixin:img_url', shareConfig.imgUrl);
         }
         
-        // 更新已存在的meta标签
-        function updateMetaTag(property, content) {
-            let meta = document.querySelector(`meta[property="${property}"], meta[name="${property}"]`);
+        // 更新已存在的 meta 标签（支持 property / name / itemprop）
+        function updateMetaTag(key, content) {
+            let meta = document.querySelector(
+                `meta[property="${key}"], meta[name="${key}"], meta[itemprop="${key}"]`
+            );
             if (meta) {
                 meta.setAttribute('content', content);
             }
         }
-        
-        // 添加新的meta标签
+
+        // 添加新的 meta 标签
         function addMetaTag(name, content) {
-            // 先尝试更新已存在的
             updateMetaTag(name, content);
-            
-            // 如果不存在，则创建新的
-            if (!document.querySelector(`meta[property="${name}"], meta[name="${name}"]`)) {
-                const meta = document.createElement('meta');
-                if (name.startsWith('og:') || name.startsWith('twitter:')) {
-                    meta.setAttribute('property', name);
-                } else {
-                    meta.setAttribute('name', name);
-                }
-                meta.setAttribute('content', content);
-                document.head.appendChild(meta);
+            if (document.querySelector(`meta[property="${name}"], meta[name="${name}"], meta[itemprop="${name}"]`)) {
+                return;
             }
+            const meta = document.createElement('meta');
+            if (name.startsWith('og:') || name.startsWith('twitter:')) {
+                meta.setAttribute('property', name);
+            } else if (name.startsWith('itemprop:')) {
+                meta.setAttribute('itemprop', name.slice('itemprop:'.length));
+            } else {
+                meta.setAttribute('name', name);
+            }
+            meta.setAttribute('content', content);
+            document.head.appendChild(meta);
         }
         
         // 页面加载完成后设置分享
@@ -4699,10 +5099,14 @@
     <footer class="simple-footer">
         <div class="container">
             <div class="footer-copyright">
-                <p>备案号：浙ICP备2024081979号 | 版权所有，nanyiqiutang.cn南意秋棠</p>
+                <p>
+                    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="icp-beian-link">浙ICP备2024081979号</a>
+                    <span class="footer-sep">|</span>
+                    版权所有，nanyiqiutang.cn 南意秋棠
+                </p>
             </div>
         </div>
     </footer>
 
 </body>
-</html> 
+</html>

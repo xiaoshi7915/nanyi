@@ -5,7 +5,7 @@
 处理品牌相关的业务逻辑
 """
 
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 from urllib.parse import unquote
 from backend.services.product_service import ProductService
 from backend.models.brand_like import BrandLike
@@ -18,6 +18,23 @@ class BrandController:
     def __init__(self):
         """初始化品牌控制器"""
         self.product_service = ProductService()
+
+    @staticmethod
+    def _brand_images_cache_valid(images: List[Dict]) -> bool:
+        """校验缓存图片路径在磁盘上存在，避免目录改名后返回 404 路径"""
+        if not images:
+            return False
+        from backend.services.image_service import ImageService
+        image_service = ImageService()
+        for img in images:
+            relative_path = img.get('relative_path') or ''
+            if not relative_path:
+                return False
+            if not image_service.get_image_by_path(relative_path):
+                fixed = image_service._ensure_valid_image_paths(img)
+                if not image_service.get_image_by_path(fixed.get('relative_path') or ''):
+                    return False
+        return True
     
     def get_brand_detail(self, brand_name: str) -> Dict:
         """
@@ -38,8 +55,12 @@ class BrandController:
         # 尝试从缓存获取
         cached_result = cache_service.get(cache_key)
         if cached_result:
-            logger.debug(f"从缓存获取品牌详情: {brand_name}")
-            return cached_result
+            cached_images = cached_result.get('images') or cached_result.get('brand_info', {}).get('images') or []
+            if self._brand_images_cache_valid(cached_images):
+                logger.debug(f"从缓存获取品牌详情: {brand_name}")
+                return cached_result
+            logger.info(f"品牌详情缓存路径失效，重新加载: {brand_name}")
+            cache_service.delete(cache_key)
         
         # URL解码品牌名
         decoded_brand_name = unquote(brand_name)
@@ -93,10 +114,47 @@ class BrandController:
             'imageCount': len(brand_images)
         }
         
-        # 缓存结果（30分钟）
-        cache_service.set(cache_key, result, ttl=1800)
+        # 缓存结果（24 小时，图片与元数据变更频率低）
+        cache_service.set(cache_key, result, ttl=86400)
         logger.debug(f"品牌详情已缓存: {brand_name}")
         
+        return result
+
+    def get_brand_images_only(self, brand_name: str) -> Optional[Dict]:
+        """
+        仅返回品牌图片列表（跳过 DB 产品查询与点赞统计，供详情弹窗快速加载）
+        """
+        from backend.services.cache_service import cache_service
+        from backend.services.image_service import ImageService
+
+        cache_key = cache_service.generate_key('brand_images', brand_name=brand_name)
+        cached_result = cache_service.get(cache_key)
+        if cached_result:
+            cached_images = cached_result.get('images') or []
+            if self._brand_images_cache_valid(cached_images):
+                logger.debug(f"从缓存获取品牌图片: {brand_name}")
+                return cached_result
+            logger.info(f"品牌图片缓存路径失效，重新加载: {brand_name}")
+            cache_service.delete(cache_key)
+
+        decoded_brand_name = unquote(brand_name)
+        base_brand_name = decoded_brand_name.split('(')[0] if '(' in decoded_brand_name else decoded_brand_name
+
+        image_service = ImageService()
+        brand_images = image_service.get_brand_images(decoded_brand_name)
+        if not brand_images and base_brand_name != decoded_brand_name:
+            brand_images = image_service.get_brand_images(base_brand_name)
+
+        if not brand_images:
+            logger.warning(f"品牌图片不存在: {decoded_brand_name}")
+            return None
+
+        result = {
+            'success': True,
+            'images': brand_images,
+            'imageCount': len(brand_images),
+        }
+        cache_service.set(cache_key, result, ttl=86400)
         return result
     
     def toggle_like(self, brand_name: str, unique_id: str, client_ip: str, user_agent: str) -> Dict:

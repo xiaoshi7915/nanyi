@@ -273,6 +273,12 @@ show_deployment_info() {
     echo "  后端日志: tail -f logs/app.log"
     echo "  前端日志: tail -f logs/frontend.log"
     echo ""
+    echo "前端发版（提示用户自动更新）:"
+    echo "  1. 修改 frontend/js/app-version.js 中的 APP_RELEASE_VERSION（如 20260701-4）"
+    echo "  2. 同步 index.html 里 app-version.js 的 ?v= 参数"
+    echo "  3. 执行: systemctl restart nanyi-frontend.service && nginx -s reload"
+    echo "  4. 用户下次打开页面会自动清缓存并刷新（无需手动操作）"
+    echo ""
     log_info "部署完成！请检查上述访问地址确认服务正常运行。"
 }
 

@@ -263,7 +263,7 @@ body {
 .search-box {
     position: relative;
     margin-bottom: 1.5rem;
-    max-width: 300px; /* 增加搜索框最大宽度，确保提示词完全显示 */
+    max-width: 520px; /* 足够宽以完整显示搜索占位提示 */
     margin-left: auto;
     margin-right: auto;
     display: flex;
@@ -669,7 +669,7 @@ body {
 .brand-card-actions {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 6px;
+    gap: 4px;
     align-items: stretch;
     min-width: 0;
     width: 100%;
@@ -680,15 +680,16 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
+    gap: 0.18rem;
     width: 100%;
     min-width: 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 0.18rem 0.35rem;
+    padding: 0.16rem 0.28rem;
     border-radius: 12px;
-    font-size: 0.6rem;
+    font-size: 0.52rem;
     font-weight: 600;
+    letter-spacing: -0.02em;
     box-shadow: 0 1px 3px rgba(102, 126, 234, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.65);
     cursor: pointer;
@@ -698,7 +699,7 @@ body {
 }
 
 .try-on-card-btn i {
-    font-size: 0.55rem;
+    font-size: 0.48rem;
 }
 
 .try-on-card-btn:hover {
@@ -711,15 +712,16 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
+    gap: 0.18rem;
     width: 100%;
     min-width: 0;
     background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
     color: white;
-    padding: 0.18rem 0.35rem;
+    padding: 0.16rem 0.28rem;
     border-radius: 12px;
-    font-size: 0.6rem;
+    font-size: 0.52rem;
     font-weight: 600;
+    letter-spacing: -0.02em;
     box-shadow: 0 1px 3px rgba(17, 153, 142, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.65);
     cursor: pointer;
@@ -729,7 +731,7 @@ body {
 }
 
 .share-card-btn i {
-    font-size: 0.55rem;
+    font-size: 0.48rem;
 }
 
 .share-card-btn:hover {
@@ -742,15 +744,16 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
+    gap: 0.18rem;
     width: 100%;
     min-width: 0;
     background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
     color: #5c3d00;
-    padding: 0.18rem 0.35rem;
+    padding: 0.16rem 0.28rem;
     border-radius: 12px;
-    font-size: 0.6rem;
+    font-size: 0.52rem;
     font-weight: 600;
+    letter-spacing: -0.02em;
     box-shadow: 0 1px 3px rgba(247, 151, 30, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.65);
     cursor: pointer;
@@ -758,7 +761,7 @@ body {
 }
 
 .review-card-btn i {
-    font-size: 0.55rem;
+    font-size: 0.48rem;
 }
 
 .review-card-btn:hover {
@@ -1032,14 +1035,14 @@ body {
     .try-on-card-btn,
     .share-card-btn,
     .review-card-btn {
-        padding: 0.2rem 0.25rem;
-        font-size: 0.52rem;
+        padding: 0.16rem 0.22rem;
+        font-size: 0.48rem;
     }
 
     .try-on-card-btn i,
     .share-card-btn i,
     .review-card-btn i {
-        font-size: 0.52rem;
+        font-size: 0.46rem;
     }
 }
 
@@ -1068,14 +1071,14 @@ body {
     .try-on-card-btn,
     .share-card-btn,
     .review-card-btn {
-        padding: 0.18rem 0.2rem;
-        font-size: 0.5rem;
+        padding: 0.14rem 0.18rem;
+        font-size: 0.46rem;
     }
 
     .try-on-card-btn i,
     .share-card-btn i,
     .review-card-btn i {
-        font-size: 0.5rem;
+        font-size: 0.44rem;
     }
 }
 
@@ -1914,6 +1917,22 @@ body {
 
 .simple-footer .footer-copyright p {
     margin: 0;
+    text-align: center;
+}
+
+.simple-footer .icp-beian-link {
+    color: #6b7280;
+    text-decoration: none;
+}
+
+.simple-footer .icp-beian-link:hover {
+    color: #374151;
+    text-decoration: underline;
+}
+
+.simple-footer .footer-sep {
+    margin: 0 0.35em;
+    color: #9ca3af;
 }
 
 /* 移动端版权信息样式 */
@@ -2154,18 +2173,25 @@ body {
 /* 模态框动作区域样式 */
 .modal-actions {
     text-align: center;
-    padding: 2rem 0 1rem 0;
+    padding: 1rem 0 0.75rem 0;
     border-top: 1px solid #f0f0f0;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
+}
+
+.modal-actions .action-buttons {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .generate-card-btn {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    padding: 1rem 2rem;
-    border-radius: 50px;
-    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -2202,56 +2228,56 @@ body {
 }
 
 .generate-card-btn i {
-    font-size: 1.2rem;
+    font-size: 0.85rem;
 }
 
 .action-hint {
-    margin-top: 0.8rem;
+    margin-top: 0.55rem;
     color: #666;
-    font-size: 0.9rem;
+    font-size: 0.78rem;
     font-style: italic;
 }
 
 /* 移动端生成卡片按钮优化 */
 @media (max-width: 768px) {
     .modal-actions {
-        padding: 1.5rem 0 1rem 0;
-        margin-top: 1.5rem;
+        padding: 0.85rem 0 0.65rem 0;
+        margin-top: 1.25rem;
     }
     
     .generate-card-btn {
-        width: 100%;
-        max-width: 280px;
-        padding: 1.2rem 1.5rem;
-        font-size: 1rem;
-        margin: 0 auto;
-        display: flex;
+        width: auto;
+        max-width: none;
+        padding: 0.48rem 0.85rem;
+        font-size: 0.76rem;
+        margin: 0;
+        display: inline-flex;
         justify-content: center;
         align-items: center;
     }
     
     .generate-card-btn i {
-        font-size: 1.3rem;
-        margin-right: 0.5rem;
+        font-size: 0.74rem;
+        margin-right: 0;
     }
     
     .action-hint {
-        margin-top: 1rem;
-        font-size: 0.85rem;
+        margin-top: 0.65rem;
+        font-size: 0.72rem;
         color: #888;
-        padding: 0 1rem;
+        padding: 0 0.75rem;
     }
 }
 
 /* 超小屏幕优化 */
 @media (max-width: 480px) {
     .generate-card-btn {
-        font-size: 0.95rem;
-        padding: 1rem 1.2rem;
+        font-size: 0.72rem;
+        padding: 0.44rem 0.75rem;
     }
     
     .action-hint {
-        font-size: 0.8rem;
+        font-size: 0.7rem;
     }
 }
 

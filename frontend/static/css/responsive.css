@@ -177,16 +177,26 @@
     }
     
     /* 搜索栏调整 - 模仿电脑端样式 */
+    .filter-section > .container > .search-box {
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
     .search-box {
         display: flex !important;
         align-items: center;
+        justify-content: center;
         background: transparent;
         border-radius: 25px;
         margin-bottom: 0.8rem;
+        margin-left: auto;
+        margin-right: auto;
         height: 44px;
         overflow: hidden;
         flex-wrap: nowrap;
         gap: 2px; /* 输入框和按钮之间的间隔 */
+        width: 100%;
     }
     
     .search-input-container {
@@ -228,7 +238,13 @@
     
     .search-input::placeholder {
         color: #9ca3af;
-        font-size: 14px;
+        font-size: 13px;
+    }
+
+    @media (max-width: 480px) {
+        .search-input::placeholder {
+            font-size: 12px;
+        }
     }
     
     .search-btn {

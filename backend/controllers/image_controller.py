@@ -18,10 +18,73 @@ Product, Admin, AccessLog = init_models()
 
 class ImageController:
     """图片控制器类"""
+
+    # 列表接口封面图优先级（与前端 getBrandCoverImage 一致）
+    _COVER_TYPE_PRIORITY = (
+        '概念图', '设计图', '成衣图', '布料图', '模特图', '买家秀图', '其他'
+    )
     
     def __init__(self):
         """初始化图片控制器"""
         self.image_service = ImageService()
+
+    @staticmethod
+    def _is_generated_image_source(image: Dict) -> bool:
+        """排除 AI 试穿生成目录图片"""
+        if not image:
+            return False
+        path_parts = [
+            str(image.get('relative_path') or ''),
+            str(image.get('filename') or ''),
+            str(image.get('url') or ''),
+        ]
+        combined = ' '.join(path_parts).lower()
+        return (
+            '/generated/' in combined
+            or 'images/generated' in combined
+            or combined.split('/') == ['generated']
+        )
+
+    def _pick_cover_image(self, images: List[Dict]) -> Optional[Dict]:
+        """为列表接口选取单张封面图元数据"""
+        safe = [img for img in (images or []) if img and not self._is_generated_image_source(img)]
+        if not safe:
+            return None
+        for image_type in self._COVER_TYPE_PRIORITY:
+            for img in safe:
+                if img.get('image_type') == image_type:
+                    return img
+        return safe[0]
+
+    def _pick_preview_images(self, images: List[Dict]) -> List[Dict]:
+        """列表接口：每个分类最多 1 张预览图，供详情弹窗乐观展示"""
+        safe = [img for img in (images or []) if img and not self._is_generated_image_source(img)]
+        if not safe:
+            return []
+        by_type: Dict[str, Dict] = {}
+        for img in safe:
+            image_type = img.get('image_type') or '其他'
+            if image_type not in by_type:
+                by_type[image_type] = img
+        previews: List[Dict] = []
+        for image_type in self._COVER_TYPE_PRIORITY:
+            if image_type in by_type:
+                previews.append(by_type[image_type])
+        for image_type, img in by_type.items():
+            if image_type not in self._COVER_TYPE_PRIORITY:
+                previews.append(img)
+        return previews
+
+    def _compact_brand_for_list(self, brand_data: Dict) -> Dict:
+        """列表响应只保留封面图，避免每个品牌携带完整 images 数组"""
+        images = brand_data.get('images') or []
+        cover = self._pick_cover_image(images)
+        previews = self._pick_preview_images(images)
+        compact = {k: v for k, v in brand_data.items() if k != 'images'}
+        compact['images'] = [cover] if cover else []
+        compact['preview_images'] = previews
+        compact['imageCount'] = brand_data.get('imageCount', len(images))
+        return compact
     
     def get_images_with_pagination(
         self,
@@ -181,13 +244,13 @@ class ImageController:
             has_prev = page > 1
             current_page = page
         
-        # 构建响应数据字典（路由层会使用APIResponse包装）
-        # 优化：即使load_all=true，也不返回所有图片数据，只返回品牌列表
-        # 图片数据可以通过品牌详情API按需加载，避免响应过大
+        # 列表接口仅返回封面图元数据，详情图由 /api/brand/<name> 按需加载
+        compact_brands = [self._compact_brand_for_list(b) for b in paginated_brands]
+
         return {
             'success': True,
-            'images': [],  # 不再返回所有图片数据，减少响应大小
-            'brands': paginated_brands,
+            'images': [],
+            'brands': compact_brands,
             'pagination': {
                 'current_page': current_page,
                 'per_page': per_page,

@@ -159,7 +159,7 @@ class ImageService(BaseService):
         cached_images = self.get_cache(cache_key)
         if cached_images:
             self.log_debug(f"从缓存获取品牌图片: {brand_name} ({len(cached_images)}张)")
-            return cached_images
+            return self.sort_images_by_priority(self._ensure_valid_image_list(cached_images))
         
         self.log_debug(f"查找品牌图片: {brand_name}")
         all_images = self.get_all_images()
@@ -168,9 +168,10 @@ class ImageService(BaseService):
         exact_matches = [img for img in all_images if img['brand_name'] == brand_name]
         if exact_matches:
             self.log_debug(f"精确匹配找到: {len(exact_matches)}张图片")
+            fixed = self._ensure_valid_image_list(exact_matches)
             # 缓存结果（2小时，图片很少变化）
-            self.set_cache(cache_key, exact_matches, ttl=7200)
-            return self.sort_images_by_priority(exact_matches)
+            self.set_cache(cache_key, fixed, ttl=7200)
+            return self.sort_images_by_priority(fixed)
         
         # 如果精确匹配失败，尝试模糊匹配
         self.log_debug(f"精确匹配失败，尝试模糊匹配: {brand_name}")
@@ -192,9 +193,10 @@ class ImageService(BaseService):
         
         if fuzzy_matches:
             self.log_debug(f"模糊匹配找到: {len(fuzzy_matches)}张图片")
+            fixed = self._ensure_valid_image_list(fuzzy_matches)
             # 缓存结果（10分钟）
-            self.set_cache(cache_key, fuzzy_matches, ttl=600)
-            return self.sort_images_by_priority(fuzzy_matches)
+            self.set_cache(cache_key, fixed, ttl=600)
+            return self.sort_images_by_priority(fixed)
         
         self.log_debug(f"未找到品牌图片: {brand_name}")
         # 缓存空结果（5分钟）
@@ -208,9 +210,12 @@ class ImageService(BaseService):
             '概念图': 1,
             '设计图': 2,
             '布料图': 3,
-            '细节图': 4,
-            '效果图': 5,
-            '其他': 6
+            '成衣图': 4,
+            '模特图': 5,
+            '买家秀图': 6,
+            '细节图': 7,
+            '效果图': 8,
+            '其他': 9
         }
         
         def get_priority(img):
@@ -224,6 +229,33 @@ class ImageService(BaseService):
         if os.path.exists(full_path) and os.path.isfile(full_path):
             return full_path
         return None
+
+    def _ensure_valid_image_paths(self, img: Dict) -> Dict:
+        """修正 relative_path 与磁盘不一致（如目录改名后旧缓存仍用旧文件夹名）"""
+        if not img:
+            return img
+        relative_path = img.get('relative_path') or ''
+        filename = img.get('filename') or ''
+        brand_name = img.get('brand_name') or ''
+        if relative_path and self.get_image_by_path(relative_path):
+            return img
+        candidates = []
+        if brand_name and filename:
+            candidates.append(f"{brand_name}/{filename}")
+        if filename and '/' not in relative_path:
+            candidates.append(filename)
+        for candidate in candidates:
+            if self.get_image_by_path(candidate):
+                fixed = dict(img)
+                fixed['relative_path'] = candidate
+                fixed['url'] = f"/static/images/{candidate}"
+                fixed['thumbnail'] = fixed['url']
+                fixed['original'] = fixed['url']
+                return fixed
+        return img
+
+    def _ensure_valid_image_list(self, images: List[Dict]) -> List[Dict]:
+        return [self._ensure_valid_image_paths(img) for img in (images or [])]
     
     def get_statistics(self) -> Dict[str, int]:
         """获取图片统计信息 - 带缓存"""

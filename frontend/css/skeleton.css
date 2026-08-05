@@ -131,3 +131,22 @@
     height: 150px;
     border-radius: 8px;
 }
+
+/* 详情弹窗：未加载分类占位 */
+.detail-section-skeleton .detail-loading-hint {
+    font-size: 0.85rem;
+    font-weight: normal;
+    color: #999;
+    margin-left: 0.35rem;
+}
+
+.modal-category-skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.modal-category-skeleton-grid .skeleton-image-item {
+    height: 150px;
+    border-radius: 8px;
+}

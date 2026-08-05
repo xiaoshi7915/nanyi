@@ -21,7 +21,7 @@ product_controller = ProductController()
 
 @share_bp.route('/share/card/<path:brand_name>')
 @log_access
-# @cached(ttl=1800, key_prefix='share_card')  # 暂时禁用缓存，避免缓存错误响应
+@cached(ttl=1800, key_prefix='share_card')
 @handle_errors
 def generate_share_card(brand_name):
     """生成分享卡片数据 - 性能优化版"""

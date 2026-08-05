@@ -10,6 +10,7 @@ from backend.controllers.brand_controller import BrandController
 from backend.utils.logger import log_access
 from backend.services.cache_service import cached
 from backend.utils.decorators import handle_errors
+from backend.utils.cache_control import smart_cache
 from backend.utils.response import APIResponse
 from backend.utils.client_ip import get_trusted_client_ip
 from backend.utils.rate_limit import rate_limit
@@ -21,8 +22,32 @@ brands_bp = Blueprint('brands', __name__, url_prefix='/api')
 brand_controller = BrandController()
 
 
+@brands_bp.route('/brand/<path:brand_name>/images')
+@log_access
+@smart_cache
+@handle_errors
+def get_brand_images_only(brand_name):
+    """仅返回品牌图片（轻量，无 DB 产品/点赞查询）"""
+    result = brand_controller.get_brand_images_only(brand_name)
+
+    if result is None:
+        from urllib.parse import unquote
+        decoded_brand_name = unquote(brand_name)
+        return APIResponse.not_found(
+            message=f'品牌图片不存在: {decoded_brand_name}',
+            resource_type='brand',
+            resource_id=decoded_brand_name,
+        )
+
+    return APIResponse.success(
+        data=result,
+        message='查询成功',
+    )
+
+
 @brands_bp.route('/brand/<path:brand_name>')
 @log_access
+@smart_cache
 @handle_errors
 def get_brand_detail(brand_name):
     """获取品牌详细信息"""

@@ -99,10 +99,40 @@ class NanyiAPI {
 
     /**
      * 获取品牌详情
+     * 后端 APIResponse 将 brand_info / images 放在 data 内，此处展平供详情弹窗使用
      */
     async getBrandDetail(brandName) {
         const encodedName = encodeURIComponent(brandName);
-        return this.request(`/brand/${encodedName}`);
+        const response = await this.request(`/brand/${encodedName}`);
+        if (response && response.success && response.data && typeof response.data === 'object') {
+            const inner = response.data;
+            return {
+                success: true,
+                message: response.message,
+                brand_info: inner.brand_info,
+                images: inner.images,
+                imageCount: inner.imageCount
+            };
+        }
+        return response;
+    }
+
+    /**
+     * 仅获取品牌图片（轻量接口，详情弹窗优先使用）
+     */
+    async getBrandImages(brandName) {
+        const encodedName = encodeURIComponent(brandName);
+        const response = await this.request(`/brand/${encodedName}/images`);
+        if (response && response.success && response.data && typeof response.data === 'object') {
+            const inner = response.data;
+            return {
+                success: true,
+                message: response.message,
+                images: inner.images,
+                imageCount: inner.imageCount
+            };
+        }
+        return response;
     }
 
     /**

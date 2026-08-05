@@ -5,6 +5,7 @@
 处理产品相关的业务逻辑
 """
 
+import re
 from typing import Dict, List, Optional
 from flask import request
 from backend.services.product_service import ProductService
@@ -194,6 +195,67 @@ class ProductController:
                 'print_sizes': ['全部', '循环印花料', '定位印花料']
             }
     
+    def _resolve_image_type(self, img: Dict) -> str:
+        """解析图片类型（与前端 getCategorizedImages / try_on 逻辑一致）。"""
+        if img.get('image_type'):
+            return img['image_type']
+        filename = img.get('filename') or ''
+        if '-概念图-' in filename or '概念图' in filename:
+            return '概念图'
+        if '-设计图-' in filename or '设计图' in filename:
+            return '设计图'
+        if '-成衣图-' in filename or '成衣图' in filename:
+            return '成衣图'
+        if '-布料图-' in filename or '布料图' in filename:
+            return '布料图'
+        if '-买家秀图-' in filename or '买家秀' in filename:
+            return '买家秀图'
+        if '-模特图-' in filename or '模特图' in filename:
+            return '模特图'
+        return '其他'
+
+    def _extract_image_color(self, img: Dict) -> str:
+        """从图片元数据或文件名括号中提取花色。"""
+        if img.get('color'):
+            return str(img['color']).strip()
+        for field in ('filename', 'relative_path', 'brand_name'):
+            text = str(img.get(field) or '')
+            match = re.search(r'\(([^)]+)\)', text)
+            if match:
+                return match.group(1).strip()
+        return '默认色'
+
+    def _image_sort_key(self, img: Dict) -> int:
+        """按文件名编号排序，便于分享卡片稳定选图。"""
+        filename = str(img.get('filename') or '')
+        match = re.search(r'-(\d+)\.', filename)
+        return int(match.group(1)) if match else 0
+
+    def _pick_share_images_by_type(
+        self,
+        images: List[Dict],
+        img_type: str,
+        limit: Optional[int] = None,
+        per_color_limit: Optional[int] = None,
+    ) -> List[Dict]:
+        """按类型选图：支持全量、总量上限、按花色各取上限。"""
+        matched = [img for img in images if self._resolve_image_type(img) == img_type]
+        matched.sort(key=self._image_sort_key)
+
+        if per_color_limit is not None:
+            by_color: Dict[str, List[Dict]] = {}
+            for img in matched:
+                color = self._extract_image_color(img)
+                by_color.setdefault(color, []).append(img)
+            picked: List[Dict] = []
+            for color in sorted(by_color.keys()):
+                picked.extend(by_color[color][:per_color_limit])
+            return picked
+
+        if limit is not None:
+            return matched[:limit]
+        return matched
+
     def generate_share_card(self, brand_name: str, frontend_host: str, request_protocol: str = 'http') -> Dict:
         """
         生成分享卡片数据
@@ -232,48 +294,34 @@ class ProductController:
                 'images': []
             }
             
-            # 优化图片处理：选择必要的图片类型，布料图显示2张，其他类型1张
+            # 分享卡片选图：概念/设计全取；布料/模特按花色各最多2张；成衣/买家秀各最多2张
             images = brand_detail.get('images', [])
-            
-            # 定义图片类型和数量限制（按优先级顺序）
-            image_config = {
-                '概念图': 1,
-                '设计图': 1, 
-                '布料图': 2,  # 布料图允许2张
-                '成衣图': 1,
-                '模特图': 1   # 新增模特图支持
-            }
-            
-            type_image_map = {}
-            
-            for img in images:
-                img_type = img['image_type']
-                if img_type in image_config:
-                    if img_type not in type_image_map:
-                        type_image_map[img_type] = []
-                    
-                    # 检查当前类型是否还能添加更多图片
-                    if len(type_image_map[img_type]) < image_config[img_type]:
-                        # 优先使用本地URL，提高加载速度
-                        img_url = ''
-                        if img.get('url'):
-                            img_url = img['url']
-                        elif img.get('relative_path'):
-                            img_url = f"/static/images/{img['relative_path']}"
-                        else:
-                            img_url = f"/static/images/{img.get('filename', 'placeholder.jpg')}"
-                        
-                        type_image_map[img_type].append({
-                            'image_type': img['image_type'],
-                            'url': img_url,
-                            'relative_path': img.get('relative_path'),
-                            'filename': img.get('filename')
-                        })
-            
-            # 按指定顺序添加图片
-            for img_type in image_config.keys():
-                if img_type in type_image_map:
-                    card_data['images'].extend(type_image_map[img_type])
+            share_card_order = ['概念图', '设计图', '布料图', '成衣图', '买家秀图', '模特图']
+
+            def append_card_image(img: Dict, img_type: str) -> None:
+                img_url = ''
+                if img.get('url'):
+                    img_url = img['url']
+                elif img.get('relative_path'):
+                    img_url = f"/static/images/{img['relative_path']}"
+                else:
+                    img_url = f"/static/images/{img.get('filename', 'placeholder.jpg')}"
+                card_data['images'].append({
+                    'image_type': img_type,
+                    'url': img_url,
+                    'relative_path': img.get('relative_path'),
+                    'filename': img.get('filename')
+                })
+
+            for img_type in share_card_order:
+                if img_type in ('概念图', '设计图'):
+                    selected = self._pick_share_images_by_type(images, img_type)
+                elif img_type in ('布料图', '模特图'):
+                    selected = self._pick_share_images_by_type(images, img_type, per_color_limit=2)
+                else:
+                    selected = self._pick_share_images_by_type(images, img_type, limit=2)
+                for img in selected:
+                    append_card_image(img, img_type)
             
             # 生成卡片URL - 指向前端服务器（使用请求的协议）
             # 协议信息已从路由层传递过来

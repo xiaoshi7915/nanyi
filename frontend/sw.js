@@ -83,6 +83,11 @@ self.addEventListener('fetch', (event) => {
         return;
     }
     
+    // 产品图片不经过 SW 缓存（避免旧 404/错误路径被 cache-first 固化）
+    if (url.pathname.startsWith('/static/images/')) {
+        return;
+    }
+
     // 静态资源：缓存优先策略
     if (isStaticAsset(url.pathname)) {
         event.respondWith(cacheFirst(request));
