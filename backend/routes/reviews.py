@@ -34,7 +34,8 @@ def _user_openid(user_id: int):
     """查询用户微信 openid（审计字段）"""
     if not user_id:
         return None
-    binding = OAuthBinding.query.filter_by(user_id=user_id, provider="wechat").first()
+    # 与 auth_user_service.upsert_user_from_wechat 写入的 provider 保持一致
+    binding = OAuthBinding.query.filter_by(user_id=user_id, provider="wechat_mp").first()
     return binding.openid if binding else None
 
 

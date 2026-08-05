@@ -3,12 +3,15 @@
 """分享卡片页 SSR meta 注入，供微信爬虫读取链接卡片预览。"""
 
 import html
+import logging
 import os
 import re
 import urllib.parse
 from typing import Dict
 
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 def _strip_html(text: str) -> str:
@@ -32,8 +35,14 @@ def _get_backend_api_base() -> str:
             response = requests.get(f"{candidate}/health", timeout=2)
             if response.ok:
                 return candidate
-        except Exception:
-            continue
+            logger.warning(
+                'SSR backend health check failed: %s status=%s',
+                candidate,
+                response.status_code,
+            )
+        except Exception as exc:
+            logger.warning('SSR backend health check error: %s (%s)', candidate, exc)
+    logger.warning('SSR falling back to http://127.0.0.1:5432 for share meta')
     return 'http://127.0.0.1:5432'
 
 
@@ -187,17 +196,33 @@ def load_card_html_with_share_meta(
     try:
         backend_url = _get_backend_api_base()
         encoded_brand = urllib.parse.quote(brand_name, safe='')
-        response = requests.get(
-            f"{backend_url}/api/share/card/{encoded_brand}",
-            timeout=8,
-        )
+        api_url = f"{backend_url}/api/share/card/{encoded_brand}"
+        response = requests.get(api_url, timeout=8)
         if response.ok:
             payload = response.json()
             card_data = payload.get('data') or payload.get('card_data')
             if payload.get('success') and card_data:
                 meta = build_share_meta(card_data, page_url, protocol, host)
                 return inject_share_meta(html_content, meta)
-    except Exception:
-        pass
+            logger.warning(
+                'SSR share card payload incomplete for brand=%s url=%s success=%s',
+                brand_name,
+                api_url,
+                payload.get('success'),
+            )
+        else:
+            logger.warning(
+                'SSR share card request failed: brand=%s url=%s status=%s',
+                brand_name,
+                api_url,
+                response.status_code,
+            )
+    except Exception as exc:
+        logger.warning(
+            'SSR share meta injection failed for brand=%s: %s',
+            brand_name,
+            exc,
+            exc_info=True,
+        )
 
     return html_content

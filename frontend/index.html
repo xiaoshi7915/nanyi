@@ -44,7 +44,7 @@
     <meta name="weixin:timeline_desc" content="传承经典 美美与共 - 古典美学设计，望君着美于裳" />
     <meta name="weixin:img_url" content="https://products.nanyiqiutang.cn/static/images/牡丹亭/牡丹亭-概念图-01.jpg" />
     
-    <!-- 微信JS-SDK -->
+    <!-- 微信 JS-SDK：保留供试衣保存图片等 API；分享走 OG-only（无 wx.config 签名） -->
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
     
     <!-- Vue.js 3 生产版本 -->
@@ -4889,19 +4889,19 @@
             }
         }
 
-        // API配置 - 智能检测访问方式
+        // API配置 - 智能检测访问方式（域名相对路径；禁止硬编码 http://IP）
         const currentHost = window.location.hostname;
+        const currentProtocol = window.location.protocol;
         let API_BASE_URL;
         
         if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-            // 本地开发环境
-            API_BASE_URL = 'http://localhost:5432';
+            API_BASE_URL = `${currentProtocol}//${currentHost}:5432`;
         } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
             // 域名访问，使用相对路径让nginx代理处理
             API_BASE_URL = '';
         } else {
-            // IP访问，直接连接后端端口
-            API_BASE_URL = 'http://121.36.205.70:5432';
+            // IP/其它主机：同协议直连后端端口，避免 HTTPS 混合内容
+            API_BASE_URL = `${currentProtocol}//${currentHost}:5432`;
         }
             
         // 移除调试日志
@@ -4950,62 +4950,12 @@
             updateMetaTag('wechat:title', shareConfig.title);
             updateMetaTag('wechat:desc', shareConfig.desc);
             
-            // 如果在微信浏览器中且有微信JS-SDK
-            if (isWeChatBrowser() && typeof wx !== 'undefined') {
-                // 配置微信JS-SDK
-                wx.config({
-                    debug: false, // 开启调试模式
-                    appId: '', // 必填，公众号的唯一标识
-                    timestamp: Math.floor(Date.now() / 1000), // 必填，生成签名的时间戳
-                    nonceStr: 'nanyiqiutang' + Math.random().toString(36).substr(2, 15), // 必填，生成签名的随机串
-                    signature: '', // 必填，签名
-                    jsApiList: [
-                        'updateAppMessageShareData',
-                        'updateTimelineShareData'
-                    ] // 必填，需要使用的JS接口列表
-                });
-                
-                // 即使没有签名，也尝试设置分享内容（有些情况下仍然有效）
-                wx.ready(function() {
-                    // 移除调试日志
-                    
-                    // 分享给朋友
-                    wx.updateAppMessageShareData({
-                        title: shareConfig.title,
-                        desc: shareConfig.desc,
-                        link: shareConfig.link,
-                        imgUrl: shareConfig.imgUrl,
-                        success: function () {
-                            // 移除调试日志
-                        },
-                        fail: function(err) {
-                            // 移除调试日志
-                        }
-                    });
-                    
-                    // 分享到朋友圈（无 desc 字段，标题需包含标语）
-                    wx.updateTimelineShareData({
-                        title: shareConfig.title,
-                        link: shareConfig.link,
-                        imgUrl: shareConfig.imgUrl,
-                        success: function () {
-                            // 移除调试日志
-                        },
-                        fail: function(err) {
-                            // 移除调试日志
-                        }
-                    });
-                });
-                
-                wx.error(function(res) {
-                    // 移除调试日志
-                    // 如果JS-SDK配置失败，使用传统方法
-                    setupTraditionalShare(shareConfig);
-                });
-            } else {
-                // 非微信环境或没有JS-SDK，使用传统分享方法
-                setupTraditionalShare(shareConfig);
-            }
+            /**
+             * Phase B OG-only：未配置 WECHAT_APP_ID/SECRET，不调用 wx.config（禁止空 signature）。
+             * 分享预览依赖页面 OG/微信 meta；用户需点右上角「…」转发。
+             * 配齐密钥后可接 GET /api/wechat/js-sdk-config?url=。
+             */
+            setupTraditionalShare(shareConfig);
         }
         
         // 传统分享方法（通过meta标签）

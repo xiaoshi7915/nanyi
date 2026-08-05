@@ -364,7 +364,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <!-- 微信JS-SDK -->
-    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <!-- Phase B: 未配置 WECHAT_APP_ID/SECRET 时不加载 JSSDK；分享依赖 SSR OG + 右上角「…」转发 -->
     <script src="js/share-card.js"></script>
 </head>
 <body>
@@ -460,14 +460,31 @@
         </button>
     </div>
     
-    <!-- 长按提示 -->
+    <!-- 长按提示：OG-only 路径下引导用户用微信菜单分享 -->
     <div class="share-hint" id="shareHint">
-        请点击右上角「…」→「转发给朋友」，勿复制链接粘贴（粘贴只会显示网址）
+        请点击右上角「…」→「转发给朋友 / 分享到朋友圈」，勿复制链接粘贴（粘贴只会显示网址）
     </div>
     
     <script>
         // 页面数据
         let cardData = {};
+
+        /**
+         * API base：域名走相对路径（nginx/HTTPS），本地/IP 直连 :5432。
+         * 禁止硬编码 http://IP，避免 HTTPS 混合内容。
+         */
+        function getApiBaseUrl() {
+            const currentHost = window.location.hostname;
+            const protocol = window.location.protocol;
+            if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+                return `${protocol}//${currentHost}:5432`;
+            }
+            if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
+                return '';
+            }
+            // IP 或其它主机：同协议直连后端端口
+            return `${protocol}//${currentHost}:5432`;
+        }
         
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
@@ -482,18 +499,16 @@
             }
         });
         
-        // 页面可见性变化时重新设置分享
+        // 页面可见性变化时重新注入 OG meta
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden && typeof setupWechatShare === 'function') {
-                console.log('页面重新可见，重新设置微信分享');
                 setTimeout(setupWechatShare, 100);
             }
         });
         
-        // URL变化时重新设置分享
+        // URL变化时重新注入 OG meta
         window.addEventListener('popstate', function() {
             if (typeof setupWechatShare === 'function') {
-                // 移除调试日志
                 setTimeout(setupWechatShare, 100);
             }
         });
@@ -618,22 +633,7 @@
         
         // 从API加载数据
         function loadFromAPI(brandName) {
-            // 智能API路径配置 - 修复HTTPS混合内容问题
-            const currentHost = window.location.hostname;
-            const protocol = window.location.protocol;
-            let apiBaseUrl = '';
-            
-            if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-                // 本地开发环境，直接连接后端端口
-                apiBaseUrl = `${protocol}//${currentHost}:5432`;
-            } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com.cn')) {
-                // 域名访问，使用相对路径让nginx代理处理（自动使用当前协议）
-                apiBaseUrl = '';
-            } else {
-                // IP访问，使用当前协议
-                apiBaseUrl = `${protocol}//${currentHost}:5432`;
-            }
-            
+            const apiBaseUrl = getApiBaseUrl();
             // 构建完整的API URL - 正确编码品牌名
             const encodedBrandName = encodeURIComponent(brandName);
             const shareApiUrl = `${apiBaseUrl}/api/share/card/${encodedBrandName}`;
@@ -1056,7 +1056,7 @@
             }, 2000);
         }
         
-        // 显示分享提示
+        // 显示分享提示（OG-only：无 JSSDK 自定义分享时必须引导右上角菜单）
         function showShareHint() {
             setTimeout(() => {
                 const hint = document.getElementById('shareHint');
@@ -1064,7 +1064,10 @@
                     hint.style.display = 'block';
                     setTimeout(() => {
                         hint.style.display = 'none';
-                    }, 3000);
+                    }, 4000);
+                }
+                if (isWechatBrowser()) {
+                    showToast('请点击右上角「…」转发，即可展示链接卡片预览');
                 }
             }, 1000);
         }
@@ -1091,21 +1094,7 @@
             // 暂时禁用按钮
             likeButton.disabled = true;
             
-            // 根据当前域名动态构建API URL
-            const currentHost = window.location.hostname;
-            let apiBaseUrl = '';
-            
-            if (currentHost === '121.36.205.70') {
-                // IP访问时使用IP地址的后端端口
-                apiBaseUrl = 'http://121.36.205.70:5432';
-            } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com')) {
-                // 域名访问时使用域名
-                apiBaseUrl = `http://${currentHost}`;
-            } else {
-                // 其他情况（如本地开发）使用相对路径
-                apiBaseUrl = '';
-            }
-            
+            const apiBaseUrl = getApiBaseUrl();
             // 点赞/取消点赞API（使用POST方法，后端会自动切换状态）
             const likeApiUrl = `${apiBaseUrl}/api/like/card/${encodeURIComponent(brandName)}`;
             
@@ -1144,21 +1133,7 @@
         // 获取点赞状态
         function loadLikeStatus() {
             const brandName = cardData.brand_name || '未知品牌';
-            
-            // 根据当前域名动态构建API URL
-            const currentHost = window.location.hostname;
-            let apiBaseUrl = '';
-            
-            if (currentHost === '121.36.205.70') {
-                // IP访问时使用IP地址的后端端口
-                apiBaseUrl = 'http://121.36.205.70:5432';
-            } else if (currentHost.includes('nanyiqiutang.cn') || currentHost.includes('chenxiaoshivivid.com')) {
-                // 域名访问时使用相对路径（自动使用当前协议，避免混合内容问题）
-                apiBaseUrl = '';
-            } else {
-                // 其他情况（如本地开发）使用相对路径
-                apiBaseUrl = '';
-            }
+            const apiBaseUrl = getApiBaseUrl();
             
             // 添加时间戳防止缓存
             const timestamp = new Date().getTime();
@@ -1230,90 +1205,15 @@
             return ua.includes('micromessenger');
         }
         
-        // 设置微信分享
+        /**
+         * 微信分享（OG-only 路径）
+         * 未配置 WECHAT_APP_ID / WECHAT_APP_SECRET 时不做 JSSDK 签名，
+         * 禁止 dummy_app_id / 空 signature 伪装可用。
+         * 依赖：frontend/share_meta.py SSR 注入的 OG/微信 meta + 用户右上角「…」转发。
+         * 若日后配齐公众号密钥，可改接 GET /api/wechat/js-sdk-config?url=。
+         */
         function setupWechatShare() {
-            // 更新meta标签
             updateMetaTags();
-            
-            // 如果在微信浏览器中，配置微信分享
-            if (isWechatBrowser() && typeof wx !== 'undefined') {
-                console.log('检测到微信浏览器，配置微信分享');
-                
-                // 配置微信分享
-                wx.config({
-                    debug: false,
-                    appId: 'dummy_app_id', // 这里需要真实的appId
-                    timestamp: Math.floor(Date.now() / 1000),
-                    nonceStr: 'dummy_nonce_str',
-                    signature: 'dummy_signature',
-                    jsApiList: [
-                        'updateAppMessageShareData',
-                        'updateTimelineShareData',
-                        'onMenuShareTimeline',
-                        'onMenuShareAppMessage'
-                    ]
-                });
-                
-                wx.ready(function() {
-                    // 移除调试日志
-                    configureWechatShare();
-                });
-                
-                wx.error(function(res) {
-                    // 移除调试日志
-                    // 即使JS-SDK失败，meta标签仍然有效
-                });
-            } else {
-                // 移除调试日志
-            }
-        }
-        
-        // 配置微信分享内容
-        function configureWechatShare() {
-            const shareData = getShareData();
-            
-            // 新版API
-            if (wx.updateAppMessageShareData) {
-                wx.updateAppMessageShareData({
-                    title: shareData.title,
-                    desc: shareData.desc,
-                    link: shareData.link,
-                    imgUrl: shareData.imgUrl,
-                    success: function() {
-                        // 移除调试日志
-                    },
-                    fail: function(err) {
-                        // 移除调试日志
-                    }
-                });
-            }
-            
-            if (wx.updateTimelineShareData) {
-                wx.updateTimelineShareData({
-                    title: shareData.timelineTitle || shareData.title,
-                    link: shareData.link,
-                    imgUrl: shareData.imgUrl,
-                    success: function() {
-                        // 移除调试日志
-                    },
-                    fail: function(err) {
-                        // 移除调试日志
-                    }
-                });
-            }
-            
-            // 兼容旧版API
-            if (wx.onMenuShareAppMessage) {
-                wx.onMenuShareAppMessage(shareData);
-            }
-            
-            if (wx.onMenuShareTimeline) {
-                wx.onMenuShareTimeline({
-                    title: shareData.title,
-                    link: shareData.link,
-                    imgUrl: shareData.imgUrl
-                });
-            }
         }
         
         const BRAND_SHARE_SLOGAN = '传承经典 美美与共';
@@ -1451,12 +1351,11 @@
             `;
             
             const isWeChat = isWechatBrowser();
-            const hasWxSDK = typeof wx !== 'undefined';
             
             debugPanel.innerHTML = `
                 <div style="font-weight: bold; margin-bottom: 10px;">🐛 调试信息</div>
                 <div>浏览器：${isWeChat ? '✅ 微信' : '❌ 非微信'}</div>
-                <div>微信SDK：${hasWxSDK ? '✅ 已加载' : '❌ 未加载'}</div>
+                <div>分享路径：OG-only（无 JSSDK）</div>
                 <div>页面标题：${document.title}</div>
                 <div>当前URL：${window.location.href}</div>
                 <div style="margin-top: 10px;">
@@ -1500,7 +1399,7 @@
                 'wechat:title', 'wechat:desc', 'wechat:imgUrl'
             ];
             
-            console.log('=== Meta标签检查 ===');
+            console.log('=== Meta标签检查（OG-only）===');
             metaTags.forEach(tag => {
                 const element = document.querySelector(`meta[property="${tag}"], meta[name="${tag}"]`);
                 if (element) {
@@ -1509,11 +1408,7 @@
                     console.log(`${tag}: 未找到`);
                 }
             });
-            
-            if (isWechatBrowser() && typeof wx !== 'undefined') {
-                console.log('=== 微信分享测试 ===');
-                setupWechatShare();
-            }
+            setupWechatShare();
         }
     </script>
     

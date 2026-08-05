@@ -16,8 +16,8 @@ class NanyiAPI {
             // 域名访问，使用相对路径让nginx代理处理
             this.baseURL = '/api';
         } else {
-            // IP访问，直接连接后端端口
-            this.baseURL = 'http://121.36.205.70:5432/api';
+            // IP/其它主机：同协议直连后端端口，避免 HTTPS 混合内容
+            this.baseURL = `${protocol}//${currentHost}:5432/api`;
         }
         
         // 只在调试模式下输出API基础URL
