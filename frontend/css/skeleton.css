@@ -53,9 +53,17 @@
 
 .skeleton-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 1rem;
     padding: 1rem;
+}
+
+@media (max-width: 768px) {
+    .skeleton-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.7rem;
+        padding: 0.5rem;
+    }
 }
 
 /* 品牌卡片骨架屏 */
@@ -142,11 +150,19 @@
 
 .modal-category-skeleton-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 0.4rem;
 }
 
 .modal-category-skeleton-grid .skeleton-image-item {
-    height: 150px;
-    border-radius: 8px;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .modal-category-skeleton-grid {
+        grid-template-columns: repeat(auto-fill, minmax(max(48px, calc((100% - 36px) / 10)), 1fr));
+        gap: 4px;
+    }
 }

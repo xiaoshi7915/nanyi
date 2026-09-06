@@ -59,13 +59,13 @@
     <link rel="stylesheet" href="static/lib/all.min.css">
     
     <!-- 发布版本号（发布时与 js/app-version.js 同步修改） -->
-    <script src="js/app-version.js?v=20260906-1"></script>
+    <script src="js/app-version.js?v=20260906-6"></script>
     
     <!-- 引入样式文件 -->
-    <link rel="stylesheet" href="css/main.css?v=20260906-1">
-    <link rel="stylesheet" href="static/css/responsive.css?v=20260906-1">
-    <link rel="stylesheet" href="css/skeleton.css?v=20260906-1">
-    <link rel="stylesheet" href="css/try-on.css?v=20260906-1">
+    <link rel="stylesheet" href="css/main.css?v=20260906-6">
+    <link rel="stylesheet" href="static/css/responsive.css?v=20260906-6">
+    <link rel="stylesheet" href="css/skeleton.css?v=20260906-6">
+    <link rel="stylesheet" href="css/try-on.css?v=20260906-6">
     
     <!-- 引入性能优化配置 -->
     <script src="js/performance-config.js"></script>
@@ -73,7 +73,7 @@
     <!-- 引入图片预加载管理器 -->
     <script src="js/image-preloader.js"></script>
     <script src="js/share-card.js"></script>
-    <script src="js/try-on-helpers.js?v=20260906-1"></script>
+    <script src="js/try-on-helpers.js?v=20260906-6"></script>
     
     <!-- 注册Service Worker (PWA) -->
     <script>
@@ -210,8 +210,8 @@
     
     <!-- 引入API客户端 -->
     <!-- 恢复使用正式API文件 -->
-    <script src="js/api.js?v=20260906-1"></script>
-    <script src="js/auth-session.js?v=20260906-1"></script>
+    <script src="js/api.js?v=20260906-6"></script>
+    <script src="js/auth-session.js?v=20260906-6"></script>
     <script>
         // 确保API已加载并验证方法存在
         (function() {
@@ -267,8 +267,8 @@
 .nanyi-auth-list{margin-top:8px;border-top:1px solid #EAE3D2;padding-top:8px;}
 .nanyi-auth-list h4{margin:0 0 6px;font-size:13px;color:#1C343B;}
 .nanyi-auth-list ul{margin:0;padding-left:18px;font-size:13px;color:#3A3526;}
-.auth-entry-btn{min-width:auto;height:28px;padding:0 10px!important;border:1px solid rgba(255,255,255,.55)!important;background:rgba(255,255,255,.28)!important;border-radius:14px;cursor:pointer;color:#fff!important;}
-.auth-entry-btn span{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.35);font-size:11px!important;font-weight:600;line-height:1;}
+.auth-entry-btn{min-width:auto;height:28px;padding:0 10px!important;border:1px solid rgba(194,161,90,.55)!important;background:var(--c-gold-pale,#F0E4C8)!important;border-radius:14px;cursor:pointer;color:var(--c-ink-deep,#1C343B)!important;}
+.auth-entry-btn span{color:var(--c-ink-deep,#1C343B)!important;text-shadow:none;font-size:11px!important;font-weight:600;line-height:1;}
 </style>
 </head>
 <body>
@@ -290,11 +290,12 @@
                     </a>
                     <!-- 右侧图标 -->
                     <div class="header-actions">
-                        <!-- 淘宝 -->
-                        <a href="https://m.tb.cn/h.hVSffucqrHuJeRZ" 
-                           target="_blank" 
-                           class="header-icon social-icon" 
-                           title="淘宝店铺">
+                        <!-- 淘宝：直达店铺页；移动端同页跳转，避免 target=_blank / 短链失败 -->
+                        <a href="https://shop357296168.taobao.com/"
+                           class="header-icon social-icon"
+                           title="淘宝店铺"
+                           rel="noopener noreferrer"
+                           @click="openTaobaoShop($event)">
                             <img src="static/images/taobao.png" alt="淘宝" class="social-logo">
                         </a>
                         <!-- 小红书 -->
@@ -325,12 +326,46 @@
             </div>
         </header>
 
-        <!-- 英雄横幅区：紫色背景上延至 fixed 顶栏下方，无独立 spacer -->
+        <!-- 英雄横幅区：深黛底 + 行书 slogan + 印章九宫格 -->
         <section class="hero-banner">
+            <div class="hero-banner__bg" aria-hidden="true">
+                <svg width="100%" height="100%" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMid slice">
+                    <path d="M0 320 L120 240 L240 280 L380 200 L520 260 L660 220 L800 270 L960 230 L1120 280 L1280 240 L1440 290 L1440 400 L0 400Z" fill="rgba(255,255,255,0.04)"/>
+                    <path d="M0 350 L150 290 L320 320 L480 270 L640 310 L820 280 L980 320 L1160 290 L1320 330 L1440 300 L1440 400 L0 400Z" fill="rgba(255,255,255,0.06)"/>
+                    <defs>
+                        <pattern id="heroRhombus" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                            <path d="M20 4 L36 20 L20 36 L4 20Z" fill="none" stroke="rgba(194,161,90,0.18)" stroke-width="0.5"/>
+                        </pattern>
+                    </defs>
+                    <rect x="0" y="0" width="1440" height="400" fill="url(#heroRhombus)"/>
+                </svg>
+            </div>
             <div class="container">
-                <div class="hero-content">
-                    <h1 class="hero-title">传承经典 美美与共</h1>
-                    <p class="hero-subtitle">古典美学设计，望君着美于裳</p>
+                <div class="hero-banner-inner">
+                    <div class="hero-copy">
+                        <div class="hero-eyebrow">NANYI · QIU TANG · 古典中式</div>
+                        <h1 class="hero-title">传承经典 美美与共</h1>
+                        <p class="hero-subtitle">古典美学设计，望君着美于裳</p>
+                        <div class="hero-cta">
+                            <button type="button" class="hero-btn hero-btn-primary" @click="openBrowseAllModal">浏览全部</button>
+                            <button type="button" class="hero-btn hero-btn-ghost" @click="openSeriesModal">了解系列</button>
+                        </div>
+                        <div class="hero-search-inline">
+                            <div class="search-input-container">
+                                <i class="fas fa-search search-icon"></i>
+                                <input
+                                    v-model="searchQuery"
+                                    type="text"
+                                    placeholder="搜索品牌名称、布料材质和主题系列"
+                                    title="搜索品牌名称、布料材质和主题系列"
+                                    class="search-input"
+                                    @input="filterBrands"
+                                    @keyup.enter="performSearch"
+                                >
+                            </div>
+                            <button type="button" @click="performSearch" class="search-btn">搜索</button>
+                        </div>
+                    </div>
                 </div>
                 <!-- 供微信爬虫读取的分享摘要（勿删） -->
                 <div id="wx-share-summary" aria-hidden="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">
@@ -339,26 +374,9 @@
             </div>
         </section>
 
-        <!-- 搜索和筛选区 -->
+        <!-- 筛选区（搜索已融入英雄区） -->
         <section class="filter-section">
             <div class="container">
-                <!-- 搜索栏 -->
-                <div class="search-box">
-                    <div class="search-input-container">
-                        <i class="fas fa-search search-icon"></i>
-                        <input 
-                            v-model="searchQuery" 
-                            type="text" 
-                            placeholder="搜索品牌名称、布料材质和主题系列"
-                            title="搜索品牌名称、布料材质和主题系列"
-                            class="search-input"
-                            @input="filterBrands"
-                        >
-                    </div>
-                    <button @click="performSearch" class="search-btn">
-                        搜索
-                    </button>
-                </div>
                 
 
 
@@ -516,13 +534,11 @@
                         class="brand-card"
                         :data-brand-name="brand.name"
                         @click="openBrandDetail(brand)"
-                        @mouseenter="preloadBrandData(brand)"
+                        @mouseenter="onBrandCardEnter(brand)"
+                        @mouseleave="onBrandCardLeave(brand)"
                         @mousedown="preloadBrandData(brand, true)"
                     >
                         <div class="brand-image-container">
-                            <span class="card-type-badge" v-if="getCardSlide(brand)">
-                                {{ getCardSlideType(brand) }} {{ getCardSlideIndex(brand) + 1 }}/{{ getBrandCarouselImages(brand).length }}
-                            </span>
                             <img
                                 :src="getCardSlideUrl(brand)"
                                 :alt="brand.name"
@@ -682,28 +698,6 @@
                     </div>
                     <!-- 实际内容 -->
                     <template v-else>
-                    <!-- 主图轮播：概念图→设计图→布料图→成衣图→模特图 -->
-                    <div class="detail-hero-carousel" v-if="getDetailCarouselImages().length">
-                        <span class="detail-hero-badge">
-                            {{ getDetailSlideType() }} {{ detailHeroIndex + 1 }}/{{ getDetailCarouselImages().length }}
-                        </span>
-                        <img
-                            :src="getImageURL(getDetailCarouselImages()[detailHeroIndex])"
-                            :alt="selectedBrand.name"
-                            @error="handleImageError"
-                        >
-                        <div class="detail-hero-nav" v-if="getDetailCarouselImages().length > 1">
-                            <button type="button" @click="prevDetailHero" aria-label="上一张"><i class="fas fa-chevron-left"></i></button>
-                            <button type="button" @click="nextDetailHero" aria-label="下一张"><i class="fas fa-chevron-right"></i></button>
-                        </div>
-                        <div class="detail-hero-dots" v-if="getDetailCarouselImages().length > 1">
-                            <i
-                                v-for="(img, i) in getDetailCarouselImages().slice(0, 10)"
-                                :key="'dh'+i"
-                                :class="{ 'is-active': i === detailHeroIndex }"
-                            ></i>
-                        </div>
-                    </div>
                     <!-- 基本信息 -->
                     <div class="detail-section">
                         <div class="section-header">
@@ -801,6 +795,26 @@
                         </div>
                         <div class="action-hint">
                             生成精美卡片，轻松分享到朋友圈
+                        </div>
+                    </div>
+
+                    <!-- 猜你也喜欢：同系列/年份/材质优先 -->
+                    <div class="detail-section related-brands-section" v-if="getRelatedBrands().length">
+                        <h3 class="section-title">猜你也喜欢</h3>
+                        <div class="related-brands-grid">
+                            <div
+                                v-for="rb in getRelatedBrands()"
+                                :key="'rel-' + rb.name"
+                                class="related-brand-card"
+                                @click="openBrandDetail(rb)"
+                            >
+                                <img :src="getBrandCoverImage(rb)" :alt="rb.name" loading="lazy" @error="handleImageError">
+                                <div class="related-name">{{ rb.name }}</div>
+                                <div class="related-meta">
+                                    <span v-if="rb.theme_series">{{ rb.theme_series }}</span>
+                                    <span v-if="rb.year"> · {{ rb.year }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     </template>
@@ -1193,6 +1207,72 @@
             </div>
         </div>
 
+        <!-- 浏览全部：按单一维度分组展示品牌（Tab 切换） -->
+        <div v-if="showBrowseAllModal" class="catalog-modal-overlay" @click="closeBrowseAllModal">
+            <div class="catalog-modal-sheet" @click.stop>
+                <div class="catalog-modal-header">
+                    <h3>浏览全部</h3>
+                    <button type="button" class="close-btn" @click="closeBrowseAllModal" aria-label="关闭">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="catalog-dimension-tabs" role="tablist" aria-label="分组方式">
+                    <button
+                        type="button"
+                        role="tab"
+                        v-for="tab in browseAllTabs"
+                        :key="'browse-tab-' + tab.key"
+                        :class="['catalog-dimension-tab', { active: browseAllDimension === tab.key }]"
+                        :aria-selected="browseAllDimension === tab.key"
+                        @click="setBrowseAllDimension(tab.key)"
+                    >{{ tab.label }}</button>
+                </div>
+                <div class="catalog-modal-body">
+                    <div v-for="group in browseAllGroups" :key="group.key" class="catalog-group">
+                        <button type="button" class="catalog-group-toggle" @click="toggleBrowseGroup(group.key)">
+                            <strong>{{ group.label }}</strong>
+                            <span>{{ group.items.length }} 款 · {{ browseGroupOpen[group.key] ? '收起' : '展开' }}</span>
+                        </button>
+                        <div class="catalog-group-list" v-show="browseGroupOpen[group.key]">
+                            <button
+                                type="button"
+                                class="catalog-brand-btn"
+                                v-for="b in group.items"
+                                :key="group.key + '-' + b.name"
+                                @click="selectBrandFromBrowse(b)"
+                            >{{ b.name }}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 了解系列：点击打开智能客服并询问系列介绍 -->
+        <div v-if="showSeriesModal" class="catalog-modal-overlay" @click="closeSeriesModal">
+            <div class="catalog-modal-sheet" @click.stop>
+                <div class="catalog-modal-header">
+                    <h3>了解系列</h3>
+                    <button type="button" class="close-btn" @click="closeSeriesModal" aria-label="关闭">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="catalog-modal-body">
+                    <div class="catalog-series-list">
+                        <button
+                            type="button"
+                            class="catalog-series-btn"
+                            v-for="s in seriesCatalog"
+                            :key="'series-' + s.name"
+                            @click="askSeriesIntro(s.name)"
+                        >
+                            <span>{{ s.name }}</span>
+                            <em>{{ s.count }} 款</em>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 智能客服弹框：内嵌 nyt_agent 客户端 -->
         <div
             v-if="showNytAgentModal"
@@ -1241,6 +1321,44 @@
                 </div>
             </div>
         </div>
+
+    <!-- 古典四栏桌面页脚（移动端 CSS 隐藏） -->
+    <footer class="site-footer">
+        <div class="site-footer__inner">
+            <div>
+                <div class="site-footer__about">南意秋棠</div>
+                <p>自 2017 年起，我们记取古典中式布料的全部细节——纹理、染色、印染工艺与穿着的呼吸节奏。</p>
+            </div>
+            <div>
+                <h4>系列 SERIES</h4>
+                <ul>
+                    <li v-for="s in footerSeriesList" :key="'ft-s-' + s">{{ s }}</li>
+                </ul>
+            </div>
+            <div>
+                <h4>渠道 CHANNEL</h4>
+                <ul>
+                    <li><a href="https://shop357296168.taobao.com/" rel="noopener noreferrer" @click="openTaobaoShop($event)">淘宝 · nanyiqiutang</a></li>
+                    <li><a href="https://weidian.com/?userid=1330457134" target="_blank" rel="noopener">微店</a></li>
+                    <li><a href="https://www.xiaohongshu.com/user/profile/60195c9800000000010082c4" target="_blank" rel="noopener">小红书 @南意秋棠</a></li>
+                    <li>线下展厅</li>
+                </ul>
+            </div>
+            <div>
+                <h4>联系 CONTACT</h4>
+                <ul>
+                    <li>客服微信 LPumpkin0217</li>
+                    <li>客服微信 moonysy511</li>
+                    <li>邮箱 hi@nanyiqiutang.cn</li>
+                    <li>合作 contact@nanyiqiutang.cn</li>
+                </ul>
+            </div>
+        </div>
+        <div class="site-footer__meta">
+            <span>© 2017 - 2026 · 南意秋棠</span>
+            <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">浙ICP备2024081979号</a>
+        </div>
+    </footer>
     </div>
 
     <script>
@@ -1278,6 +1396,9 @@
                     detailFetchGeneration: 0, // 详情请求代次，用于忽略过期响应
                     detailImagesLoading: false, // 详情全量图尚未就绪（列表仅含封面）
                     cardSlideByBrand: {}, // 首页卡片轮播下标
+                    cardCarouselTimers: {}, // 品牌名 → 自动轮播 timer
+                    cardCarouselPaused: {}, // 品牌名 → 悬停暂停
+                    _cardCarouselObserver: null, // 视口内自动轮播观察器
                     detailHeroIndex: 0, // 详情主图轮播下标
                     _brandDetailInflight: {}, // 品牌详情请求去重
                     
@@ -1313,6 +1434,20 @@
                     // 智能客服弹框（嵌入 nanyi-agent）
                     showNytAgentModal: false,
                     nytAgentIframeSrc: '',
+                    nytAgentPresetMessage: '',
+
+                    // 浏览全部 / 了解系列弹框
+                    showBrowseAllModal: false,
+                    showSeriesModal: false,
+                    browseGroupOpen: {},
+                    // 浏览全部：一次只看一种分组维度（默认按年份）
+                    browseAllDimension: 'year',
+                    browseAllTabs: [
+                        { key: 'year', label: '按年份' },
+                        { key: 'material', label: '按材质' },
+                        { key: 'theme_series', label: '按主题系列' },
+                        { key: 'print_size', label: '按印制尺寸' }
+                    ],
 
                     // AI试衣相关数据
                     showTryOnModal: false,
@@ -1383,6 +1518,7 @@
                     
                     await this.loadData();
                     this.setupBrandCardViewportPrefetch();
+                    this.setupCardCarouselAutoplay();
 
                     // 登录态：本地 JWT 静默续期并拉取 /api/me（回访不重复走微信授权）
                     if (window.NanyiAuth && typeof window.NanyiAuth.bootstrap === 'function') {
@@ -1444,7 +1580,107 @@
                 }
             },
 
+            beforeUnmount() {
+                this.stopAllCardAutoplays();
+                if (this._cardCarouselObserver) {
+                    this._cardCarouselObserver.disconnect();
+                    this._cardCarouselObserver = null;
+                }
+                if (this._brandViewportObserver) {
+                    this._brandViewportObserver.disconnect();
+                    this._brandViewportObserver = null;
+                }
+            },
+
             computed: {
+                // 页脚系列名（有数据用真实，否则设计稿默认）
+                footerSeriesList() {
+                    var list = (this.filterOptions && this.filterOptions.theme_series) || [];
+                    if (list && list.length) return list.slice(0, 8);
+                    return ['画韵春秋', '长物志', '执·念', '未公开款'];
+                },
+                // 了解系列列表
+                seriesCatalog() {
+                    var self = this;
+                    var series = (this.filterOptions && this.filterOptions.theme_series) || [];
+                    if (!series.length) {
+                        series = ['画韵春秋', '长物志', '执·念', '未公开款'];
+                    }
+                    return series.map(function (name) {
+                        var count = (self.brandCounts && self.brandCounts.theme_series && self.brandCounts.theme_series[name]) || 0;
+                        if (!count) {
+                            count = Object.values(self.brandData || {}).filter(function (b) {
+                                return b.theme_series === name;
+                            }).length;
+                        }
+                        return { name: name, count: count };
+                    });
+                },
+                // 浏览全部：按当前 Tab 维度分组（年份倒序；其余按名称）
+                browseAllGroups() {
+                    var self = this;
+                    var dim = this.browseAllDimension || 'year';
+                    var brands = Object.values(this.brandData || {}).filter(function (b) {
+                        return b && b.name;
+                    });
+                    function sortBrandNames(list) {
+                        return list.slice().sort(function (a, b) {
+                            return (a.name || '').localeCompare(b.name || '', 'zh');
+                        });
+                    }
+                    function groupBy(key, labelPrefix, sortKeysFn) {
+                        var map = {};
+                        brands.forEach(function (b) {
+                            var val = b[key];
+                            if (!val || val === 'N/A') val = '未标注';
+                            if (!map[val]) map[val] = [];
+                            map[val].push(b);
+                        });
+                        var keys = Object.keys(map);
+                        if (typeof sortKeysFn === 'function') {
+                            keys = sortKeysFn(keys);
+                        } else {
+                            keys.sort(function (a, b) {
+                                if (a === '未标注') return 1;
+                                if (b === '未标注') return -1;
+                                return a.localeCompare(b, 'zh');
+                            });
+                        }
+                        return keys.map(function (k) {
+                            return {
+                                key: key + '::' + k,
+                                label: labelPrefix + ' · ' + k,
+                                items: sortBrandNames(map[k])
+                            };
+                        });
+                    }
+                    if (dim === 'year') {
+                        return groupBy('year', '年份', function (keys) {
+                            return keys.sort(function (a, b) {
+                                if (a === '未标注') return 1;
+                                if (b === '未标注') return -1;
+                                return Number(b) - Number(a);
+                            });
+                        });
+                    }
+                    if (dim === 'material') {
+                        return groupBy('material', '材质');
+                    }
+                    if (dim === 'theme_series') {
+                        return groupBy('theme_series', '系列');
+                    }
+                    if (dim === 'print_size') {
+                        return groupBy('print_size', '印制尺寸');
+                    }
+                    return groupBy('year', '年份', function (keys) {
+                        return keys.sort(function (a, b) {
+                            if (a === '未标注') return 1;
+                            if (b === '未标注') return -1;
+                            return Number(b) - Number(a);
+                        });
+                    });
+                },
+
                 /** 顶栏登录按钮文案：优先手机号，其次用户名/邮箱/昵称 */
                 authEntryLabel() {
                     if (!this.authUser) return '登录';
@@ -1578,6 +1814,7 @@
                             
                             this.dataLoaded = true;
                             this.observeNewBrandCards();
+                            this.observeCardCarouselCards();
                             if (PerformanceConfig.performanceMonitoring.verboseLogging) {
                                 // 移除调试日志
                             }
@@ -1761,6 +1998,11 @@
                     
                     // 更新筛选后的统计数量
                     this.updateFilterCounts(filtered);
+                    this.stopAllCardAutoplays();
+                    this.$nextTick(() => {
+                        this.observeNewBrandCards();
+                        this.observeCardCarouselCards();
+                    });
                 },
 
                 /** 切换首页列表页码并滚到列表顶部 */
@@ -1768,11 +2010,14 @@
                     const target = Math.max(1, Math.min(page, this.totalDisplayPages));
                     if (target === this.displayPage) return;
                     this.displayPage = target;
+                    this.stopAllCardAutoplays();
                     this.$nextTick(() => {
                         const grid = document.querySelector('.brands-grid');
                         if (grid) {
                             grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }
+                        this.observeNewBrandCards();
+                        this.observeCardCarouselCards();
                     });
                 },
                 
@@ -1925,9 +2170,149 @@
                         });
                 },
 
-                /** 首页卡片轮播图（预览图按类型序） */
+                /** 首页卡片轮播：优先全量非生成图（概念→设计→布料→成衣→模特→买家秀） */
                 getBrandCarouselImages(brand) {
-                    return this.sortImagesByType(this.getBrandPreviewImages(brand));
+                    if (!brand) return [];
+                    const previewLen = (brand.preview_images || []).length;
+                    let images = [];
+
+                    // 1) brand.images 已是全量（张数超过 preview，或本身无 preview）
+                    if (Array.isArray(brand.images) && brand.images.length) {
+                        if (!previewLen || brand.images.length > previewLen) {
+                            images = brand.images;
+                        }
+                    }
+
+                    // 2) 悬停/视口预取缓存
+                    if (!images.length || (previewLen > 0 && images.length <= previewLen)) {
+                        const cached = this.getCachedBrandDetailPayload(brand);
+                        if (cached && cached.images && cached.images.length) {
+                            if (!images.length || cached.images.length > images.length) {
+                                images = cached.images;
+                            }
+                        }
+                    }
+
+                    // 3) 列表 preview 兜底
+                    if (!images.length) {
+                        images = this.getBrandPreviewImages(brand);
+                    }
+
+                    return this.sortImagesByType(images);
+                },
+
+                /** 将全量图写回列表数据，驱动卡片轮播更新 */
+                mergeCarouselImagesIntoBrand(brandName, images) {
+                    if (!brandName || !images || !images.length) return;
+                    const filtered = images.filter(img => img && !this.isGeneratedImageSource(img));
+                    if (!filtered.length) return;
+                    const existing = this.brandData[brandName];
+                    if (!existing) return;
+                    const prevLen = (existing.images || existing.preview_images || []).length;
+                    if (filtered.length <= prevLen && existing.images && existing.images.length >= filtered.length) {
+                        return;
+                    }
+                    const updated = { ...existing, images: filtered };
+                    this.brandData[brandName] = updated;
+                    const idx = this.filteredBrands.findIndex(b => b && b.name === brandName);
+                    if (idx >= 0) {
+                        this.filteredBrands.splice(idx, 1, updated);
+                    }
+                },
+
+                onBrandCardEnter(brand) {
+                    this.preloadBrandData(brand);
+                    this.pauseCardAutoplay(brand);
+                },
+
+                onBrandCardLeave(brand) {
+                    this.resumeCardAutoplay(brand);
+                },
+
+                pauseCardAutoplay(brand) {
+                    // 仅真实悬停设备暂停，避免移动端 touch 误触发后无法 resume
+                    if (window.matchMedia && !window.matchMedia('(hover: hover)').matches) return;
+                    const name = brand && (brand.name || brand.brand_name);
+                    if (!name) return;
+                    this.cardCarouselPaused = { ...this.cardCarouselPaused, [name]: true };
+                },
+
+                resumeCardAutoplay(brand) {
+                    const name = brand && (brand.name || brand.brand_name);
+                    if (!name) return;
+                    this.cardCarouselPaused = { ...this.cardCarouselPaused, [name]: false };
+                },
+
+                startCardAutoplay(brandName) {
+                    if (!brandName) return;
+                    this.stopCardAutoplay(brandName);
+                    const brand = this.brandData[brandName]
+                        || this.filteredBrands.find(b => b && b.name === brandName);
+                    if (!brand || this.getBrandCarouselImages(brand).length < 2) return;
+                    const self = this;
+                    this.cardCarouselTimers[brandName] = setInterval(() => {
+                        if (self.cardCarouselPaused[brandName]) return;
+                        const b = self.brandData[brandName]
+                            || self.filteredBrands.find(x => x && x.name === brandName);
+                        if (b) self.nextCardSlide(b);
+                    }, 3500);
+                },
+
+                stopCardAutoplay(brandName) {
+                    if (!brandName) return;
+                    if (this.cardCarouselTimers[brandName]) {
+                        clearInterval(this.cardCarouselTimers[brandName]);
+                        delete this.cardCarouselTimers[brandName];
+                    }
+                },
+
+                stopAllCardAutoplays() {
+                    Object.keys(this.cardCarouselTimers || {}).forEach((name) => {
+                        this.stopCardAutoplay(name);
+                    });
+                },
+
+                /** 视口内卡片自动轮播；离开视口清理 timer */
+                setupCardCarouselAutoplay() {
+                    if (!('IntersectionObserver' in window)) return;
+                    if (this._cardCarouselObserver) {
+                        this._cardCarouselObserver.disconnect();
+                    }
+                    const self = this;
+                    this._cardCarouselObserver = new IntersectionObserver((entries) => {
+                        entries.forEach((entry) => {
+                            const brandName = entry.target.dataset.brandName;
+                            if (!brandName) return;
+                            if (entry.isIntersecting) {
+                                self.preloadBrandData(
+                                    self.brandData[brandName]
+                                        || self.filteredBrands.find(b => b && b.name === brandName),
+                                    true
+                                );
+                                self.startCardAutoplay(brandName);
+                            } else {
+                                self.stopCardAutoplay(brandName);
+                            }
+                        });
+                    }, { rootMargin: '40px 0px', threshold: 0.2 });
+
+                    this.$nextTick(() => {
+                        document.querySelectorAll('.brand-card[data-brand-name]').forEach((el) => {
+                            this._cardCarouselObserver.observe(el);
+                        });
+                    });
+                },
+
+                observeCardCarouselCards() {
+                    if (!this._cardCarouselObserver) return;
+                    this.$nextTick(() => {
+                        document.querySelectorAll('.brand-card[data-brand-name]').forEach((el) => {
+                            if (!el._carouselObserved) {
+                                el._carouselObserved = true;
+                                this._cardCarouselObserver.observe(el);
+                            }
+                        });
+                    });
                 },
 
                 getCardSlideIndex(brand) {
@@ -2301,7 +2686,12 @@
                             if (this.getCachedBrandDetailPayload(brand)) {
                                 const cached = window.cacheManager.get('brand_detail', brandName);
                                 const payload = this.normalizeBrandDetailPayload(cached, brand);
+                                this.mergeCarouselImagesIntoBrand(brandName, payload?.images || []);
                                 this.preloadDetailImageUrls(payload?.images || [], 24);
+                                // 全量图到位后可启动/刷新自动轮播
+                                if (this.getBrandCarouselImages(this.brandData[brandName] || brand).length > 1) {
+                                    this.startCardAutoplay(brandName);
+                                }
                                 return;
                             }
 
@@ -2310,8 +2700,12 @@
                             if (payload && window.cacheManager && this.isCompleteDetailPayload(payload, expectedCount, brand)) {
                                 window.cacheManager.set('brand_detail', payload, brandName);
                             }
+                            this.mergeCarouselImagesIntoBrand(brandName, payload?.images || []);
                             this.preloadDetailImageUrls(payload?.images || [], 24);
                             this.prefetchShareCardInBackground(brandName, this.getShareCardApiUrl(brandName));
+                            if (this.getBrandCarouselImages(this.brandData[brandName] || brand).length > 1) {
+                                this.startCardAutoplay(brandName);
+                            }
                         } catch (error) {
                             if (PerformanceConfig && PerformanceConfig.performanceMonitoring && PerformanceConfig.performanceMonitoring.verboseLogging) {
                                 // 静默失败
@@ -2906,16 +3300,121 @@
                         }
                     } catch (e) {}
                 },
-                openNytAgentChat() {
-                    var at = (window.NanyiAuth && window.NanyiAuth.getAccessToken()) || '';
+                openNytAgentChat(presetMessage) {
+                    var msg = (typeof presetMessage === 'string' && presetMessage) ? presetMessage : '';
+                    this.nytAgentPresetMessage = msg;
                     var src = 'https://nanyi-agent.nanyiqiutang.cn/?embed=1';
-                    // 优先 postMessage，避免 token 进 Referer；URL 仅作兜底
+                    if (msg) {
+                        src += '&q=' + encodeURIComponent(msg);
+                    }
+                    // 优先 postMessage，避免 token 进 Referer；URL query 作预填兜底
                     this.nytAgentIframeSrc = src;
                     this.showNytAgentModal = true;
                     document.body.style.overflow = 'hidden';
                     var self = this;
-                    setTimeout(function () { self.postAuthToAgentIframe(); }, 600);
-                    setTimeout(function () { self.postAuthToAgentIframe(); }, 1500);
+                    setTimeout(function () { self.postAuthToAgentIframe(); self.postPresetToAgentIframe(); }, 600);
+                    setTimeout(function () { self.postAuthToAgentIframe(); self.postPresetToAgentIframe(); }, 1500);
+                    setTimeout(function () { self.postPresetToAgentIframe(); }, 2500);
+                },
+
+                postPresetToAgentIframe() {
+                    try {
+                        var iframe = document.querySelector('.nyt-agent-iframe');
+                        var msg = this.nytAgentPresetMessage;
+                        if (!iframe || !iframe.contentWindow || !msg) return;
+                        iframe.contentWindow.postMessage({
+                            type: 'nyt_agent_preset',
+                            message: msg,
+                            autoSend: true
+                        }, '*');
+                        iframe.contentWindow.postMessage({
+                            type: 'nanyi_chat_preset',
+                            text: msg,
+                            send: true
+                        }, '*');
+                    } catch (e) {}
+                },
+
+                // 浏览全部弹框
+                openBrowseAllModal() {
+                    this.showBrowseAllModal = true;
+                    this.browseAllDimension = 'year';
+                    this.initBrowseGroupOpen();
+                    document.body.style.overflow = 'hidden';
+                },
+                initBrowseGroupOpen() {
+                    var groups = this.browseAllGroups;
+                    var open = {};
+                    groups.forEach(function (g, idx) { open[g.key] = idx === 0; });
+                    this.browseGroupOpen = open;
+                },
+                setBrowseAllDimension(dim) {
+                    this.browseAllDimension = dim || 'year';
+                    this.initBrowseGroupOpen();
+                },
+                closeBrowseAllModal() {
+                    this.showBrowseAllModal = false;
+                    if (!this.showModal && !this.showNytAgentModal && !this.showSeriesModal && !this.showTryOnModal) {
+                        document.body.style.overflow = '';
+                    }
+                },
+                toggleBrowseGroup(key) {
+                    this.browseGroupOpen = Object.assign({}, this.browseGroupOpen, {
+                        [key]: !this.browseGroupOpen[key]
+                    });
+                },
+                selectBrandFromBrowse(brand) {
+                    this.closeBrowseAllModal();
+                    this.openBrandDetail(brand);
+                },
+
+                // 了解系列弹框
+                openSeriesModal() {
+                    this.showSeriesModal = true;
+                    document.body.style.overflow = 'hidden';
+                },
+                closeSeriesModal() {
+                    this.showSeriesModal = false;
+                    if (!this.showModal && !this.showNytAgentModal && !this.showBrowseAllModal && !this.showTryOnModal) {
+                        document.body.style.overflow = '';
+                    }
+                },
+                askSeriesIntro(seriesName) {
+                    this.closeSeriesModal();
+                    var q = '请介绍「' + seriesName + '」系列的设计理念、风格特点和代表款式。';
+                    this.openNytAgentChat(q);
+                },
+
+                // 猜你也喜欢：同系列 > 同年份 > 同材质
+                getRelatedBrands() {
+                    var current = this.selectedBrand;
+                    if (!current) return [];
+                    var curName = current.name || current.brand_name;
+                    var all = Object.values(this.brandData || {}).filter(function (b) {
+                        return b && (b.name || b.brand_name) !== curName;
+                    });
+                    var scored = all.map(function (b) {
+                        var score = 0;
+                        if (current.theme_series && b.theme_series === current.theme_series) score += 5;
+                        if (current.year && b.year === current.year) score += 3;
+                        if (current.material && b.material === current.material) score += 2;
+                        if (current.print_size && b.print_size === current.print_size) score += 1;
+                        return { brand: b, score: score };
+                    });
+                    scored.sort(function (a, b) {
+                        if (b.score !== a.score) return b.score - a.score;
+                        return (a.brand.name || '').localeCompare(b.brand.name || '', 'zh');
+                    });
+                    var top = scored.filter(function (x) { return x.score > 0; }).slice(0, 3);
+                    if (top.length < 3) {
+                        scored.slice(0, 3).forEach(function (x) {
+                            if (top.length >= 3) return;
+                            if (!top.some(function (t) { return t.brand.name === x.brand.name; })) {
+                                top.push(x);
+                            }
+                        });
+                    }
+                    return top.map(function (x) { return x.brand; }).slice(0, 3);
                 },
 
                 // 关闭智能客服弹框
@@ -2926,6 +3425,129 @@
                     if (!this.showTryOnModal && !this.showModal && !this.showReviewModal) {
                         document.body.style.overflow = '';
                     }
+                },
+
+                // 打开淘宝店铺：微信内必须有可见反馈；其它环境尽量原生跳转
+                openTaobaoShop(event) {
+                    const url = 'https://shop357296168.taobao.com/';
+                    const shopId = '357296168';
+                    const ua = navigator.userAgent || '';
+                    const isWeChat = /MicroMessenger/i.test(ua);
+                    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile/i.test(ua);
+
+                    // 微信内：拦截后尝试唤起淘宝 App，并弹出自带样式的引导层（绝不静默）
+                    if (isWeChat) {
+                        if (event) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        this.tryOpenTaobaoApp(shopId, url);
+                        this.showOpenInBrowserTip(url);
+                        this.showToast('请用浏览器打开淘宝店，或复制下方链接', 3200);
+                        return false;
+                    }
+
+                    // 非微信：尽量交给原生 <a>，减少拦截
+                    if (isMobile) {
+                        // 同页跳转更稳，避免 target=_blank 被拦
+                        if (event) event.preventDefault();
+                        window.location.href = url;
+                        return false;
+                    }
+
+                    // 桌面：允许新标签；失败则同页跳转
+                    if (event) event.preventDefault();
+                    const win = window.open(url, '_blank', 'noopener,noreferrer');
+                    if (!win) {
+                        window.location.href = url;
+                    }
+                    return false;
+                },
+
+                // 尝试唤起淘宝 App（失败时由引导弹层兜底，不依赖跳转结果）
+                tryOpenTaobaoApp(shopId, httpsUrl) {
+                    try {
+                        const deepLinks = [
+                            // 店铺首页 scheme
+                            `taobao://shop.m.taobao.com/shop/shop_index.htm?shop_id=${shopId}`,
+                            // 通用 tbopen，携带 H5 店铺地址
+                            `tbopen://m.taobao.com/tbopen/index.html?h5Url=${encodeURIComponent(httpsUrl)}`
+                        ];
+                        // 用隐藏 iframe 尝试唤起，避免直接改 location 导致白屏无反馈
+                        const iframe = document.createElement('iframe');
+                        iframe.style.cssText = 'display:none;width:0;height:0;border:0;';
+                        iframe.src = deepLinks[0];
+                        document.body.appendChild(iframe);
+                        setTimeout(() => {
+                            try { iframe.remove(); } catch (e) { /* ignore */ }
+                        }, 1500);
+                        // 部分机型对 iframe scheme 无效，再轻量尝试一次 location（短延迟，弹层已显示）
+                        setTimeout(() => {
+                            try {
+                                const probe = document.createElement('a');
+                                probe.href = deepLinks[1];
+                                probe.style.display = 'none';
+                                document.body.appendChild(probe);
+                                probe.click();
+                                setTimeout(() => { try { probe.remove(); } catch (e) { /* ignore */ } }, 800);
+                            } catch (e) { /* ignore */ }
+                        }, 400);
+                    } catch (e) {
+                        // 唤起失败不抛错，引导弹层已负责反馈
+                        console.warn('tryOpenTaobaoApp failed', e);
+                    }
+                },
+
+                // 微信内置浏览器引导：自带完整样式，不依赖客服弹窗的动态 CSS
+                showOpenInBrowserTip(shopUrl) {
+                    const existing = document.querySelector('.open-browser-tip-modal');
+                    if (existing) existing.remove();
+
+                    const modal = document.createElement('div');
+                    modal.className = 'open-browser-tip-modal';
+                    // 关键定位 + 高 z-index，保证在微信里一定可见
+                    modal.setAttribute('role', 'dialog');
+                    modal.setAttribute('aria-modal', 'true');
+                    modal.style.cssText = 'position:fixed;inset:0;z-index:99999;';
+                    modal.innerHTML = `
+                        <div class="ob-tip-overlay" style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box;">
+                            <div class="ob-tip-content" style="background:#fff;border-radius:12px;max-width:340px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,0.35);overflow:hidden;">
+                                <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #eee;">
+                                    <h3 style="margin:0;font-size:1.05rem;color:#1C343B;">打开淘宝店铺</h3>
+                                    <button type="button" class="ob-tip-close" aria-label="关闭" style="border:none;background:transparent;font-size:1.25rem;line-height:1;cursor:pointer;color:#666;padding:4px 8px;">×</button>
+                                </div>
+                                <p style="margin:14px 16px 8px;line-height:1.65;color:#333;font-size:14px;text-align:left;">
+                                    微信里可能打不开淘宝。请点击右上角 <strong>···</strong>，选择「在浏览器打开」，即可进入南意秋棠淘宝店。
+                                </p>
+                                <p style="margin:0 16px 12px;font-size:12px;color:#888;word-break:break-all;text-align:left;user-select:all;-webkit-user-select:all;">${shopUrl}</p>
+                                <div style="display:flex;flex-direction:column;gap:10px;padding:0 16px 18px;">
+                                    <button type="button" class="ob-tip-copy" style="padding:10px 16px;border:none;border-radius:22px;background:#C2A15A;color:#1C343B;font-weight:600;cursor:pointer;font-size:14px;">复制店铺链接</button>
+                                    <a class="ob-tip-open" href="${shopUrl}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 16px;border-radius:22px;border:1px solid #C2A15A;color:#1C343B;text-decoration:none;font-weight:600;font-size:14px;">再次尝试打开店铺</a>
+                                </div>
+                            </div>
+                        </div>`;
+                    document.body.appendChild(modal);
+
+                    const close = () => { try { modal.remove(); } catch (e) { /* ignore */ } };
+                    modal.querySelector('.ob-tip-overlay').addEventListener('click', (e) => {
+                        if (e.target && e.target.classList && e.target.classList.contains('ob-tip-overlay')) close();
+                    });
+                    modal.querySelector('.ob-tip-close').addEventListener('click', close);
+                    modal.querySelector('.ob-tip-content').addEventListener('click', (e) => e.stopPropagation());
+                    // 复制：走站点已有兜底逻辑，避免 clipboard API 静默失败
+                    modal.querySelector('.ob-tip-copy').addEventListener('click', () => {
+                        if (typeof this.copyToClipboard === 'function') {
+                            this.copyToClipboard(shopUrl, '淘宝店铺链接');
+                        } else {
+                            this.showToast('请长按上方链接复制', 2500);
+                        }
+                    });
+                    // 「再次尝试打开」：仍拦截，避免无反馈跳转；改为再唤起 + toast
+                    modal.querySelector('.ob-tip-open').addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.tryOpenTaobaoApp('357296168', shopUrl);
+                        this.showToast('若未自动打开，请用右上角···在浏览器打开', 3000);
+                    });
                 },
 
                 openCustomerService() {
@@ -5474,19 +6096,6 @@
             }
         }, 1000);
     </script>
-
-    <!-- 网页底部版权信息 -->
-    <footer class="simple-footer">
-        <div class="container">
-            <div class="footer-copyright">
-                <p>
-                    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" class="icp-beian-link">浙ICP备2024081979号</a>
-                    <span class="footer-sep">|</span>
-                    版权所有，nanyiqiutang.cn 南意秋棠
-                </p>
-            </div>
-        </div>
-    </footer>
 
 </body>
 </html>

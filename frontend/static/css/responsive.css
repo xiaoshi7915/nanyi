@@ -7,7 +7,8 @@
     }
     
     .brands-grid {
-        grid-template-columns: repeat(3, 1fr);
+        /* 平板也保持 4 列，避免桌面窄窗退回 2/3 列 */
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 1rem;
     }
     
@@ -147,46 +148,47 @@
         display: inline-block;
         white-space: nowrap;
         padding: 0.4rem 0.8rem;
-        border: 2px solid #e5e7eb;
-        border-radius: 20px;
-        background: white;
-        color: #374151;
+        border: 1px solid var(--c-gold, #C2A15A);
+        border-radius: 999px;
+        background: var(--c-gold-pale, #F0E4C8);
+        color: var(--c-gold-deep, #8C7338);
         font-size: 0.8rem;
         font-weight: 500;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.25s ease;
         min-width: fit-content;
         flex-shrink: 0;
     }
     
     .year-tag:hover {
-        border-color: #667eea;
-        background: #f8f9ff;
+        border-color: var(--c-gold, #C2A15A);
+        background: var(--c-gold, #C2A15A);
+        color: var(--c-ink-deep, #1C343B);
     }
     
     .year-tag.active {
-        background: #667eea;
-        border-color: #667eea;
+        background: var(--c-rose, #9E2B25);
+        border-color: var(--c-rose, #9E2B25);
         color: white;
     }
     
-    /* 移动端全部按钮的特殊样式 */
+    /* 移动端全部按钮 */
     .year-tag:first-child {
-        background: #f1f5f9;
-        border-color: #94a3b8;
+        background: var(--c-gold-pale, #F0E4C8);
+        border-color: var(--c-gold, #C2A15A);
         font-weight: 600;
     }
     
     .year-tag:first-child.active {
-        background: #64748b;
-        border-color: #64748b;
+        background: var(--c-rose, #9E2B25);
+        border-color: var(--c-rose, #9E2B25);
         color: white;
     }
     
     .year-tag:first-child:hover {
-        background: #64748b;
-        border-color: #64748b;
-        color: white;
+        background: var(--c-gold, #C2A15A);
+        border-color: var(--c-gold, #C2A15A);
+        color: var(--c-ink-deep, #1C343B);
     }
     
     /* 搜索栏调整 - 模仿电脑端样式 */
@@ -250,13 +252,22 @@
     }
     
     .search-input::placeholder {
-        color: #9ca3af;
+        color: #4A453C;
+        opacity: 1;
         font-size: 13px;
+    }
+
+    .search-input {
+        color: #1C343B !important;
+        font-weight: 500;
+        caret-color: #1C343B;
     }
 
     @media (max-width: 480px) {
         .search-input::placeholder {
-            font-size: 12px;
+            color: #4A453C;
+            opacity: 1;
+            font-size: 13px;
         }
     }
     
@@ -353,6 +364,9 @@
     .brand-name {
         font-size: 0.8rem; /* 减小字体 */
         margin-bottom: 2px; /* 减少下边距 */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .meta-tags {
@@ -391,8 +405,8 @@
     }
 
     .image-gallery {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+        gap: 0.35rem;
     }
 
     .hero-section {
@@ -436,11 +450,27 @@
     .brand-name {
         font-size: 0.75rem;
         line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .search-input {
         font-size: 0.85rem;
-        padding: 0.4rem 0.6rem;
+        /* 勿去掉左侧内边距，避免光标压在放大镜上；英雄区另有专用规则 */
+        padding: 0.4rem 0.6rem 0.4rem 0.6rem;
+        color: #1C343B;
+    }
+
+    .hero-search-inline .search-input {
+        padding: 0 14px 0 42px !important;
+    }
+
+    .hero-search-inline .search-btn {
+        padding: 0 18px;
+        font-size: 0.85rem;
+        min-width: 72px;
+        height: 48px;
     }
 
     .search-btn {
@@ -459,8 +489,8 @@
     }
 
     .image-gallery {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.4rem;
+        grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+        gap: 0.3rem;
     }
 
     .section-title {
@@ -477,11 +507,12 @@
     }
 }
 
-/* 客服弹窗样式调整 */
+/* 客服/详情标签：鎏金未选中风格（覆盖旧蓝紫） */
 .detail-tag {
     display: inline-block;
-    background: #3b82f6 !important; /* 蓝色背景 */
-    color: white !important; /* 白色文字 */
+    background: var(--c-gold-pale, #F0E4C8) !important;
+    color: var(--c-gold-deep, #8C7338) !important;
+    border: 1px solid var(--c-gold, #C2A15A) !important;
     padding: 0.25rem 0.5rem;
     border-radius: 12px;
     font-size: 0.75rem;
@@ -509,7 +540,7 @@
     }
 }
 
-/* 大屏幕优化 */
+/* 大屏幕优化：列表强制 4 列 */
 @media (min-width: 1200px) {
     .container {
         max-width: 1400px;
@@ -517,12 +548,13 @@
     }
 
     .brands-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 2rem;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 1.25rem;
     }
 
     .brand-image-container {
-        height: 220px;
+        height: auto;
+        aspect-ratio: 1 / 1;
     }
 } 
 
@@ -531,5 +563,36 @@
     .brands-grid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 0.7rem;
+    }
+}
+
+
+/* 第二轮改版：桌面列表固定 4 列，移动固定 2 列（仅 .brands-grid） */
+@media (min-width: 769px) {
+    .brands-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+@media (max-width: 768px) {
+    .brands-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    /* 详情缩略图：移动端高密度横排，约一行最多 10 张 */
+    .modal-body .image-gallery {
+        grid-template-columns: repeat(auto-fill, minmax(max(48px, calc((100% - 36px) / 10)), 1fr)) !important;
+        gap: 4px !important;
+    }
+    .modal-body .gallery-item {
+        aspect-ratio: 3 / 4;
+        border-radius: 4px;
+    }
+    .modal-body .image-actions {
+        top: 2px;
+        right: 2px;
+    }
+    .modal-body .action-btn {
+        width: 22px;
+        height: 22px;
+        font-size: 0.65rem;
     }
 }
