@@ -45,9 +45,21 @@
         padding: 0 10px; /* 减少边距 */
     }
     
-    /* 头部调整 - 更紧凑 */
+    /* 头部调整 - 更紧凑（保持 fixed；高度走 CSS 变量，勿再写死 spacer） */
+    :root {
+        --header-pad-y: 0.3rem;
+        --header-content-height: 32px;
+    }
+
     .header {
-        padding: 0.3rem 0 !important; /* 进一步减少头部内边距 */
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        padding: var(--header-pad-y) 0 !important;
+        min-height: var(--header-height);
+        z-index: 9500 !important;
     }
     
     .header-content {
@@ -60,6 +72,7 @@
     
     .logo {
         font-size: 1rem; /* 大幅减小字体 */
+        height: var(--header-content-height);
     }
     
     .header-icon {
@@ -71,10 +84,10 @@
         font-size: 0.9rem; /* 减小图标字体 */
     }
     
-    /* 英雄横幅调整 */
+    /* 英雄横幅：上内边距含顶栏高度，紫色背景上延至顶栏下 */
     .hero-banner {
-        padding: 0.8rem 0 !important; /* 进一步减少内边距 */
-        margin-bottom: 0.3rem !important; /* 进一步减少下边距 */
+        padding: calc(var(--header-height) + 0.8rem) 0 0.8rem !important;
+        margin-bottom: 0.3rem !important;
     }
     
     .hero-title {

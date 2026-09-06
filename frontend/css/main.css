@@ -1,5 +1,13 @@
 /* 南意秋棠 - 主样式文件 */
 
+/* 顶栏高度：padding + 内容行高，与 .hero-banner 的 padding-top 共用，消除缝隙 */
+:root {
+    --header-pad-y: 0.75rem;
+    --header-content-height: 40px;
+    --header-height: calc(var(--header-pad-y) * 2 + var(--header-content-height));
+    --brand-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
 /* 基础重置 */
 * {
     margin: 0;
@@ -21,12 +29,39 @@ body {
     padding: 0 20px;
 }
 
-/* 头部样式 */
+/* 头部样式 — fixed 叠在紫色 hero 上（不再用独立 spacer，避免高度不一致露白） */
 .header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--brand-purple);
     color: white;
-    padding: 1rem 0;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: var(--header-pad-y) 0;
+    min-height: var(--header-height);
+    /* 阴影用同色系半透明，避免底部出现浅色/白缝视觉 */
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.28);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 9500; /* 高于商品网格，低于部分全屏弹层 */
+}
+
+/* 旧 spacer 已废弃：保留规则防止残留 DOM 再造白缝 */
+.header-spacer {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+}
+
+/* 登录按钮比社交圆标更扁、更小 */
+.header-icon.auth-entry-btn {
+    width: auto !important;
+    min-width: 0;
+    height: 28px !important;
+    border-radius: 14px !important;
+    padding: 0 10px !important;
 }
 
 .header-content {
@@ -51,7 +86,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;  /* 图片和文字之间的间距 */
-    height: 40px;  /* 设置logo容器高度 */
+    height: var(--header-content-height);  /* 与顶栏高度变量同步 */
 }
 
 .logo-image {
@@ -164,10 +199,12 @@ body {
     }
 }
 
-/* 英雄横幅区 */
+/* 英雄横幅区 — 背景上延至顶栏下方，padding-top 为顶栏高度 + 内容内边距，无第二元素露白 */
 .hero-banner {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 1.5rem 0; /* 减少内边距 */
+    background: var(--brand-purple);
+    /* 上内边距 = 固定顶栏高度 + 原视觉内边距，正文从顶栏下开始 */
+    padding: calc(var(--header-height) + 1.5rem) 0 1.5rem;
+    margin-top: 0;
     margin-bottom: 1rem; /* 减少下边距 */
     color: white;
     text-align: center;
@@ -1552,9 +1589,15 @@ body {
         padding: 0 15px;
     }
 
-    /* 移动端头部优化 */
+    /* 移动端头部：与 --header-height 同步，hero 自动跟变量垫高 */
+    :root {
+        --header-pad-y: 0.35rem;
+        --header-content-height: 32px;
+    }
+
     .header {
-        padding: 0.4rem 0 !important;
+        padding: var(--header-pad-y) 0 !important;
+        min-height: var(--header-height);
     }
 
     .header-content {
@@ -1563,7 +1606,7 @@ body {
     }
 
     .logo {
-        height: 32px !important;  /* 调整移动端logo容器为适中大小 */
+        height: var(--header-content-height) !important;  /* 与变量一致 */
         gap: 5px !important;  /* 适当间距 */
     }
     
@@ -1674,7 +1717,8 @@ body {
     }
 
     .hero-banner {
-        padding: 1rem 0 !important;
+        /* 顶栏高度变量 + 移动端内容内边距，背景连续无白缝 */
+        padding: calc(var(--header-height) + 1rem) 0 1rem !important;
     }
 
     .hero-placeholder h2 {
@@ -2360,3 +2404,215 @@ body {
 }
 
 
+
+/* ========== 智能客服浮动入口（右下角，移动端优先） ========== */
+.nyt-agent-fab-stack {
+    position: fixed;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(20px, calc(16px + env(safe-area-inset-bottom)));
+    z-index: 9200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.nyt-agent-fab {
+    pointer-events: auto;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #7c6cf0 0%, #5b4fd6 55%, #4a3fc7 100%);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(91, 79, 214, 0.38);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.nyt-agent-fab i {
+    font-size: 0.85rem;
+}
+
+/* 弹框标题品牌标：logo 图 +「南意秋棠」文字 */
+.nyt-agent-modal-logo {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    display: block;
+    flex-shrink: 0;
+}
+
+.nyt-agent-modal-title-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nyt-agent-modal-title-btn:active {
+    opacity: 0.85;
+}
+
+.nyt-agent-fab:active {
+    transform: scale(0.94);
+}
+
+.nyt-agent-fab:hover {
+    box-shadow: 0 10px 26px rgba(91, 79, 214, 0.5);
+    transform: translateY(-1px);
+}
+
+.nyt-agent-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10060;
+    background: rgba(15, 12, 40, 0.55);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0;
+    /* 移动端键盘/安全区 */
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nyt-agent-modal-sheet {
+    width: 100%;
+    max-width: 100%;
+    /* 移动端接近全屏，避免 iframe 内再被裁切 */
+    height: min(96dvh, 100%);
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px));
+    background: #fff;
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.22);
+    animation: nytAgentSheetIn 0.22s ease-out;
+}
+
+@keyframes nytAgentSheetIn {
+    from { transform: translateY(24px); opacity: 0.6; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.nyt-agent-modal-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    border-bottom: 1px solid #eee;
+    background: linear-gradient(90deg, #6b5ce7, #7c6cf0);
+    color: #fff;
+}
+
+.nyt-agent-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.nyt-agent-modal-close {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.nyt-agent-modal-close:active {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.nyt-agent-modal-body {
+    flex: 1;
+    min-height: 0;
+    background: #f7f6fb;
+    /* 保证 iframe 可占满剩余高度 */
+    display: flex;
+    flex-direction: column;
+}
+
+.nyt-agent-iframe {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    min-height: 0;
+    border: 0;
+    display: block;
+    background: #fff;
+}
+
+/* 平板：居中卡片，给客服主区足够宽度 */
+@media (min-width: 768px) {
+    .nyt-agent-modal-overlay {
+        align-items: center;
+        padding: 24px;
+    }
+    .nyt-agent-modal-sheet {
+        height: min(88vh, 820px);
+        border-radius: 16px;
+        /* 原先 420px 过窄导致侧栏+主区重叠；加宽到可用宽度 */
+        max-width: min(920px, calc(100vw - 48px));
+        width: min(920px, calc(100vw - 48px));
+    }
+}
+
+/* 桌面宽屏：再略增宽度，接近独立客服页体验 */
+@media (min-width: 1100px) {
+    .nyt-agent-modal-sheet {
+        max-width: min(980px, calc(100vw - 64px));
+        width: min(980px, calc(100vw - 64px));
+        height: min(86vh, 860px);
+    }
+}
+
+/* 极小屏：加大触控与占屏 */
+@media (max-width: 380px) {
+    .nyt-agent-fab {
+        width: 32px;
+        height: 32px;
+    }
+    .nyt-agent-modal-sheet {
+        height: 100dvh;
+        max-height: 100dvh;
+        border-radius: 0;
+    }
+}
+
+/* 横屏手机：降低高度，避免顶边被裁 */
+@media (max-height: 480px) and (orientation: landscape) {
+    .nyt-agent-modal-sheet {
+        height: 98dvh;
+        max-height: 98dvh;
+        border-radius: 12px;
+    }
+    .nyt-agent-fab-stack {
+        bottom: max(12px, env(safe-area-inset-bottom));
+        right: max(12px, env(safe-area-inset-right));
+    }
+}

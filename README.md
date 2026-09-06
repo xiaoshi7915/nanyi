@@ -112,6 +112,22 @@ source products_env/bin/activate
 python backend/migrations/add_users_oauth_assets_and_user_ids.py
 ```
 
+邮箱密码登录、浏览足迹、登录审计、重置密码（并补齐 C 端 `users` 列如 nickname/phone）：
+
+```bash
+source products_env/bin/activate
+PYTHONPATH=/opt/hanfu/products python backend/migrations/add_auth_browse_login_tables.py
+```
+
+### 账号与智能客服打通
+
+- **登录**：顶栏「登录」— 微信为主（公众号 OAuth），邮箱/手机 + 密码为辅；支持忘记密码（需配置 `SMTP_*`）。
+- **权限**：匿名仍可浏览、试穿、开客服；登录后试穿/浏览按 `user_id` 跨设备持久化。
+- **客服 SSO**：打开智能客服 iframe 时 `postMessage` 传 JWT；`nyt_agent` 用与本站相同的 `SECRET_KEY`/`JWT_SECRET_KEY` 验签并合并匿名会话。
+- **相关 API**：`POST /api/auth/register|login|forgot-password|reset-password`，`GET /api/me`，`POST|GET /api/me/browse`，`GET /api/me/try-on-assets`。
+
+与 `nyt_agent` 对齐的密钥说明见对方 `.env.example`（`PRODUCTS_JWT_SECRET`、`ARK_*`、`LLM_*`）。
+
 ```bash
 # 运行数据库迁移（Admin表新字段）
 source products_env/bin/activate

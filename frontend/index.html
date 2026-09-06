@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>南意秋棠 - 传承经典 美美与共</title>
     
     <!-- 微信分享优化 -->
@@ -54,13 +54,13 @@
     <link rel="stylesheet" href="static/lib/all.min.css">
     
     <!-- 发布版本号（发布时与 js/app-version.js 同步修改） -->
-    <script src="js/app-version.js?v=20260805-1"></script>
+    <script src="js/app-version.js?v=20260831-2"></script>
     
     <!-- 引入样式文件 -->
-    <link rel="stylesheet" href="css/main.css?v=20260805-1">
-    <link rel="stylesheet" href="static/css/responsive.css?v=20260805-1">
-    <link rel="stylesheet" href="css/skeleton.css?v=20260805-1">
-    <link rel="stylesheet" href="css/try-on.css?v=20260805-1">
+    <link rel="stylesheet" href="css/main.css?v=20260831-4">
+    <link rel="stylesheet" href="static/css/responsive.css?v=20260831-4">
+    <link rel="stylesheet" href="css/skeleton.css?v=20260831-2">
+    <link rel="stylesheet" href="css/try-on.css?v=20260831-2">
     
     <!-- 引入性能优化配置 -->
     <script src="js/performance-config.js"></script>
@@ -68,7 +68,7 @@
     <!-- 引入图片预加载管理器 -->
     <script src="js/image-preloader.js"></script>
     <script src="js/share-card.js"></script>
-    <script src="js/try-on-helpers.js?v=20260805-1"></script>
+    <script src="js/try-on-helpers.js?v=20260831-2"></script>
     
     <!-- 注册Service Worker (PWA) -->
     <script>
@@ -205,8 +205,8 @@
     
     <!-- 引入API客户端 -->
     <!-- 恢复使用正式API文件 -->
-    <script src="js/api.js?v=20260805-1"></script>
-    <script src="js/auth-session.js?v=20260805-1"></script>
+    <script src="js/api.js?v=20260831-2"></script>
+    <script src="js/auth-session.js?v=20260831-2"></script>
     <script>
         // 确保API已加载并验证方法存在
         (function() {
@@ -241,6 +241,30 @@
     </script>
     <!-- <script src="js/components.js"></script> -->
     <!-- <script src="static/js/main.js"></script> -->
+
+<style id="nanyi-auth-style">
+.nanyi-auth-overlay{position:fixed;inset:0;z-index:10050;background:rgba(20,10,30,.45);display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+@media(min-width:720px){.nanyi-auth-overlay{align-items:center;}}
+.nanyi-auth-sheet{width:min(420px,100%);background:#fff;border-radius:16px 16px 12px 12px;max-height:88vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.2);}
+.nanyi-auth-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #eee;}
+.nanyi-auth-head button{border:0;background:transparent;font-size:22px;line-height:1;cursor:pointer;}
+.nanyi-auth-body{padding:16px;display:flex;flex-direction:column;gap:10px;}
+.nanyi-auth-body input{border:1px solid #ddd;border-radius:10px;padding:10px 12px;font-size:14px;}
+.nanyi-auth-btn{border:0;border-radius:10px;padding:11px 14px;background:linear-gradient(135deg,#7b4ea3,#c06c9c);color:#fff;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;}
+.nanyi-auth-btn.ghost{background:#f5f0f8;color:#5b3a7a;}
+.nanyi-auth-btn.wechat{background:#07c160;}
+.nanyi-auth-link{border:0;background:transparent;color:#7b4ea3;cursor:pointer;font-size:13px;}
+.nanyi-auth-tabs{display:flex;gap:8px;}
+.nanyi-auth-tabs button{flex:1;border:1px solid #e5dceb;background:#fff;border-radius:8px;padding:8px;cursor:pointer;}
+.nanyi-auth-tabs button.on{background:#f3e9f8;border-color:#c06c9c;color:#5b3a7a;}
+.nanyi-auth-divider{text-align:center;color:#999;font-size:12px;}
+.nanyi-auth-hint,.nanyi-auth-msg{font-size:12px;color:#666;margin:0;}
+.nanyi-auth-list{margin-top:8px;border-top:1px solid #eee;padding-top:8px;}
+.nanyi-auth-list h4{margin:0 0 6px;font-size:13px;}
+.nanyi-auth-list ul{margin:0;padding-left:18px;font-size:13px;color:#444;}
+.auth-entry-btn{min-width:auto;height:28px;padding:0 10px!important;border:1px solid rgba(255,255,255,.55)!important;background:rgba(255,255,255,.28)!important;border-radius:14px;cursor:pointer;color:#fff!important;}
+.auth-entry-btn span{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.35);font-size:11px!important;font-weight:600;line-height:1;}
+</style>
 </head>
 <body>
     <div id="app">
@@ -248,9 +272,8 @@
         <header class="header">
             <div class="container">
                 <div class="header-content">
-                    <!-- 可点击的logo，跳转到淘宝店铺 -->
-                    <a href="https://m.tb.cn/h.hVSffucqrHuJeRZ " 
-                       target="_blank" 
+                    <!-- 可点击的 logo，回到官网首页 -->
+                    <a href="/" 
                        class="logo-link"
                        @click="handleLogoClick">
                         <div class="logo">
@@ -287,12 +310,17 @@
                         <button @click="openCustomerService" class="header-icon social-icon" title="微信客服">
                             <img src="static/images/wechat.png" alt="微信" class="social-logo">
                         </button>
+                        <!-- 登录 / 我的 -->
+                        <button type="button" class="header-icon auth-entry-btn" @click="openAuthModal"
+                                :title="authEntryLabel">
+                            <span>{{ authEntryLabel }}</span>
+                        </button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- 英雄横幅区 -->
+        <!-- 英雄横幅区：紫色背景上延至 fixed 顶栏下方，无独立 spacer -->
         <section class="hero-banner">
             <div class="container">
                 <div class="hero-content">
@@ -1054,6 +1082,120 @@
                 </div>
             </div>
         </div>
+
+        <!-- 右下角智能客服浮动入口（主要面向手机） -->
+        <div class="nyt-agent-fab-stack" aria-live="polite">
+            <button
+                type="button"
+                class="nyt-agent-fab"
+                @click="openNytAgentChat"
+                aria-label="打开智能客服"
+                title="智能客服"
+            >
+                <i class="fas fa-comments" aria-hidden="true"></i>
+            </button>
+        </div>
+
+        <!-- 登录注册弹窗 -->
+        <div id="nanyiAuthModal" class="nanyi-auth-overlay" v-show="authModalOpen" @click.self="closeAuthModal">
+            <div class="nanyi-auth-sheet" @click.stop>
+                <div class="nanyi-auth-head">
+                    <strong>{{ authTab === 'register' ? '注册' : (authTab === 'forgot' ? '忘记密码' : (authTab === 'reset' ? '重置密码' : '登录')) }}</strong>
+                    <button type="button" @click="closeAuthModal" aria-label="关闭">×</button>
+                </div>
+                <div class="nanyi-auth-body">
+                    <p class="nanyi-auth-hint" v-if="authUser">已登录：{{ authUser.nickname || authUser.email || authUser.phone }}</p>
+                    <template v-if="authUser">
+                        <button type="button" class="nanyi-auth-btn" @click="openMyTryOn">我的试穿</button>
+                        <button type="button" class="nanyi-auth-btn ghost" @click="openMyBrowse">最近浏览</button>
+                        <button type="button" class="nanyi-auth-btn ghost" @click="logoutAuth">退出登录</button>
+                    </template>
+                    <template v-else>
+                        <div class="nanyi-auth-tabs" v-if="authTab==='login' || authTab==='register'">
+                            <button type="button" :class="{on: authTab==='login'}" @click="authTab='login'">登录</button>
+                            <button type="button" :class="{on: authTab==='register'}" @click="authTab='register'">注册</button>
+                        </div>
+                        <!-- 微信 OAuth 未配置时不展示微信登录入口 -->
+                        <a v-if="authWechatReady" class="nanyi-auth-btn wechat" :href="authWechatUrl">微信登录</a>
+                        <template v-if="authTab==='login'">
+                            <input v-model="authForm.phone" type="tel" inputmode="numeric" maxlength="11" placeholder="手机号" />
+                            <input v-model="authForm.password" type="password" placeholder="密码" />
+                            <button type="button" class="nanyi-auth-btn" @click="submitLogin">登录</button>
+                        </template>
+                        <template v-else-if="authTab==='register'">
+                            <input v-model="authForm.phone" type="tel" inputmode="numeric" maxlength="11" placeholder="手机号" />
+                            <input v-model="authForm.password" type="password" placeholder="密码至少6位" />
+                            <button type="button" class="nanyi-auth-btn" @click="submitRegister">注册并登录</button>
+                        </template>
+                        <template v-else-if="authTab==='forgot'">
+                            <input v-model="authForm.email" placeholder="注册邮箱" />
+                            <button type="button" class="nanyi-auth-btn" @click="submitForgot">发送重置邮件</button>
+                            <button type="button" class="nanyi-auth-link" @click="authTab='login'">返回登录</button>
+                        </template>
+                        <template v-else-if="authTab==='reset'">
+                            <input v-model="authForm.password" type="password" placeholder="新密码至少6位" />
+                            <button type="button" class="nanyi-auth-btn" @click="submitReset">确认重置</button>
+                        </template>
+                        <p class="nanyi-auth-msg" v-if="authMsg">{{ authMsg }}</p>
+                    </template>
+                    <div v-if="authListTitle" class="nanyi-auth-list">
+                        <h4>{{ authListTitle }}</h4>
+                        <ul>
+                            <li v-for="(it,i) in authListItems" :key="i">{{ it }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 智能客服弹框：内嵌 nyt_agent 客户端 -->
+        <div
+            v-if="showNytAgentModal"
+            class="nyt-agent-modal-overlay"
+            @click="closeNytAgentChat"
+            role="dialog"
+            aria-modal="true"
+            aria-label="南意秋棠"
+        >
+            <div class="nyt-agent-modal-sheet" @click.stop>
+                <div class="nyt-agent-modal-header">
+                    <button
+                        type="button"
+                        class="nyt-agent-modal-title-btn"
+                        @click="goHomeFromNytAgent"
+                        aria-label="关闭客服并回到首页"
+                        title="回到首页"
+                    >
+                        <img
+                            class="nyt-agent-modal-logo"
+                            src="https://products.nanyiqiutang.cn/static/images/logo.svg"
+                            alt=""
+                            width="22"
+                            height="22"
+                        >
+                        <span>南意秋棠</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="nyt-agent-modal-close"
+                        @click="closeNytAgentChat"
+                        aria-label="关闭"
+                    >
+                        <i class="fas fa-times" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="nyt-agent-modal-body">
+                    <iframe
+                        v-if="nytAgentIframeSrc"
+                        class="nyt-agent-iframe"
+                        :src="nytAgentIframeSrc"
+                        title="南意秋棠智能客服"
+                        allow="clipboard-write; microphone; camera"
+                        referrerpolicy="no-referrer-when-downgrade"
+                    ></iframe>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1109,6 +1251,22 @@
                     // 确保初始状态正确
                     dataLoaded: false,
                     
+                    // 登录注册
+                    authModalOpen: false,
+                    authTab: 'login',
+                    authUser: null,
+                    authForm: { account: '', email: '', phone: '', password: '', nickname: '' },
+                    authMsg: '',
+                    authWechatReady: false,
+                    authWechatUrl: '',
+                    authResetToken: '',
+                    authListTitle: '',
+                    authListItems: [],
+
+                    // 智能客服弹框（嵌入 nanyi-agent）
+                    showNytAgentModal: false,
+                    nytAgentIframeSrc: '',
+
                     // AI试衣相关数据
                     showTryOnModal: false,
                     tryOnStyles: [], // 可用款式列表
@@ -1181,7 +1339,32 @@
 
                     // 登录态：本地 JWT 静默续期并拉取 /api/me（回访不重复走微信授权）
                     if (window.NanyiAuth && typeof window.NanyiAuth.bootstrap === 'function') {
-                        window.NanyiAuth.bootstrap().catch(function () {});
+                        var self = this;
+                        window.addEventListener('message', function (ev) {
+                            if (!ev.data || !ev.data.type) return;
+                            if (ev.data.type === 'nyt_agent_ready') {
+                                try { self.postAuthToAgentIframe(); } catch (e) {}
+                            }
+                            // iframe 内点品牌：关客服弹框并回首页
+                            if (ev.data.type === 'nyt_agent_go_home') {
+                                try { self.goHomeFromNytAgent(); } catch (e) {}
+                            }
+                        });
+                        window.NanyiAuth.bootstrap().then(function (me) {
+                            if (me && me.user) self.authUser = me.user;
+                            if (me && me.auth) self.authWechatReady = !!me.auth.wechat_ready;
+                        }).catch(function () {});
+                        try {
+                            self.authWechatUrl = window.NanyiAuth.wechatLoginUrl();
+                            // 仅当后端明确 wechat_ready 时展示微信登录（勿因 UA 误开）
+                        } catch (e) {}
+                        var sp = new URLSearchParams(window.location.search || '');
+                        var rt = sp.get('reset_token');
+                        if (rt) {
+                            self.authResetToken = rt;
+                            self.authTab = 'reset';
+                            self.authModalOpen = true;
+                        }
                     }
 
                     // 恢复未完成的试衣任务（页面刷新/重开后继续追踪）
@@ -1215,6 +1398,18 @@
             },
 
             computed: {
+                /** 顶栏登录按钮文案：优先手机号，其次用户名/邮箱/昵称 */
+                authEntryLabel() {
+                    if (!this.authUser) return '登录';
+                    const u = this.authUser;
+                    const phone = (u.phone || u.username || u.display_id || '').toString().trim();
+                    if (phone) return phone;
+                    const email = (u.email || '').toString().trim();
+                    if (email) return email;
+                    const nick = (u.nickname || u.name || '').toString().trim();
+                    if (nick) return nick;
+                    return '已登录';
+                },
                 /** 筛选后的总页数 */
                 totalDisplayPages() {
                     const total = this.filteredBrands.length;
@@ -1878,6 +2073,9 @@
 
                 async openBrandDetail(brand) {
                     const brandName = brand.name || brand.brand_name;
+                    try {
+                        if (window.NanyiAuth && brandName) window.NanyiAuth.recordBrowse(brandName);
+                    } catch (e) {}
                     const generation = ++this.detailFetchGeneration;
                     const needsFetch = this.brandNeedsDetailFetch(brand);
 
@@ -2482,8 +2680,126 @@
                     }
                 },
 
+                // 打开右下角智能客服弹框（iframe 嵌入 nyt_agent）
+                openAuthModal() {
+                    this.authMsg = '';
+                    this.authListTitle = '';
+                    this.authListItems = [];
+                    // 点击「登录」入口默认展示注册页（注册并登录）
+                    if (!this.authUser) this.authTab = 'register';
+                    this.authModalOpen = true;
+                    document.body.style.overflow = 'hidden';
+                },
+                closeAuthModal() {
+                    this.authModalOpen = false;
+                    if (!this.showNytAgentModal) document.body.style.overflow = 'auto';
+                },
+                async submitLogin() {
+                    this.authMsg = '';
+                    const phone = (this.authForm.phone || '').trim();
+                    if (!phone) { this.authMsg = '请输入手机号'; return; }
+                    if (!this.authForm.password) { this.authMsg = '请输入密码'; return; }
+                    const r = await window.NanyiAuth.login({
+                        phone: phone,
+                        account: phone,
+                        password: this.authForm.password,
+                    });
+                    if (!r.ok) { this.authMsg = (r.data && r.data.error) || '登录失败'; return; }
+                    this.authUser = (r.data && r.data.user) || null;
+                    this.authMsg = '登录成功';
+                    this.closeAuthModal();
+                },
+                async submitRegister() {
+                    this.authMsg = '';
+                    const phone = (this.authForm.phone || '').trim();
+                    if (!phone) { this.authMsg = '请输入手机号'; return; }
+                    if (!this.authForm.password || this.authForm.password.length < 6) {
+                        this.authMsg = '密码至少6位'; return;
+                    }
+                    const r = await window.NanyiAuth.register({
+                        phone: phone,
+                        password: this.authForm.password,
+                    });
+                    if (!r.ok) { this.authMsg = (r.data && r.data.error) || '注册失败'; return; }
+                    this.authUser = (r.data && r.data.user) || null;
+                    this.authMsg = '注册成功';
+                    this.closeAuthModal();
+                },
+                async submitForgot() {
+                    this.authMsg = '';
+                    const r = await window.NanyiAuth.forgotPassword(this.authForm.email);
+                    this.authMsg = (r.data && r.data.message) || (r.ok ? '已提交' : '发送失败');
+                },
+                async submitReset() {
+                    this.authMsg = '';
+                    const r = await window.NanyiAuth.resetPassword(this.authResetToken, this.authForm.password);
+                    if (!r.ok) { this.authMsg = (r.data && r.data.error) || '重置失败'; return; }
+                    this.authUser = (r.data && r.data.user) || null;
+                    this.authMsg = '密码已重置';
+                    this.closeAuthModal();
+                },
+                logoutAuth() {
+                    window.NanyiAuth.clearTokens();
+                    this.authUser = null;
+                    this.authMsg = '已退出';
+                },
+                async openMyTryOn() {
+                    const at = window.NanyiAuth.getAccessToken();
+                    if (!at) return;
+                    const res = await fetch((window.api && window.api.baseURL || '') + '/me/try-on-assets', {
+                        headers: { Authorization: 'Bearer ' + at },
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    this.authListTitle = '我的试穿';
+                    this.authListItems = (data.items || []).map(function (x) {
+                        return (x.type || 'asset') + ' · ' + (x.created_at || '') + (x.url ? ' · ' + x.url : '');
+                    });
+                    if (!this.authListItems.length) this.authListItems = ['暂无试穿记录'];
+                },
+                async openMyBrowse() {
+                    const at = window.NanyiAuth.getAccessToken();
+                    if (!at) return;
+                    const res = await fetch((window.api && window.api.baseURL || '') + '/me/browse?limit=30', {
+                        headers: { Authorization: 'Bearer ' + at },
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    this.authListTitle = '最近浏览';
+                    this.authListItems = (data.items || []).map(function (x) { return x.brand_name; });
+                    if (!this.authListItems.length) this.authListItems = ['暂无浏览记录'];
+                },
+                postAuthToAgentIframe() {
+                    try {
+                        var iframe = document.querySelector('.nyt-agent-iframe');
+                        var at = window.NanyiAuth && window.NanyiAuth.getAccessToken();
+                        if (iframe && iframe.contentWindow && at) {
+                            iframe.contentWindow.postMessage({ type: 'nyt_agent_auth', access_token: at }, '*');
+                        }
+                    } catch (e) {}
+                },
+                openNytAgentChat() {
+                    var at = (window.NanyiAuth && window.NanyiAuth.getAccessToken()) || '';
+                    var src = 'https://nanyi-agent.nanyiqiutang.cn/?embed=1';
+                    // 优先 postMessage，避免 token 进 Referer；URL 仅作兜底
+                    this.nytAgentIframeSrc = src;
+                    this.showNytAgentModal = true;
+                    document.body.style.overflow = 'hidden';
+                    var self = this;
+                    setTimeout(function () { self.postAuthToAgentIframe(); }, 600);
+                    setTimeout(function () { self.postAuthToAgentIframe(); }, 1500);
+                },
+
+                // 关闭智能客服弹框
+                closeNytAgentChat() {
+                    this.showNytAgentModal = false;
+                    // 卸载 iframe，避免后台继续占用资源
+                    this.nytAgentIframeSrc = '';
+                    if (!this.showTryOnModal && !this.showModal && !this.showReviewModal) {
+                        document.body.style.overflow = '';
+                    }
+                },
+
                 openCustomerService() {
-                    // 智能客服功能
+                    // 微信人工客服（顶部入口）
                                     const wechatId = 'LPumpkin0217';  // 小南的微信号
                 const wechatId2 = 'moonysy511'; // 染白的微信号
 
@@ -2696,15 +3012,25 @@
                     document.body.removeChild(textArea);
                 },
 
-                // 处理logo点击
+                // 处理 logo 点击：回到官网首页（非淘宝）
                 handleLogoClick(event) {
-                    // 移动端直接跳转，不阻止默认行为
-                    if (window.innerWidth <= 768) {
-                        // 移动端：直接跳转
-                        window.open('https://shop357296168.taobao.com/?spm=a21n57.shop_search.0.0.1ad93904ohsQt4', '_blank');
-                        event.preventDefault(); // 阻止默认的a标签行为，使用我们的跳转
+                    event.preventDefault();
+                    // 已在首页则滚回顶部；其他页跳转首页
+                    if (window.location.pathname === '/' || /index\.html?$/i.test(window.location.pathname)) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        return;
                     }
-                    // 桌面端：使用默认的a标签行为
+                    window.location.href = '/';
+                },
+
+                // 智能客服弹框标题：关闭弹框并回到首页
+                goHomeFromNytAgent() {
+                    this.closeNytAgentChat();
+                    if (window.location.pathname === '/' || /index\.html?$/i.test(window.location.pathname)) {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                        return;
+                    }
+                    window.location.href = '/';
                 },
 
                 // 通过标签筛选品牌

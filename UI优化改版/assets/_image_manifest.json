@@ -1,0 +1,402 @@
+{
+  "feiyu": [
+    {
+      "type": "concept",
+      "cn": "概念图",
+      "idx": "01",
+      "file": "feiyu-concept-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "01",
+      "file": "feiyu-design-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "02",
+      "file": "feiyu-design-02.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "fabric",
+      "cn": "布料图",
+      "idx": "01",
+      "file": "feiyu-fabric-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "garment",
+      "cn": "成衣图",
+      "idx": "01",
+      "file": "feiyu-garment-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "model",
+      "cn": "模特图",
+      "idx": "01",
+      "file": "feiyu-model-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    }
+  ],
+  "zhaoyebai": [
+    {
+      "type": "concept",
+      "cn": "概念图",
+      "idx": "01",
+      "file": "zhaoyebai-concept-01.jpg",
+      "status": "ok",
+      "bytes": 140046
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "01",
+      "file": "zhaoyebai-design-01.jpg",
+      "status": "ok",
+      "bytes": 33822
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "02",
+      "file": "zhaoyebai-design-02.jpg",
+      "status": "ok",
+      "bytes": 106984
+    },
+    {
+      "type": "fabric",
+      "cn": "布料图",
+      "idx": "01",
+      "file": "zhaoyebai-fabric-01.jpg",
+      "status": "ok",
+      "bytes": 129001
+    },
+    {
+      "type": "garment",
+      "cn": "成衣图",
+      "idx": "01",
+      "file": "zhaoyebai-garment-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "model",
+      "cn": "模特图",
+      "idx": "01",
+      "file": "zhaoyebai-model-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    }
+  ],
+  "yunqi": [
+    {
+      "type": "concept",
+      "cn": "概念图",
+      "idx": "01",
+      "file": "yunqi-concept-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "01",
+      "file": "yunqi-design-01.jpg",
+      "status": "ok",
+      "bytes": 80817
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "02",
+      "file": "yunqi-design-02.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "fabric",
+      "cn": "布料图",
+      "idx": "01",
+      "file": "yunqi-fabric-01.jpg",
+      "status": "ok",
+      "bytes": 51177
+    },
+    {
+      "type": "garment",
+      "cn": "成衣图",
+      "idx": "01",
+      "file": "yunqi-garment-01.jpg",
+      "status": "ok",
+      "bytes": 78364
+    },
+    {
+      "type": "model",
+      "cn": "模特图",
+      "idx": "01",
+      "file": "yunqi-model-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    }
+  ],
+  "lansheng": [
+    {
+      "type": "concept",
+      "cn": "概念图",
+      "idx": "01",
+      "file": "lansheng-concept-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "01",
+      "file": "lansheng-design-01.jpg",
+      "status": "ok",
+      "bytes": 81172
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "02",
+      "file": "lansheng-design-02.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "fabric",
+      "cn": "布料图",
+      "idx": "01",
+      "file": "lansheng-fabric-01.jpg",
+      "status": "ok",
+      "bytes": 49327
+    },
+    {
+      "type": "garment",
+      "cn": "成衣图",
+      "idx": "01",
+      "file": "lansheng-garment-01.jpg",
+      "status": "ok",
+      "bytes": 80138
+    },
+    {
+      "type": "model",
+      "cn": "模特图",
+      "idx": "01",
+      "file": "lansheng-model-01.jpg",
+      "status": "ok",
+      "bytes": 80618
+    }
+  ],
+  "zhaohun": [
+    {
+      "type": "concept",
+      "cn": "概念图",
+      "idx": "01",
+      "file": "zhaohun-concept-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "01",
+      "file": "zhaohun-design-01.jpg",
+      "status": "ok",
+      "bytes": 81288
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "02",
+      "file": "zhaohun-design-02.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "fabric",
+      "cn": "布料图",
+      "idx": "01",
+      "file": "zhaohun-fabric-01.jpg",
+      "status": "ok",
+      "bytes": 78742
+    },
+    {
+      "type": "garment",
+      "cn": "成衣图",
+      "idx": "01",
+      "file": "zhaohun-garment-01.jpg",
+      "status": "ok",
+      "bytes": 81131
+    },
+    {
+      "type": "model",
+      "cn": "模特图",
+      "idx": "01",
+      "file": "zhaohun-model-01.jpg",
+      "status": "ok",
+      "bytes": 81011
+    }
+  ],
+  "wenling": [
+    {
+      "type": "concept",
+      "cn": "概念图",
+      "idx": "01",
+      "file": "wenling-concept-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "01",
+      "file": "wenling-design-01.jpg",
+      "status": "ok",
+      "bytes": 80748
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "02",
+      "file": "wenling-design-02.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "fabric",
+      "cn": "布料图",
+      "idx": "01",
+      "file": "wenling-fabric-01.jpg",
+      "status": "ok",
+      "bytes": 68983
+    },
+    {
+      "type": "garment",
+      "cn": "成衣图",
+      "idx": "01",
+      "file": "wenling-garment-01.jpg",
+      "status": "ok",
+      "bytes": 78622
+    },
+    {
+      "type": "model",
+      "cn": "模特图",
+      "idx": "01",
+      "file": "wenling-model-01.jpg",
+      "status": "ok",
+      "bytes": 80293
+    }
+  ],
+  "buyuege": [
+    {
+      "type": "concept",
+      "cn": "概念图",
+      "idx": "01",
+      "file": "buyuege-concept-01.jpg",
+      "status": "ok",
+      "bytes": 79752
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "01",
+      "file": "buyuege-design-01.jpg",
+      "status": "ok",
+      "bytes": 75173
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "02",
+      "file": "buyuege-design-02.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "fabric",
+      "cn": "布料图",
+      "idx": "01",
+      "file": "buyuege-fabric-01.jpg",
+      "status": "ok",
+      "bytes": 50708
+    },
+    {
+      "type": "garment",
+      "cn": "成衣图",
+      "idx": "01",
+      "file": "buyuege-garment-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "model",
+      "cn": "模特图",
+      "idx": "01",
+      "file": "buyuege-model-01.jpg",
+      "status": "ok",
+      "bytes": 81234
+    }
+  ],
+  "shishitongtang": [
+    {
+      "type": "concept",
+      "cn": "概念图",
+      "idx": "01",
+      "file": "shishitongtang-concept-01.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "01",
+      "file": "shishitongtang-design-01.jpg",
+      "status": "ok",
+      "bytes": 81815
+    },
+    {
+      "type": "design",
+      "cn": "设计图",
+      "idx": "02",
+      "file": "shishitongtang-design-02.jpg",
+      "status": "miss",
+      "err": "HTTPError"
+    },
+    {
+      "type": "fabric",
+      "cn": "布料图",
+      "idx": "01",
+      "file": "shishitongtang-fabric-01.jpg",
+      "status": "ok",
+      "bytes": 78802
+    },
+    {
+      "type": "garment",
+      "cn": "成衣图",
+      "idx": "01",
+      "file": "shishitongtang-garment-01.jpg",
+      "status": "ok",
+      "bytes": 70910
+    },
+    {
+      "type": "model",
+      "cn": "模特图",
+      "idx": "01",
+      "file": "shishitongtang-model-01.jpg",
+      "status": "ok",
+      "bytes": 78953
+    }
+  ]
+}

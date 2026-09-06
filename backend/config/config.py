@@ -132,6 +132,14 @@ class Config:
         self.JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or self.SECRET_KEY
         self.JWT_ACCESS_EXPIRES_MINUTES = int(os.environ.get('JWT_ACCESS_EXPIRES_MINUTES', '15'))
         self.JWT_REFRESH_EXPIRES_DAYS = int(os.environ.get('JWT_REFRESH_EXPIRES_DAYS', '30'))
+
+        # 忘记密码发信（可选）
+        self.SMTP_HOST = (os.environ.get('SMTP_HOST') or '').strip()
+        self.SMTP_PORT = int(os.environ.get('SMTP_PORT') or 465)
+        self.SMTP_USER = (os.environ.get('SMTP_USER') or '').strip()
+        self.SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD') or ''
+        self.SMTP_FROM = (os.environ.get('SMTP_FROM') or self.SMTP_USER or '').strip()
+        self.SMTP_SSL = (os.environ.get('SMTP_SSL') or 'true').strip()
         
         # 微信公众号 / 开放平台网页授权（仅微信内 H5 使用 snsapi_userinfo）
         self.WECHAT_APP_ID = os.environ.get('WECHAT_APP_ID', '').strip()

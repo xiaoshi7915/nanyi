@@ -210,6 +210,7 @@ def create_app(config_name='development'):
         from backend.routes.static_cards import static_cards_bp
         from backend.routes.try_on import try_on_bp
         from backend.routes.auth import auth_bp
+        from backend.routes.user_center import user_bp
         from backend.routes.reviews import reviews_bp
         from backend.routes.admin_reviews import admin_reviews_bp
         
@@ -221,11 +222,12 @@ def create_app(config_name='development'):
         app.register_blueprint(static_cards_bp)
         app.register_blueprint(try_on_bp)
         app.register_blueprint(auth_bp)
+        app.register_blueprint(user_bp)
         app.register_blueprint(reviews_bp)
         app.register_blueprint(admin_reviews_bp)
         
         logger.info("✅ API路由注册成功 (支持 /api 和 /api/v1)")
-        logger.info("✅ 已注册路由模块: images, brands, products, filters, share, try_on, auth, reviews, admin_reviews")
+        logger.info("✅ 已注册路由模块: images, brands, products, filters, share, try_on, auth, user_center, reviews, admin_reviews")
     except ImportError as e:
         logger.warning(f"警告: 路由导入失败 - {e}")
         import traceback

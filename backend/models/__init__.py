@@ -29,7 +29,14 @@ Product = None
 Admin = None
 AccessLog = None
 
-from .user import User, OAuthBinding, UserAsset
+from .user import (
+    User,
+    OAuthBinding,
+    UserAsset,
+    UserBrowseEvent,
+    UserLoginEvent,
+    PasswordResetToken,
+)
 
 __all__ = [
     'db',
@@ -39,5 +46,9 @@ __all__ = [
     'User',
     'OAuthBinding',
     'UserAsset',
+    'UserBrowseEvent',
+    'UserLoginEvent',
+    'PasswordResetToken',
     'init_models',
-] 
+]
+ 

@@ -1,0 +1,1102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>南意秋棠 · 古典中式</title>
+
+  <!-- 字体：志莽行书 + 思源宋体 + Noto Serif SC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============ Sticky Table of Contents / Nav ============ -->
+<header class="toc-bar">
+  <div class="toc-bar__brand">
+    <span class="seal">棠</span>
+    南意秋棠 · 设计稿 v2
+  </div>
+  <nav>
+    <a href="#ds">设计系统</a>
+    <a href="#d-home">桌面 · 首页</a>
+    <a href="#d-detail">桌面 · 详情弹窗</a>
+    <a href="#d-cs">桌面 · 客服弹窗</a>
+    <a href="#m-home">移动 · 首页</a>
+    <a href="#m-detail">移动 · 详情</a>
+    <a href="#m-cs">移动 · 客服</a>
+  </nav>
+  <div class="toc-bar__meta">1440 + 390 · 古典中式</div>
+</header>
+
+<div class="app-shell">
+
+  <main class="board">
+
+    <!-- ============ Frame 0: Design System ============ -->
+    <section id="ds" style="display:flex;flex-direction:column;align-items:center;width:100%">
+      <div class="frame-label"><b>设计系统 · 古典中式</b></div>
+      <div class="frame frame--ds">
+        <div class="ds">
+          <h1 class="ds__title">Design Tokens</h1>
+          <p class="ds__sub">PALETTE · TYPOGRAPHY · SPACING</p>
+
+          <div class="ds__block">
+            <h2 class="ds__block-title">色板 Palette</h2>
+            <div class="swatch-row">
+              <div class="swatch">
+                <div class="swatch__chip" style="background:#FCFAF3"></div>
+                <div class="swatch__meta">
+                  <div class="swatch__name">月白</div>
+                  <div class="swatch__hex">#FCFAF3</div>
+                </div>
+              </div>
+              <div class="swatch">
+                <div class="swatch__chip" style="background:#2E4F58"></div>
+                <div class="swatch__meta">
+                  <div class="swatch__name">黛青</div>
+                  <div class="swatch__hex">#2E4F58</div>
+                </div>
+              </div>
+              <div class="swatch">
+                <div class="swatch__chip" style="background:#9E2B25"></div>
+                <div class="swatch__meta">
+                  <div class="swatch__name">朱红</div>
+                  <div class="swatch__hex">#9E2B25</div>
+                </div>
+              </div>
+              <div class="swatch">
+                <div class="swatch__chip" style="background:#C2A15A"></div>
+                <div class="swatch__meta">
+                  <div class="swatch__name">鎏金</div>
+                  <div class="swatch__hex">#C2A15A</div>
+                </div>
+              </div>
+              <div class="swatch">
+                <div class="swatch__chip" style="background:#1F1D1A"></div>
+                <div class="swatch__meta">
+                  <div class="swatch__name">墨</div>
+                  <div class="swatch__hex">#1F1D1A</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ds__block">
+            <h2 class="ds__block-title">字体 Typography</h2>
+            <div class="type-row">
+              <div class="type-row__spec">
+                <span class="type-row__label">H1</span>
+                <span class="type-1">南意秋棠</span>
+              </div>
+              <div class="type-row__spec">
+                <span class="type-row__label">H2</span>
+                <span class="type-2">画韵春秋 · 162 款</span>
+              </div>
+              <div class="type-row__spec">
+                <span class="type-row__label">Body</span>
+                <span class="type-3">凤凰于飞，麒麟踏雪。 取意《山海经·南山经》中&hellip;</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ds__block">
+            <h2 class="ds__block-title">圆角 Radii</h2>
+            <div class="rad-row">
+              <div class="rad-cell"><div class="rad-block" style="border-radius:14px"></div><small>14px · 标签</small></div>
+              <div class="rad-cell"><div class="rad-block" style="border-radius:12px"></div><small>12px · 卡片</small></div>
+              <div class="rad-cell"><div class="rad-block" style="border-radius:20px"></div><small>20px · 弹窗</small></div>
+              <div class="rad-cell"><div class="rad-block" style="border-radius:24px 24px 0 0"></div><small>24px sheet</small></div>
+              <div class="rad-cell"><div class="rad-block" style="border-radius:999px"></div><small>999px · 胶囊</small></div>
+            </div>
+          </div>
+
+          <div class="ds__block">
+            <h2 class="ds__block-title">间距 Spacing</h2>
+            <div style="display:flex;gap:24px;align-items:flex-end">
+              <div class="rad-cell"><div style="width:4px;height:24px;background:var(--c-gold)"></div><small>4</small></div>
+              <div class="rad-cell"><div style="width:8px;height:32px;background:var(--c-gold)"></div><small>8</small></div>
+              <div class="rad-cell"><div style="width:12px;height:40px;background:var(--c-gold)"></div><small>12</small></div>
+              <div class="rad-cell"><div style="width:16px;height:48px;background:var(--c-gold)"></div><small>16</small></div>
+              <div class="rad-cell"><div style="width:24px;height:56px;background:var(--c-gold)"></div><small>24</small></div>
+              <div class="rad-cell"><div style="width:32px;height:64px;background:var(--c-gold)"></div><small>32</small></div>
+            </div>
+          </div>
+
+          <div class="ds__block">
+            <h2 class="ds__block-title">组件 Components</h2>
+            <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+              <button class="btn-primary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12l5 5 9-9"/></svg>
+                主要按钮
+              </button>
+              <button class="btn-ghost">描边按钮</button>
+              <button class="btn-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
+                分享
+              </button>
+              <button class="btn-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+                试穿 327
+              </button>
+              <button class="btn-pill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12c0 4-4 8-9 8a10 10 0 0 1-3.5-.6L4 21l1.6-4.5C4.6 15 4 13.6 4 12c0-4 4-8 8-8s9 4 9 8z"/></svg>
+                评价 56
+              </button>
+              <span class="chip is-active">2025 <span class="chip__count">28</span></span>
+              <span class="chip">2024 <span class="chip__count">32</span></span>
+              <span class="chip">画韵春秋系列</span>
+              <span class="brand-card__tag">银丝乱麻</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Frame 1: Desktop Home ============ -->
+    <section id="d-home" style="display:flex;flex-direction:column;align-items:center;width:100%">
+      <div class="frame-label"><b>桌面 · 首页 1440</b></div>
+      <div class="frame">
+
+        <!-- Header -->
+        <header class="site-header">
+          <div class="site-header__inner">
+            <div class="site-header__brand">
+              <div class="seal">棠</div>
+              <div>
+                <h1>南意秋棠</h1>
+                <small>NANYI · QIU TANG</small>
+              </div>
+            </div>
+
+            <nav>
+              <a href="#" class="active">首页</a>
+              <a href="#">系列</a>
+              <a href="#">材质</a>
+              <a href="#">资讯</a>
+              <a href="#">关于</a>
+            </nav>
+
+            <div class="site-header__actions">
+              <button class="icon-btn" aria-label="搜索">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="用户">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+              </button>
+              <button class="icon-btn" aria-label="购物车">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 7h14l-1.5 11.5a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5L5 7z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>
+                <span class="dot"></span>
+              </button>
+              <button class="btn-primary" data-open="cs">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12c0 4-4 8-9 8a10 10 0 0 1-3.5-.6L4 21l1.6-4.5C4.6 15 4 13.6 4 12c0-4 4-8 8-8s9 4 9 8z"/></svg>
+                立即咨询
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- Hero -->
+        <section class="hero">
+          <div class="hero__bg" aria-hidden="true">
+            <svg width="100%" height="100%" viewBox="0 0 1440 400" preserveAspectRatio="xMidYMid slice">
+              <!-- 远山 -->
+              <path d="M0 320 L120 240 L240 280 L380 200 L520 260 L660 220 L800 270 L960 230 L1120 280 L1280 240 L1440 290 L1440 400 L0 400Z" fill="rgba(255,255,255,0.04)"/>
+              <path d="M0 350 L150 290 L320 320 L480 270 L640 310 L820 280 L980 320 L1160 290 L1320 330 L1440 300 L1440 400 L0 400Z" fill="rgba(255,255,255,0.06)"/>
+              <!-- 鎏金菱纹 -->
+              <defs>
+                <pattern id="rhombus" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M20 4 L36 20 L20 36 L4 20Z" fill="none" stroke="rgba(194,161,90,0.18)" stroke-width="0.5"/>
+                </pattern>
+              </defs>
+              <rect x="0" y="0" width="1440" height="400" fill="url(#rhombus)"/>
+            </svg>
+          </div>
+
+          <div class="hero__inner">
+            <div class="hero__copy">
+              <div class="hero__eyebrow">NANYI · QIU TANG · 古典中式</div>
+              <h2 class="hero__title">传承经典 美美与共</h2>
+              <p class="hero__sub">古典美学设计，望君着美与裳</p>
+              <div class="hero__cta">
+                <button class="btn-primary" data-open="detail">浏览全部</button>
+                <button class="btn-ghost">了解系列</button>
+              </div>
+            </div>
+
+            <div class="hero__deco">
+              <div class="hero__seal-stack">
+                <i>南</i>
+                <i>意</i>
+                <i>秋</i>
+                <i>棠</i>
+                <i>壹</i>
+                <i>贰</i>
+                <i>叁</i>
+                <i>肆</i>
+                <i>伍</i>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Filter -->
+        <section class="filter">
+          <div class="filter__head">
+            <div class="filter__title">筛选 <em>·</em> FILTER</div>
+            <div class="filter__search">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+              <input placeholder="搜索款名、材质、灵感&hellip;" />
+            </div>
+          </div>
+          <div class="filter__groups">
+            <div class="filter__group">
+              <div class="filter__group-label">年份</div>
+              <div class="filter__tags" data-facet="year">
+                <button class="chip">全部</button>
+                <button class="chip is-active">2025 <span class="chip__count">28</span></button>
+                <button class="chip">2024 <span class="chip__count">32</span></button>
+                <button class="chip">2023 <span class="chip__count">24</span></button>
+                <button class="chip">2022 <span class="chip__count">22</span></button>
+                <button class="chip">2021 <span class="chip__count">20</span></button>
+              </div>
+            </div>
+            <div class="filter__group">
+              <div class="filter__group-label">主题</div>
+              <div class="filter__tags" data-facet="theme">
+                <button class="chip is-active">画韵春秋系列 <span class="chip__count">110</span></button>
+                <button class="chip">长物志系列 <span class="chip__count">22</span></button>
+                <button class="chip">执·念系列 <span class="chip__count">20</span></button>
+              </div>
+            </div>
+            <div class="filter__group">
+              <div class="filter__group-label">材质</div>
+              <div class="filter__tags" data-facet="material">
+                <button class="chip is-active">银丝乱麻 <span class="chip__count">42</span></button>
+                <button class="chip">仿醋酸双面缎 <span class="chip__count">21</span></button>
+                <button class="chip">30D天丝雪纺 <span class="chip__count">19</span></button>
+                <button class="chip">织锦缎 <span class="chip__count">15</span></button>
+              </div>
+            </div>
+            <div class="filter__group">
+              <div class="filter__group-label">印花</div>
+              <div class="filter__tags" data-facet="print">
+                <button class="chip is-active">循环印花料 <span class="chip__count">87</span></button>
+                <button class="chip">旗袍定位料 <span class="chip__count">60</span></button>
+                <button class="chip">单边定位裙料 <span class="chip__count">15</span></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Brand Grid -->
+        <section class="grid-section">
+          <div class="grid-head">
+            <div class="grid-head__title">
+              162 款 <em>· 画韵春秋</em>
+            </div>
+            <div class="grid-head__sort">
+              <span>排序</span>
+              <select>
+                <option>最新入库</option>
+                <option>最受喜爱</option>
+                <option>最早上架</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="brand-grid" id="brandGrid"><!-- JS 注入 8 张卡片 --></div>
+        </section>
+
+        <!-- Pagination -->
+        <nav class="pagination">
+          <button class="pg" aria-label="上一页"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg></button>
+          <button class="pg is-current">1</button>
+          <button class="pg">2</button>
+          <button class="pg">3</button>
+          <button class="pg">4</button>
+          <span class="pg" style="border:0;background:transparent">…</span>
+          <button class="pg">8</button>
+          <button class="pg" aria-label="下一页"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></button>
+        </nav>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+          <div class="site-footer__inner">
+            <div>
+              <div class="site-footer__about">南意秋棠</div>
+              <p>自 2017 年起，我们记取古典中式布料的全部细节——<br>纹理、染色、印染工艺与穿着的呼吸节奏。</p>
+            </div>
+            <div>
+              <h4>系列 SERIES</h4>
+              <ul>
+                <li>画韵春秋</li>
+                <li>长物志</li>
+                <li>执·念</li>
+                <li>未公开款</li>
+              </ul>
+            </div>
+            <div>
+              <h4>渠道 CHANNEL</h4>
+              <ul>
+                <li>淘宝 · nanyiqiutang</li>
+                <li>微店</li>
+                <li>小红书 @南意秋棠</li>
+                <li>线下展厅</li>
+              </ul>
+            </div>
+            <div>
+              <h4>联系 CONTACT</h4>
+              <ul>
+                <li>客服微信 LPumpkin0217</li>
+                <li>客服微信 moonysy511</li>
+                <li>邮箱 hi@nanyiqiutang.cn</li>
+                <li>合作 contact@nanyiqiutang.cn</li>
+              </ul>
+            </div>
+          </div>
+          <div class="site-footer__meta">
+            <span>© 2017 - 2026 · 南意秋棠</span>
+            <span>浙ICP备2024081979号-1</span>
+          </div>
+        </footer>
+
+      </div>
+    </section>
+
+    <!-- ============ Frame 2: Desktop Detail Modal ============ -->
+    <section id="d-detail" style="display:flex;flex-direction:column;align-items:center;width:100%">
+      <div class="frame-label"><b>桌面 · 品牌详情弹窗 1440 × 1000</b></div>
+      <div class="frame-env">
+        <div class="frame" style="width:1440px;height:1000px;position:relative">
+
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg, #F6F1E4 0%, #F0E8D5 100%);display:flex;align-items:center;justify-content:center;color:var(--c-gray-500);font-size:14px;letter-spacing:0.2em">
+            <div style="text-align:center">
+              <div style="font-family:'Zhi Mang Xing',serif;font-size:64px;color:var(--c-ink-deep);opacity:0.15">南意秋棠</div>
+              <div style="margin-top:24px;opacity:0.5">[ ORIGINAL · BEHIND MODAL ]</div>
+            </div>
+          </div>
+
+          <div class="modal is-open" style="position:absolute;inset:0">
+            <div class="modal__card">
+
+              <button class="modal__close" data-close>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 6l12 12M6 18L18 6"/></svg>
+              </button>
+
+              <div class="detail-head">
+                <h2 class="detail-head__title">凤麟</h2>
+                <div class="detail-head__meta">
+                  <span>2025 年 · <b>画韵春秋系列</b></span>
+                  <span><b>银丝乱麻</b> · 50D 乱麻底</span>
+                  <span>限量 <b>300 匹</b></span>
+                </div>
+                <button class="detail-head__like">
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z"/></svg>
+                  扫码 327
+                </button>
+              </div>
+
+              <div class="detail-body">
+                <div>
+                  <div class="detail-section__heading">设计灵感 INSPIRATION</div>
+                  <div class="detail-inspire">
+                    取意「凤凰于飞，麒麟踏雪」。<br>
+                    取《山海经·南山经》中「凤凰&hellip;&hellip;」，<br>
+                    以工笔笔触写意山石肌理与卷云，<br>
+                    配以朱红、鎏金点缀，<br>
+                    寓祥瑞安宁之意。
+                  </div>
+
+                  <div class="detail-section__heading">布料 FABRIC</div>
+                  <div class="detail-fabric">
+                    <div class="detail-fabric__item"><img src="assets/feiyu.jpg" alt=""></div>
+                    <div class="detail-fabric__item"><img src="assets/zhaoyebai.jpg" alt=""></div>
+                    <div class="detail-fabric__item"><img src="assets/yunqi.jpg" alt=""></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="detail-section__heading">模特 MODEL</div>
+                  <div class="detail-model">
+                    <div class="detail-model__item">
+                      <img src="assets/zhaoyebai.jpg" alt="模特 01">
+                      <div class="detail-model__label">正面 · 江南水乡</div>
+                    </div>
+                    <div class="detail-model__item">
+                      <img src="assets/yunqi.jpg" alt="模特 02">
+                      <div class="detail-model__label">背面 · 月下荷塘</div>
+                    </div>
+                    <div class="detail-model__item">
+                      <img src="assets/buyuege.jpg" alt="模特 03">
+                      <div class="detail-model__label">古典园林</div>
+                    </div>
+                    <div class="detail-model__item">
+                      <img src="assets/shishitongtang.jpg" alt="模特 04">
+                      <div class="detail-model__label">朱红庭院</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-cta">
+                <button class="btn-primary">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+                  生成布料卡片
+                </button>
+                <button class="btn-ghost">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+                  AI 试穿
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Frame 3: Desktop CS Modal ============ -->
+    <section id="d-cs" style="display:flex;flex-direction:column;align-items:center;width:100%">
+      <div class="frame-label"><b>桌面 · 智能客服弹窗 1440 × 1000</b></div>
+      <div class="frame-env">
+        <div class="frame" style="width:1440px;height:1000px;position:relative">
+
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg, #F6F1E4 0%, #F0E8D5 100%);display:flex;align-items:center;justify-content:center;color:var(--c-gray-500);font-size:14px;letter-spacing:0.2em">
+            <div style="text-align:center">
+              <div style="font-family:'Zhi Mang Xing',serif;font-size:64px;color:var(--c-ink-deep);opacity:0.15">南意秋棠</div>
+              <div style="margin-top:24px;opacity:0.5">[ ORIGINAL · BEHIND MODAL ]</div>
+            </div>
+          </div>
+
+          <div class="modal is-open" style="position:absolute;inset:0">
+            <div class="modal__card modal--cs__inner">
+
+              <button class="modal__close" data-close>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 6l12 12M6 18L18 6"/></svg>
+              </button>
+
+              <div class="cs-head">
+                <div class="cs-head__who">
+                  <div class="cs-head__avatar">棠</div>
+                  <div class="cs-head__meta">
+                    <b>棠棠 · 智能客服</b>
+                    <small>NANYI · QIU TANG · 在线服务</small>
+                  </div>
+                </div>
+                <div class="cs-head__actions">
+                  <button aria-label="更多">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="cs-body">
+                <div class="cs-time">今天 14:32</div>
+
+                <div class="cs-msg">
+                  <div class="cs-msg__avatar">棠</div>
+                  <div class="cs-msg__bubble">
+                    您好，我是棠棠～<br>很高兴为您服务！想找哪一类布料呢？
+                    <div class="cs-chips">
+                      <button class="chip">画韵春秋</button>
+                      <button class="chip">旗袍定位料</button>
+                      <button class="chip">银丝乱麻</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cs-msg cs-msg--mine">
+                  <div class="cs-msg__avatar">小石</div>
+                  <div class="cs-msg__bubble">
+                    想看一下黑金系列，有比较素雅一点的款吗？
+                  </div>
+                </div>
+
+                <div class="cs-msg">
+                  <div class="cs-msg__avatar">棠</div>
+                  <div class="cs-msg__bubble">
+                    没问题～ 为您筛选了几款朱红鎏金点缀的款式：
+                    <div class="cs-chips">
+                      <button class="chip">翡玉</button>
+                      <button class="chip">照夜白</button>
+                      <button class="chip">步月歌</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cs-msg">
+                  <div class="cs-msg__avatar">棠</div>
+                  <div class="cs-msg__bubble">
+                    也可以告诉我偏好，我将为您定制推荐～
+                  </div>
+                </div>
+              </div>
+
+              <div class="cs-quick">
+                <div class="cs-quick__title">快捷提问</div>
+                <div class="cs-quick__list">
+                  <button class="cs-quick__item">
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 7h14l-1.5 11.5a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5L5 7z"/></svg>
+                    查 物流
+                  </button>
+                  <button class="cs-quick__item">
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12c0 4-4 8-9 8a10 10 0 0 1-3.5-.6L4 21l1.6-4.5C4.6 15 4 13.6 4 12c0-4 4-8 8-8s9 4 9 8z"/></svg>
+                    问 价格
+                  </button>
+                  <button class="cs-quick__item">
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18M9 3v18"/></svg>
+                    定 制
+                  </button>
+                  <button class="cs-quick__item">
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+                    转 人工
+                  </button>
+                </div>
+              </div>
+
+              <div class="cs-input">
+                <button class="cs-input__attach" aria-label="附件">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 11l-9 9-7-7 9-9"/><path d="M14 4l6 6"/></svg>
+                </button>
+                <input placeholder="输入您的问题，按 Enter 发送…" />
+                <button class="cs-input__send" aria-label="发送">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12l14-7-4 14-3-5-7-2z"/></svg>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Frame 4: Mobile Home ============ -->
+    <section id="m-home" style="display:flex;flex-direction:column;align-items:center;width:100%">
+      <div class="frame-label"><b>移动 · 首页 390</b></div>
+      <div class="frame frame--mobile">
+        <div class="mob">
+          <header class="mob-header">
+            <div class="mob-header__brand">
+              <span class="seal">棠</span>
+              南意秋棠
+            </div>
+            <button class="mob-header__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><circle cx="5" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="19" cy="6" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="19" cy="18" r="1.5"/></svg>
+            </button>
+          </header>
+
+          <section class="mob-hero">
+            <div class="mob-hero__t">传承经典<br>美美与共</div>
+            <div class="mob-hero__s">古典美学设计，望君着美与裳</div>
+            <svg class="mob-hero__bg" width="240" height="160" viewBox="0 0 240 160">
+              <path d="M0 120 L40 80 L80 110 L120 60 L160 100 L200 70 L240 90 L240 160 L0 160Z" fill="rgba(194,161,90,0.18)"/>
+              <path d="M0 140 L60 110 L120 130 L180 100 L240 120 L240 160 L0 160Z" fill="rgba(158,43,37,0.2)"/>
+            </svg>
+          </section>
+
+          <div class="mob-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3-3"/></svg>
+            <input placeholder="搜索款名或材质…" />
+          </div>
+
+          <div class="mob-tabs">
+            <button class="chip is-active">全部</button>
+            <button class="chip">2025</button>
+            <button class="chip">2024</button>
+            <button class="chip">2023</button>
+            <button class="chip">画韵春秋</button>
+            <button class="chip">长物志</button>
+          </div>
+
+          <div class="mob-grid" id="mobGrid"><!-- JS 注入 2 列网格卡片 --></div>
+
+          <button class="mob-fab" aria-label="客服" data-open="cs">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M21 12c0 4-4 8-9 8a10 10 0 0 1-3.5-.6L4 21l1.6-4.5C4.6 15 4 13.6 4 12c0-4 4-8 8-8s9 4 9 8z"/></svg>
+          </button>
+
+          <div class="mob-footer">
+            © 2017 - 2026 · 南意秋棠<br>
+            浙ICP备2024081979号-1
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Frame 4b: Mobile Detail Page (NEW) ============ -->
+    <section id="m-detail" style="display:flex;flex-direction:column;align-items:center;width:100%">
+      <div class="frame-label"><b>移动 · 详情页 390 × 900</b></div>
+      <div class="frame frame--mobile frame--mob-detail">
+        <div class="mob-detail">
+
+          <!-- 顶部 nav -->
+          <div class="mob-detail__topbar">
+            <button aria-label="返回">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="mob-detail__topbar-title">步月歌</div>
+            <div class="right-btns">
+              <button aria-label="收藏">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z"/></svg>
+              </button>
+              <button aria-label="更多">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero 轮播 -->
+          <div class="mob-detail__hero" data-mob-detail-hero>
+            <div class="mob-detail__hero-track">
+              <img src="assets/buyuege-concept-01.jpg" alt="概念图">
+              <img src="assets/buyuege-design-01.jpg" alt="设计图">
+              <img src="assets/buyuege-fabric-01.jpg" alt="布料图">
+              <img src="assets/buyuege-model-01.jpg" alt="模特图">
+            </div>
+            <div class="mob-detail__hero-dots">
+              <i class="is-active"></i><i></i><i></i><i></i>
+            </div>
+            <button class="mob-detail__hero-arrow prev" aria-label="上一张">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button class="mob-detail__hero-arrow next" aria-label="下一张">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="m9 6 6 6-6 6"/></svg>
+            </button>
+            <span class="mob-detail__hero-count">概念图 1/4</span>
+          </div>
+
+          <!-- 主体 -->
+          <div class="mob-detail__body">
+            <div class="mob-detail__name">步月歌</div>
+            <div class="mob-detail__pinyin">BUYUEGE</div>
+            <div class="mob-detail__tags">
+              <span class="brand-card__tag">2024</span>
+              <span class="brand-card__tag">执·念</span>
+              <span class="brand-card__tag">旗袍定位料</span>
+            </div>
+
+            <div class="mob-detail__inspire">
+              取意「凤凰于飞，麒麟踏雪」。取《山海经·南山经》中
+              「凤凰……」以工笔笔触写意山石肌理，配以朱红、鎏金点缀，
+              寓祥瑞安宁之意。
+            </div>
+
+            <div class="mob-detail__stats">
+              <button class="mob-stat" data-stat="tryon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+                <b>720</b>
+                <small>试穿</small>
+              </button>
+              <button class="mob-stat" data-stat="share">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
+                <b>192</b>
+                <small>分享</small>
+              </button>
+              <button class="mob-stat" data-stat="rating">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12c0 4-4 8-9 8a10 10 0 0 1-3.5-.6L4 21l1.6-4.5C4.6 15 4 13.6 4 12c0-4 4-8 8-8s9 4 9 8z"/></svg>
+                <b>108</b>
+                <small>评价</small>
+              </button>
+            </div>
+
+            <div class="mob-detail__spec">
+              <div class="mob-detail__spec-row">
+                <span>材质</span><b>银丝乱麻 · 50D 乱麻底</b>
+              </div>
+              <div class="mob-detail__spec-row">
+                <span>工艺</span><b>循环印花料 · 工笔写意</b>
+              </div>
+              <div class="mob-detail__spec-row">
+                <span>数量</span><b>限量 300 匹</b>
+              </div>
+            </div>
+
+            <div class="mob-detail__related-title">你可能也喜欢</div>
+            <div class="mob-detail__related">
+              <img src="assets/zhaoyebai.jpg" alt="">
+              <img src="assets/yunqi.jpg" alt="">
+              <img src="assets/feiyu.jpg" alt="">
+            </div>
+          </div>
+
+          <!-- 底部 sticky 操作栏 -->
+          <div class="mob-detail__bottombar">
+            <button class="btn-pill btn-pill--ghost" data-stat="share">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>
+              分享
+            </button>
+            <button class="btn-pill btn-pill--ghost" data-stat="tryon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+              AI 试穿
+            </button>
+            <button class="btn-pill btn-pill--primary" data-stat="rating">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12c0 4-4 8-9 8a10 10 0 0 1-3.5-.6L4 21l1.6-4.5C4.6 15 4 13.6 4 12c0-4 4-8 8-8s9 4 9 8z"/></svg>
+              我要评价
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Frame 5: Mobile CS ============ -->
+    <section id="m-cs" style="display:flex;flex-direction:column;align-items:center;width:100%">
+      <div class="frame-label"><b>移动 · 客服 390 × 780</b></div>
+      <div class="frame frame--mobile" style="height:780px">
+        <div class="mob" style="min-height:auto;display:flex;flex-direction:column">
+
+          <div class="cs-head">
+            <div class="cs-head__who">
+              <button style="width:30px;height:30px;display:grid;place-items:center;color:#fff">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <div class="cs-head__avatar">棠</div>
+              <div class="cs-head__meta">
+                <b style="font-size:14px">棠棠</b>
+                <small>在线</small>
+              </div>
+            </div>
+            <div class="cs-head__actions">
+              <button>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="cs-body" style="flex:1">
+            <div class="cs-time">今天 14:32</div>
+            <div class="cs-msg">
+              <div class="cs-msg__avatar">棠</div>
+              <div class="cs-msg__bubble">
+                您好～ 请问想找哪一类？
+                <div class="cs-chips">
+                  <button class="chip">画韵春秋</button>
+                  <button class="chip">银丝乱麻</button>
+                </div>
+              </div>
+            </div>
+            <div class="cs-msg cs-msg--mine">
+              <div class="cs-msg__avatar">我</div>
+              <div class="cs-msg__bubble">看下黑金系列～</div>
+            </div>
+            <div class="cs-msg">
+              <div class="cs-msg__avatar">棠</div>
+              <div class="cs-msg__bubble">
+                这边为您找到三款：
+                <div class="cs-chips">
+                  <button class="chip">翡玉</button>
+                  <button class="chip">照夜白</button>
+                  <button class="chip">步月歌</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="cs-input">
+            <button class="cs-input__attach">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 11l-9 9-7-7 9-9"/></svg>
+            </button>
+            <input placeholder="输入消息…" />
+            <button class="cs-input__send">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12l14-7-4 14-3-5-7-2z"/></svg>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Live Demo Modals (overlay) ============ -->
+    <div class="modal modal--detail" id="modal-detail">
+      <div class="modal__card">
+        <button class="modal__close" data-close>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 6l12 12M6 18L18 6"/></svg>
+        </button>
+        <div class="detail-head">
+          <h2 class="detail-head__title">步月歌</h2>
+          <div class="detail-head__meta">
+            <span>2024 年 · <b>执·念系列</b></span>
+            <span><b>旗袍定位料</b> · 50D 乱麻底</span>
+            <span>限量 <b>300 匹</b></span>
+          </div>
+          <button class="detail-head__like">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="14" height="14"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5.5-7 10-7 10z"/></svg>
+            扫码 327
+          </button>
+        </div>
+        <div class="detail-body">
+          <div>
+            <div class="detail-section__heading">设计灵感 INSPIRATION</div>
+            <div class="detail-inspire">
+              取意「凤凰于飞，麒麟踏雪」。<br>
+              取《山海经·南山经》中「凤凰」，<br>
+              以工笔笔触写意山石肌理，<br>
+              配以朱红、鎏金点缀。
+            </div>
+            <div class="detail-section__heading">布料 FABRIC</div>
+            <div class="detail-fabric">
+              <div class="detail-fabric__item"><img src="assets/buyuege-design-01.jpg" alt=""></div>
+              <div class="detail-fabric__item"><img src="assets/buyuege-fabric-01.jpg" alt=""></div>
+              <div class="detail-fabric__item"><img src="assets/buyuege-model-01.jpg" alt=""></div>
+            </div>
+          </div>
+          <div>
+            <div class="detail-section__heading">模特 MODEL</div>
+            <div class="detail-model">
+              <div class="detail-model__item"><img src="assets/buyuege-model-01.jpg" alt=""><div class="detail-model__label">正面 · 江南水乡</div></div>
+              <div class="detail-model__item"><img src="assets/buyuege.jpg" alt=""><div class="detail-model__label">背面 · 月下荷塘</div></div>
+              <div class="detail-model__item"><img src="assets/zhaoyebai.jpg" alt=""><div class="detail-model__label">古典园林</div></div>
+              <div class="detail-model__item"><img src="assets/buyuege-fabric-01.jpg" alt=""><div class="detail-model__label">朱红庭院</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="detail-cta">
+          <button class="btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>生成布料卡片</button>
+          <button class="btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>AI 试穿</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CS Modal Live -->
+    <div class="modal modal--cs" id="modal-cs">
+      <div class="modal__card">
+        <button class="modal__close" data-close>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 6l12 12M6 18L18 6"/></svg>
+        </button>
+        <div class="cs-head">
+          <div class="cs-head__who">
+            <div class="cs-head__avatar">棠</div>
+            <div class="cs-head__meta">
+              <b>棠棠 · 智能客服</b>
+              <small>NANYI · QIU TANG · 在线服务</small>
+            </div>
+          </div>
+        </div>
+        <div class="cs-body">
+          <div class="cs-time">今天 14:32</div>
+          <div class="cs-msg">
+            <div class="cs-msg__avatar">棠</div>
+            <div class="cs-msg__bubble">
+              您好，我是棠棠～<br>很高兴为您服务！想找哪一类布料呢？
+              <div class="cs-chips">
+                <button class="chip">画韵春秋</button>
+                <button class="chip">旗袍定位料</button>
+                <button class="chip">银丝乱麻</button>
+              </div>
+            </div>
+          </div>
+          <div class="cs-msg cs-msg--mine">
+            <div class="cs-msg__avatar">小石</div>
+            <div class="cs-msg__bubble">想看一下黑金系列～</div>
+          </div>
+          <div class="cs-msg">
+            <div class="cs-msg__avatar">棠</div>
+            <div class="cs-msg__bubble">
+              好的～ 为您筛选几款：
+              <div class="cs-chips">
+                <button class="chip">翡玉</button>
+                <button class="chip">照夜白</button>
+                <button class="chip">步月歌</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cs-quick">
+          <div class="cs-quick__title">快捷提问</div>
+          <div class="cs-quick__list">
+            <button class="cs-quick__item">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 7h14l-1.5 11.5a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5L5 7z"/></svg>
+              查 物流
+            </button>
+            <button class="cs-quick__item">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12c0 4-4 8-9 8a10 10 0 0 1-3.5-.6L4 21l1.6-4.5C4.6 15 4 13.6 4 12c0-4 4-8 8-8s9 4 9 8z"/></svg>
+              问 价格
+            </button>
+            <button class="cs-quick__item">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9h18M9 3v18"/></svg>
+              定 制
+            </button>
+            <button class="cs-quick__item">
+              <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+              转 人工
+            </button>
+          </div>
+        </div>
+        <div class="cs-input">
+          <button class="cs-input__attach" aria-label="附件">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 11l-9 9-7-7 9-9"/></svg>
+          </button>
+          <input placeholder="输入您的问题…" />
+          <button class="cs-input__send" aria-label="发送">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M5 12l14-7-4 14-3-5-7-2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============ Three Bottom-Sheet Popups (评价/分享/试穿) ============ -->
+  <div class="sheet-backdrop" data-close></div>
+
+  <section class="sheet sheet--rating" id="sheet-rating" aria-hidden="true">
+    <div class="sheet__grab"></div>
+    <div class="sheet__head">
+      <div class="sheet__title">为此款评价</div>
+      <button class="sheet__close" data-close>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 6l12 12M6 18L18 6"/></svg>
+      </button>
+    </div>
+    <div class="sheet__body">
+      <div style="text-align:center;color:var(--c-gray-500);font-size:13px;margin-bottom:8px">步月歌 · 整体评价</div>
+      <div class="rating-row" data-rating-row>
+        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.6 6.4L21 10l-5 4.6L17.5 22 12 18l-5.5 4L8 14.6 3 10l6.4-.6Z"/></svg></i>
+        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.6 6.4L21 10l-5 4.6L17.5 22 12 18l-5.5 4L8 14.6 3 10l6.4-.6Z"/></svg></i>
+        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.6 6.4L21 10l-5 4.6L17.5 22 12 18l-5.5 4L8 14.6 3 10l6.4-.6Z"/></svg></i>
+        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.6 6.4L21 10l-5 4.6L17.5 22 12 18l-5.5 4L8 14.6 3 10l6.4-.6Z"/></svg></i>
+        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3 2.6 6.4L21 10l-5 4.6L17.5 22 12 18l-5.5 4L8 14.6 3 10l6.4-.6Z"/></svg></i>
+      </div>
+
+      <div class="upload-zone" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+        <div class="upload-zone__t">添加图片 / 视频</div>
+        <div class="upload-zone__s">最多 9 张 · 5 MB / 张</div>
+      </div>
+
+      <textarea class="textarea" rows="4" placeholder="说说您的真实体验 · 穿着感受、面料、版型、尺寸&#8230;"></textarea>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--c-gray-500);margin:8px 0">
+        <span>是否匿名</span>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="checkbox" style="accent-color:var(--c-rose)">
+          匿名发布
+        </label>
+      </div>
+
+      <button class="sheet-submit">提交评价</button>
+    </div>
+  </section>
+
+  <section class="sheet sheet--share" id="sheet-share" aria-hidden="true">
+    <div class="sheet__grab"></div>
+    <div class="sheet__head">
+      <div class="sheet__title">分享 · 步月歌</div>
+      <button class="sheet__close" data-close>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 6l12 12M6 18L18 6"/></svg>
+      </button>
+    </div>
+    <div class="sheet__body">
+      <div class="share-grid">
+        <button class="share-cell">
+          <span class="ico ico--wechat"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M9 11a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm6 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zM8 5C4 5 1 7.7 1 11c0 1.7.9 3.3 2.3 4.4L2.5 17l1.9-1c.5.1 1 .2 1.6.3-.2-.6-.4-1.3-.4-2 0-2.8 2.7-5 6-5h.5C11.5 6.4 9.9 5 8 5zm10 8c0-2.5-2.5-4.5-5.5-4.5S7 10.5 7 13s2.5 4.5 5.5 4.5c.6 0 1.1-.1 1.6-.2l1.4.7-.4-1.4c1.7-.9 2.9-2.4 2.9-3.6z"/></svg></span>
+          <small>微信好友</small>
+        </button>
+        <button class="share-cell">
+          <span class="ico ico--pyq"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm-3.5 6 .4 1.5h-2v1.5h5.4l-2.6 5.5H7l-.4 1.4h6.6l-1 3.6h1.5l1-3.6h2.6l-1 3.6h1.5l1-3.6H22L18.5 6H8.5z"/></svg></span>
+          <small>朋友圈</small>
+        </button>
+        <button class="share-cell">
+          <span class="ico ico--xhs"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 5h18v14H3z" opacity=".15"/><path d="M5 7v10h14V7H5zm2 2h2v6H7V9zm4 0h2v6h-2V9zm4 0h2v6h-2V9z"/></svg></span>
+          <small>小红书</small>
+        </button>
+        <button class="share-cell">
+          <span class="ico ico--link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span>
+          <small>复制链接</small>
+        </button>
+        <button class="share-cell">
+          <span class="ico ico--qr"><svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5z"/></svg></span>
+          <small>扫码分享</small>
+        </button>
+        <button class="share-cell">
+          <span class="ico ico--save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg></span>
+          <small>保存图片</small>
+        </button>
+      </div>
+
+      <div style="background:var(--c-paper);padding:14px 16px;border-radius:var(--r-soft);margin:8px 0 16px">
+        <div style="font-size:12px;color:var(--c-gray-500);margin-bottom:6px">分享文案</div>
+        <div style="font-family:'Noto Serif SC',serif;font-size:14px;color:var(--c-ink-deep);line-height:1.8">步月歌 · 2024 执·念系列 · 旗袍定位料<br>限量 300 匹 · 工笔写意山石 · 朱红鎏金</div>
+        <div style="display:flex;justify-content:flex-end;margin-top:8px">
+          <button class="btn-pill btn-pill--ghost" style="height:32px;font-size:12px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            一键复制
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet sheet--tryon" id="sheet-tryon" aria-hidden="true">
+    <div class="sheet__grab"></div>
+    <div class="sheet__head">
+      <div class="sheet__title">AI 试穿 · 步月歌</div>
+      <button class="sheet__close" data-close>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M6 6l12 12M6 18L18 6"/></svg>
+      </button>
+    </div>
+    <div class="sheet__body">
+      <div class="tryon-fig">
+        <div class="tryon-fig__t">上传一张全身照</div>
+        <div class="tryon-fig__s">正面站立 · 浅色背景 · 清晰面部 · 全身可见</div>
+        <div class="upload-zone" tabindex="0" style="margin-top:12px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+          <div class="upload-zone__t">选择照片或试穿</div>
+          <div class="upload-zone__s">JPG / PNG · 5 MB 内</div>
+        </div>
+      </div>
+
+      <div style="margin:6px 0 4px;font-size:13px;color:var(--c-ink-deep)">款型 / 系列</div>
+      <div class="tryon-opts">
+        <button class="tryon-opt is-on">
+          <b>旗袍</b>
+          <small>高领 · 修身</small>
+        </button>
+        <button class="tryon-opt">
+          <b>襦裙</b>
+          <small>短襦 + 长裙</small>
+        </button>
+        <button class="tryon-opt">
+          <b>汉服</b>
+          <small>马面 / 大袖</small>
+        </button>
+        <button class="tryon-opt">
+          <b>外套</b>
+          <small>披风 + 内搭</small>
+        </button>
+      </div>
+
+      <div style="margin:14px 0 4px;font-size:13px;color:var(--c-ink-deep)">尺码 · Size</div>
+      <div class="size-slider">
+        <div class="size-slider__head">
+          <span>尺码</span>
+          <b data-size-label>165 / 88A</b>
+        </div>
+        <input type="range" min="0" max="4" value="0" step="1" data-size-range>
+        <div class="size-slider__ticks">
+          <span>S</span><span>M</span><span>L</span><span>XL</span><span>XXL</span>
+        </div>
+      </div>
+
+      <button class="sheet-submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+        生成试穿效果图
+      </button>
+      <div style="text-align:center;color:var(--c-gray-500);font-size:11px;margin-top:8px">生成需 8~15 秒 · 完成后通知您</div>
+    </div>
+  </section>
+
+  <!-- FAB for global cs trigger -->
+  <div class="fab">
+    <button class="fab__btn" data-open="cs" aria-label="联系客服">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12c0 4-4 8-9 8a10 10 0 0 1-3.5-.6L4 21l1.6-4.5C4.6 15 4 13.6 4 12c0-4 4-8 8-8s9 4 9 8z"/></svg>
+    </button>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
