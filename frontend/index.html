@@ -50,17 +50,22 @@
     <!-- Vue.js 3 生产版本 -->
     <script src="static/lib/vue.global.prod.js"></script>
     
+    <!-- 古典改版字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Zhi+Mang+Xing&display=swap" rel="stylesheet">
+
     <!-- 引入图标库 -->
     <link rel="stylesheet" href="static/lib/all.min.css">
     
     <!-- 发布版本号（发布时与 js/app-version.js 同步修改） -->
-    <script src="js/app-version.js?v=20260831-2"></script>
+    <script src="js/app-version.js?v=20260906-1"></script>
     
     <!-- 引入样式文件 -->
-    <link rel="stylesheet" href="css/main.css?v=20260831-4">
-    <link rel="stylesheet" href="static/css/responsive.css?v=20260831-4">
-    <link rel="stylesheet" href="css/skeleton.css?v=20260831-2">
-    <link rel="stylesheet" href="css/try-on.css?v=20260831-2">
+    <link rel="stylesheet" href="css/main.css?v=20260906-1">
+    <link rel="stylesheet" href="static/css/responsive.css?v=20260906-1">
+    <link rel="stylesheet" href="css/skeleton.css?v=20260906-1">
+    <link rel="stylesheet" href="css/try-on.css?v=20260906-1">
     
     <!-- 引入性能优化配置 -->
     <script src="js/performance-config.js"></script>
@@ -68,7 +73,7 @@
     <!-- 引入图片预加载管理器 -->
     <script src="js/image-preloader.js"></script>
     <script src="js/share-card.js"></script>
-    <script src="js/try-on-helpers.js?v=20260831-2"></script>
+    <script src="js/try-on-helpers.js?v=20260906-1"></script>
     
     <!-- 注册Service Worker (PWA) -->
     <script>
@@ -205,8 +210,8 @@
     
     <!-- 引入API客户端 -->
     <!-- 恢复使用正式API文件 -->
-    <script src="js/api.js?v=20260831-2"></script>
-    <script src="js/auth-session.js?v=20260831-2"></script>
+    <script src="js/api.js?v=20260906-1"></script>
+    <script src="js/auth-session.js?v=20260906-1"></script>
     <script>
         // 确保API已加载并验证方法存在
         (function() {
@@ -243,25 +248,25 @@
     <!-- <script src="static/js/main.js"></script> -->
 
 <style id="nanyi-auth-style">
-.nanyi-auth-overlay{position:fixed;inset:0;z-index:10050;background:rgba(20,10,30,.45);display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+.nanyi-auth-overlay{position:fixed;inset:0;z-index:10050;background:rgba(28,52,59,.42);display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));}
 @media(min-width:720px){.nanyi-auth-overlay{align-items:center;}}
-.nanyi-auth-sheet{width:min(420px,100%);background:#fff;border-radius:16px 16px 12px 12px;max-height:88vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.2);}
-.nanyi-auth-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #eee;}
-.nanyi-auth-head button{border:0;background:transparent;font-size:22px;line-height:1;cursor:pointer;}
+.nanyi-auth-sheet{width:min(420px,100%);background:#FCFAF3;border-radius:20px;max-height:88vh;overflow:auto;box-shadow:0 24px 64px rgba(20,35,40,.28);border:1px solid rgba(194,161,90,.35);}
+.nanyi-auth-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #EAE3D2;color:#1C343B;}
+.nanyi-auth-head button{border:0;background:transparent;font-size:22px;line-height:1;cursor:pointer;color:#6B6350;}
 .nanyi-auth-body{padding:16px;display:flex;flex-direction:column;gap:10px;}
-.nanyi-auth-body input{border:1px solid #ddd;border-radius:10px;padding:10px 12px;font-size:14px;}
-.nanyi-auth-btn{border:0;border-radius:10px;padding:11px 14px;background:linear-gradient(135deg,#7b4ea3,#c06c9c);color:#fff;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;}
-.nanyi-auth-btn.ghost{background:#f5f0f8;color:#5b3a7a;}
+.nanyi-auth-body input{border:1px solid #DCD3BB;border-radius:16px;padding:10px 12px;font-size:14px;background:#F6F1E4;}
+.nanyi-auth-btn{border:0;border-radius:999px;padding:11px 14px;background:#9E2B25;color:#fff;font-weight:600;cursor:pointer;text-align:center;text-decoration:none;}
+.nanyi-auth-btn.ghost{background:#F0E4C8;color:#2E4F58;}
 .nanyi-auth-btn.wechat{background:#07c160;}
-.nanyi-auth-link{border:0;background:transparent;color:#7b4ea3;cursor:pointer;font-size:13px;}
+.nanyi-auth-link{border:0;background:transparent;color:#8C7338;cursor:pointer;font-size:13px;}
 .nanyi-auth-tabs{display:flex;gap:8px;}
-.nanyi-auth-tabs button{flex:1;border:1px solid #e5dceb;background:#fff;border-radius:8px;padding:8px;cursor:pointer;}
-.nanyi-auth-tabs button.on{background:#f3e9f8;border-color:#c06c9c;color:#5b3a7a;}
-.nanyi-auth-divider{text-align:center;color:#999;font-size:12px;}
-.nanyi-auth-hint,.nanyi-auth-msg{font-size:12px;color:#666;margin:0;}
-.nanyi-auth-list{margin-top:8px;border-top:1px solid #eee;padding-top:8px;}
-.nanyi-auth-list h4{margin:0 0 6px;font-size:13px;}
-.nanyi-auth-list ul{margin:0;padding-left:18px;font-size:13px;color:#444;}
+.nanyi-auth-tabs button{flex:1;border:1px solid #DCD3BB;background:#FCFAF3;border-radius:999px;padding:8px;cursor:pointer;color:#2E4F58;}
+.nanyi-auth-tabs button.on{background:#F4E4E2;border-color:#C76A65;color:#9E2B25;}
+.nanyi-auth-divider{text-align:center;color:#6B6350;font-size:12px;}
+.nanyi-auth-hint,.nanyi-auth-msg{font-size:12px;color:#6B6350;margin:0;}
+.nanyi-auth-list{margin-top:8px;border-top:1px solid #EAE3D2;padding-top:8px;}
+.nanyi-auth-list h4{margin:0 0 6px;font-size:13px;color:#1C343B;}
+.nanyi-auth-list ul{margin:0;padding-left:18px;font-size:13px;color:#3A3526;}
 .auth-entry-btn{min-width:auto;height:28px;padding:0 10px!important;border:1px solid rgba(255,255,255,.55)!important;background:rgba(255,255,255,.28)!important;border-radius:14px;cursor:pointer;color:#fff!important;}
 .auth-entry-btn span{color:#fff!important;text-shadow:0 1px 2px rgba(0,0,0,.35);font-size:11px!important;font-weight:600;line-height:1;}
 </style>
@@ -515,13 +520,31 @@
                         @mousedown="preloadBrandData(brand, true)"
                     >
                         <div class="brand-image-container">
-                            <img 
-                                :src="getBrandCoverImage(brand)" 
+                            <span class="card-type-badge" v-if="getCardSlide(brand)">
+                                {{ getCardSlideType(brand) }} {{ getCardSlideIndex(brand) + 1 }}/{{ getBrandCarouselImages(brand).length }}
+                            </span>
+                            <img
+                                :src="getCardSlideUrl(brand)"
                                 :alt="brand.name"
                                 class="brand-image"
                                 loading="lazy"
                                 @error="handleImageError"
                             >
+                            <template v-if="getBrandCarouselImages(brand).length > 1">
+                                <button type="button" class="card-carousel-arrow prev" @click.stop="prevCardSlide(brand)" aria-label="上一张">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button type="button" class="card-carousel-arrow next" @click.stop="nextCardSlide(brand)" aria-label="下一张">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                                <div class="card-carousel-dots">
+                                    <i
+                                        v-for="(img, i) in getBrandCarouselImages(brand).slice(0, 8)"
+                                        :key="i"
+                                        :class="{ 'is-active': i === getCardSlideIndex(brand) }"
+                                    ></i>
+                                </div>
+                            </template>
                         </div>
                         <div class="brand-info">
                             <h3 class="brand-name">{{ brand.name }}</h3>
@@ -659,6 +682,28 @@
                     </div>
                     <!-- 实际内容 -->
                     <template v-else>
+                    <!-- 主图轮播：概念图→设计图→布料图→成衣图→模特图 -->
+                    <div class="detail-hero-carousel" v-if="getDetailCarouselImages().length">
+                        <span class="detail-hero-badge">
+                            {{ getDetailSlideType() }} {{ detailHeroIndex + 1 }}/{{ getDetailCarouselImages().length }}
+                        </span>
+                        <img
+                            :src="getImageURL(getDetailCarouselImages()[detailHeroIndex])"
+                            :alt="selectedBrand.name"
+                            @error="handleImageError"
+                        >
+                        <div class="detail-hero-nav" v-if="getDetailCarouselImages().length > 1">
+                            <button type="button" @click="prevDetailHero" aria-label="上一张"><i class="fas fa-chevron-left"></i></button>
+                            <button type="button" @click="nextDetailHero" aria-label="下一张"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                        <div class="detail-hero-dots" v-if="getDetailCarouselImages().length > 1">
+                            <i
+                                v-for="(img, i) in getDetailCarouselImages().slice(0, 10)"
+                                :key="'dh'+i"
+                                :class="{ 'is-active': i === detailHeroIndex }"
+                            ></i>
+                        </div>
+                    </div>
                     <!-- 基本信息 -->
                     <div class="detail-section">
                         <div class="section-header">
@@ -1232,6 +1277,8 @@
                     preloadTimer: null, // 预加载定时器
                     detailFetchGeneration: 0, // 详情请求代次，用于忽略过期响应
                     detailImagesLoading: false, // 详情全量图尚未就绪（列表仅含封面）
+                    cardSlideByBrand: {}, // 首页卡片轮播下标
+                    detailHeroIndex: 0, // 详情主图轮播下标
                     _brandDetailInflight: {}, // 品牌详情请求去重
                     
                     // 首页列表展示分页（每页条数，仅控制 DOM 渲染数量）
@@ -1850,21 +1897,103 @@
                     }
                 },
 
-                getBrandCoverImage(brand) {
-                    // 定义图片类型优先级顺序：概念图 > 设计图 > 成衣图 > 布料图 > 模特图 > 买家秀图 > 其他
-                    const priorityOrder = ['概念图', '设计图', '成衣图', '布料图', '模特图', '买家秀图', '其他'];
 
-                    // 按优先级查找非 AI 生成目录图片
-                    for (const imageType of priorityOrder) {
-                        const candidates = (brand.images || [])
-                            .filter(img => img && img.image_type === imageType)
-                            .filter(img => !this.isGeneratedImageSource(img));
-                        if (candidates.length > 0) {
-                            return this.getImageURL(candidates[0]);
-                        }
+                /** 统一图片类型优先级 */
+                getImageTypeOrder() {
+                    return ['概念图', '设计图', '布料图', '成衣图', '模特图', '买家秀图', '其他'];
+                },
+
+                resolveImageType(img) {
+                    if (!img) return '其他';
+                    if (img.image_type) return img.image_type;
+                    const name = img.filename || img.relative_path || '';
+                    const order = this.getImageTypeOrder();
+                    for (const t of order) {
+                        if (t !== '其他' && name.includes(t)) return t;
                     }
+                    return '其他';
+                },
 
-                    // 如果没有匹配的类型，使用第一张非生成图片
+                sortImagesByType(images) {
+                    const order = this.getImageTypeOrder();
+                    return [...(images || [])]
+                        .filter(img => img && !this.isGeneratedImageSource(img))
+                        .sort((a, b) => {
+                            const ai = order.indexOf(this.resolveImageType(a));
+                            const bi = order.indexOf(this.resolveImageType(b));
+                            return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+                        });
+                },
+
+                /** 首页卡片轮播图（预览图按类型序） */
+                getBrandCarouselImages(brand) {
+                    return this.sortImagesByType(this.getBrandPreviewImages(brand));
+                },
+
+                getCardSlideIndex(brand) {
+                    const name = brand && (brand.name || brand.brand_name);
+                    const slides = this.getBrandCarouselImages(brand);
+                    if (!slides.length) return 0;
+                    const idx = Number(this.cardSlideByBrand[name] || 0);
+                    return ((idx % slides.length) + slides.length) % slides.length;
+                },
+
+                getCardSlide(brand) {
+                    const slides = this.getBrandCarouselImages(brand);
+                    return slides[this.getCardSlideIndex(brand)] || null;
+                },
+
+                getCardSlideUrl(brand) {
+                    const slide = this.getCardSlide(brand);
+                    return slide ? this.getImageURL(slide) : this.getBrandCoverImage(brand);
+                },
+
+                getCardSlideType(brand) {
+                    const slide = this.getCardSlide(brand);
+                    return slide ? this.resolveImageType(slide) : '概念图';
+                },
+
+                nextCardSlide(brand) {
+                    const name = brand && (brand.name || brand.brand_name);
+                    const slides = this.getBrandCarouselImages(brand);
+                    if (!name || slides.length < 2) return;
+                    const next = (this.getCardSlideIndex(brand) + 1) % slides.length;
+                    this.cardSlideByBrand = { ...this.cardSlideByBrand, [name]: next };
+                },
+
+                prevCardSlide(brand) {
+                    const name = brand && (brand.name || brand.brand_name);
+                    const slides = this.getBrandCarouselImages(brand);
+                    if (!name || slides.length < 2) return;
+                    const prev = (this.getCardSlideIndex(brand) - 1 + slides.length) % slides.length;
+                    this.cardSlideByBrand = { ...this.cardSlideByBrand, [name]: prev };
+                },
+
+                getDetailCarouselImages() {
+                    return this.sortImagesByType(this.brandImages || []);
+                },
+
+                getDetailSlideType() {
+                    const imgs = this.getDetailCarouselImages();
+                    const img = imgs[this.detailHeroIndex];
+                    return img ? this.resolveImageType(img) : '';
+                },
+
+                nextDetailHero() {
+                    const n = this.getDetailCarouselImages().length;
+                    if (n < 2) return;
+                    this.detailHeroIndex = (this.detailHeroIndex + 1) % n;
+                },
+
+                prevDetailHero() {
+                    const n = this.getDetailCarouselImages().length;
+                    if (n < 2) return;
+                    this.detailHeroIndex = (this.detailHeroIndex - 1 + n) % n;
+                },
+
+                getBrandCoverImage(brand) {
+                    const sorted = this.getBrandCarouselImages(brand);
+                    if (sorted.length) return this.getImageURL(sorted[0]);
                     const fallback = (brand.images || []).filter(img => img && !this.isGeneratedImageSource(img))[0];
                     return fallback ? this.getImageURL(fallback) : null;
                 },
@@ -2108,6 +2237,7 @@
                     this.brandLikeStatus.liked = false;
                     this.brandLikeStatus.count = brand.like_count || 0;
                     this.brandLikeStatus.loading = false;
+                    this.detailHeroIndex = 0;
                     this.showModal = true;
                     document.body.style.overflow = 'hidden';
 
@@ -3210,7 +3340,7 @@
                 /** 用列表/详情已有数据组装卡片 bootstrap，供 card.html 秒开 */
                 buildShareCardBootstrapFromBrand(brand) {
                     const brandName = brand.name || brand.brand_name;
-                    const shareCardOrder = ['概念图', '设计图', '布料图', '成衣图', '买家秀图', '模特图'];
+                    const shareCardOrder = ['概念图', '设计图', '布料图', '成衣图', '模特图', '买家秀图'];
                     const sourceImages = (brand.images || []).filter((img) => img && !this.isGeneratedImageSource(img));
                     const images = [];
 

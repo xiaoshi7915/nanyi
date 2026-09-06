@@ -7,8 +7,8 @@
     }
     
     .brands-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
     }
     
     .filter-tags-container {
@@ -324,7 +324,7 @@
     
     /* 品牌网格调整 - 去掉空隙 */
     .brands-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* 稍微减小最小宽度以适应两列 */
+        grid-template-columns: repeat(2, 1fr); /* 稍微减小最小宽度以适应两列 */
         gap: 0.5rem; /* 减少间距 */
         margin-top: 0; /* 去掉顶部边距 */
     }
@@ -391,7 +391,7 @@
     }
 
     .image-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 0.5rem;
     }
 
@@ -413,7 +413,7 @@
     }
 
     .brands-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 0.4rem;
     }
 
@@ -459,7 +459,7 @@
     }
 
     .image-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 0.4rem;
     }
 
@@ -500,7 +500,7 @@
     }
 
     .brands-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 0.6rem;
     }
 
@@ -517,7 +517,7 @@
     }
 
     .brands-grid {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 2rem;
     }
 
@@ -525,3 +525,11 @@
         height: 220px;
     }
 } 
+
+/* 古典改版：手机端固定 2 列 */
+@media (max-width: 768px) {
+    .brands-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.7rem;
+    }
+}
