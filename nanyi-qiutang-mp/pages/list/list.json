@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "fabric-card": "../../components/fabric-card/index"
+  },
+  "navigationStyle": "custom",
+  "backgroundColor": "#F4F0E4"
+}

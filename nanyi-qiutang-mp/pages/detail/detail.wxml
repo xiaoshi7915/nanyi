@@ -1,0 +1,175 @@
+<view class="page">
+  <!-- 顶部大图 -->
+  <view class="hero">
+    <swiper
+      class="hero__swiper"
+      current="{{galleryIndex}}"
+      bindchange="onSwiperChange"
+      duration="260"
+    >
+      <swiper-item wx:for="{{gallery}}" wx:key="*this">
+        <image
+          class="hero__img"
+          src="{{item}}"
+          mode="aspectFill"
+          data-index="{{index}}"
+          bindtap="onPreviewImage"
+        />
+      </swiper-item>
+    </swiper>
+
+    <!-- 悬浮按钮 -->
+    <view class="hero__nav" style="padding-top:{{navTotalHeight}}px; padding-right:{{capsuleGap}}px">
+      <view class="hero__circle" bindtap="onBack">
+        <view class="hero__circle-icon icon icon--arrow-left icon-c-ink" />
+      </view>
+      <button class="hero__circle hero__circle--share" open-type="share">
+        <view class="hero__circle-icon icon icon--share icon-c-ink" />
+      </button>
+    </view>
+
+    <!-- 轮播指示 -->
+    <view class="hero__dots" wx:if="{{gallery.length > 1}}">
+      <view
+        class="hero__dot {{galleryIndex === index ? 'is-active' : ''}}"
+        wx:for="{{gallery}}"
+        wx:key="*this"
+      />
+    </view>
+
+    <view class="hero__empty skeleton" wx:if="{{loading || !gallery.length}}" />
+  </view>
+
+  <!-- 内容 -->
+  <view class="body">
+    <view class="title-row">
+      <text class="title ellipsis">{{displayName || name}}</text>
+      <view class="like" bindtap="onToggleLike">
+        <view class="like__icon icon {{liked ? 'icon--heart' : 'icon--heart-line'}}" />
+        <text class="like__num">{{likeCount}}</text>
+      </view>
+    </view>
+
+    <text class="subtitle" wx:if="{{subtitle}}">{{subtitle}}</text>
+
+    <view class="tags" wx:if="{{tags.length}}">
+      <view
+        class="tag"
+        wx:for="{{tags}}"
+        wx:key="*this"
+        data-value="{{item}}"
+        bindtap="onTapTag"
+      >{{item}}</view>
+    </view>
+
+    <!-- 参数 -->
+    <view class="params" wx:if="{{params.length}}">
+      <view class="param" wx:for="{{params}}" wx:key="label">
+        <text class="param__label">{{item.label}}</text>
+        <text class="param__value">{{item.value}}</text>
+      </view>
+    </view>
+
+    <!-- 设计灵感 -->
+    <view class="section-head" wx:if="{{verses.length || brief}}">
+      <view class="section-head__title">
+        <view class="section-head__bar" />
+        <text>设计灵感</text>
+      </view>
+      <view class="section-head__more" bindtap="onPreviewGallery">图集 ›</view>
+    </view>
+
+    <view class="verse" wx:if="{{verses.length}}">
+      <text class="verse__line" wx:for="{{verses}}" wx:key="*this">{{item}}</text>
+    </view>
+
+    <text class="brief" wx:if="{{brief}}">{{brief}}</text>
+
+
+    <!-- 用户评价 -->
+    <view class="section-head" id="review-section">
+      <view class="section-head__title">
+        <view class="section-head__bar" />
+        <text>用户评价</text>
+      </view>
+      <text class="section-head__meta" wx:if="{{reviewStats.count}}">共 {{reviewStats.count}} 条</text>
+    </view>
+
+    <view class="review-form">
+      <view class="review-stars">
+        <view
+          class="review-star icon {{reviewRating >= item ? 'icon--heart' : 'icon--heart-line'}}"
+          wx:for="{{[1,2,3,4,5]}}"
+          wx:key="*this"
+          data-rating="{{item}}"
+          bindtap="onPickRating"
+        />
+        <text class="review-stars__hint">{{reviewRating ? reviewRating + ' 分' : '点选评分'}}</text>
+      </view>
+      <textarea
+        class="review-input"
+        value="{{reviewContent}}"
+        maxlength="200"
+        placeholder="说说对这款面料的感受（可选）"
+        placeholder-class="review-input__ph"
+        bindinput="onReviewInput"
+      />
+      <view
+        class="review-submit {{reviewSubmitting ? 'is-busy' : ''}}"
+        bindtap="onSubmitReview"
+      >{{reviewSubmitting ? '提交中…' : '提交评价'}}</view>
+    </view>
+
+    <view class="review-list" wx:if="{{reviews.length}}">
+      <view class="review-item" wx:for="{{reviews}}" wx:key="id">
+        <view class="review-item__head">
+          <text class="review-item__name">{{item.nickname}}</text>
+          <text class="review-item__rating" wx:if="{{item.rating}}">{{item.rating}} 分</text>
+          <text class="review-item__time">{{item.time}}</text>
+        </view>
+        <text class="review-item__content" wx:if="{{item.content}}">{{item.content}}</text>
+      </view>
+      <view class="review-more" wx:if="{{reviewHasMore}}" bindtap="onLoadMoreReviews">加载更多</view>
+    </view>
+    <view class="review-empty" wx:elif="{{!reviewLoading}}">暂无评价，来写第一条吧</view>
+    <view class="review-empty" wx:if="{{reviewLoading}}">评价加载中…</view>
+
+    <!-- 猜你也喜欢 -->
+    <block wx:if="{{related.length}}">
+      <view class="section-head">
+        <view class="section-head__title">
+          <view class="section-head__bar" />
+          <text>猜你也喜欢</text>
+        </view>
+      </view>
+      <view class="related">
+        <view
+          class="related__item"
+          wx:for="{{related}}"
+          wx:key="index"
+          data-name="{{item.rawName}}"
+          bindtap="onTapRelated"
+        >
+          <image class="related__img" src="{{item.cover}}" mode="aspectFill" lazy-load />
+        </view>
+      </view>
+    </block>
+
+    <view class="empty" wx:if="{{error}}">{{error}}</view>
+  </view>
+
+  <!-- 底部操作 -->
+  <view class="bottom" style="padding-bottom:{{safeBottom}}px">
+    <view class="bottom__ghost" bindtap="onShareCard">
+      <view class="bottom__icon icon icon--card icon-c-ink" />
+      <text>生成分享卡片</text>
+    </view>
+    <view class="bottom__primary" bindtap="onGoTryOn">
+      <view class="bottom__icon icon icon--tryon icon-c-light" />
+      <text>AI 试穿</text>
+    </view>
+  </view>
+
+  <!-- 离屏画布：生成分享卡片 -->
+  <canvas type="2d" id="shareCard" class="share-canvas" />
+</view>

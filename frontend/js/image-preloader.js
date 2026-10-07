@@ -122,23 +122,30 @@ class ImagePreloader {
             return;
         }
 
-        // 优先预加载概念图和设计图（首屏显示）
-        const priorityImages = brand.images.filter(img => 
-            img.image_type === '概念图' || img.image_type === '设计图'
+        const isVideo = (img) => {
+            if (!img) return true;
+            if (img.media_type === 'video') return true;
+            const fn = String(img.filename || img.url || '').toLowerCase();
+            return fn.endsWith('.mp4') || fn.endsWith('.webm');
+        };
+
+        // 优先预加载概念图和设计图（首屏显示），排除视频
+        const priorityImages = brand.images.filter(img =>
+            !isVideo(img) && (img.image_type === '概念图' || img.image_type === '设计图')
         );
 
-        // 其他图片
-        const otherImages = brand.images.filter(img => 
-            img.image_type !== '概念图' && img.image_type !== '设计图'
+        // 其他图片（排除视频）
+        const otherImages = brand.images.filter(img =>
+            !isVideo(img) && img.image_type !== '概念图' && img.image_type !== '设计图'
         );
 
         // 先预加载优先级图片
-        const priorityUrls = priorityImages.map(img => getImageURL(img));
+        const priorityUrls = priorityImages.map(img => getImageURL(img)).filter(Boolean);
         await this.preloadImages(priorityUrls);
 
-        // 然后预加载其他图片（延迟加载）
+        // 然后预加载其他图片（延迟加载，限制数量）
         setTimeout(() => {
-            const otherUrls = otherImages.map(img => getImageURL(img));
+            const otherUrls = otherImages.slice(0, 8).map(img => getImageURL(img)).filter(Boolean);
             this.preloadImages(otherUrls);
         }, 500);
     }

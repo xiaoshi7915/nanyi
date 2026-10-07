@@ -23,30 +23,28 @@ def parse_filename(filename):
     # 移除文件扩展名
     name_without_ext = os.path.splitext(filename)[0]
     
-    # 匹配格式1: 品牌名-图片类型-编号
-    pattern1 = r'^([^-]+)-([^-]+)-(\d+)$'
-    match1 = re.match(pattern1, name_without_ext)
-    
-    if match1:
+    # 优先匹配花色格式: 品牌名(颜色)-图片类型-编号
+    pattern_color = r'^([^(]+)\(([^)]+)\)-([^-]+)-(\d+)$'
+    match_color = re.match(pattern_color, name_without_ext)
+    if match_color:
         return {
-            'brand_name': match1.group(1).strip(),
-            'image_type': match1.group(2).strip(),
-            'number': match1.group(3).strip(),
+            'brand_name': match_color.group(1).strip(),
+            'color': match_color.group(2).strip(),
+            'image_type': match_color.group(3).strip(),
+            'number': match_color.group(4).strip(),
+            'has_color': True
+        }
+
+    # 无花色: 品牌名-图片类型-编号
+    pattern_plain = r'^([^-]+)-([^-]+)-(\d+)$'
+    match_plain = re.match(pattern_plain, name_without_ext)
+    if match_plain:
+        return {
+            'brand_name': match_plain.group(1).strip(),
+            'image_type': match_plain.group(2).strip(),
+            'number': match_plain.group(3).strip(),
             'color': None,
             'has_color': False
-        }
-    
-    # 匹配格式2: 品牌名(颜色)-图片类型-编号
-    pattern2 = r'^([^(]+)\(([^)]+)\)-([^-]+)-(\d+)$'
-    match2 = re.match(pattern2, name_without_ext)
-    
-    if match2:
-        return {
-            'brand_name': match2.group(1).strip(),
-            'color': match2.group(2).strip(),
-            'image_type': match2.group(3).strip(),
-            'number': match2.group(4).strip(),
-            'has_color': True
         }
     
     # 如果都不匹配，返回默认值

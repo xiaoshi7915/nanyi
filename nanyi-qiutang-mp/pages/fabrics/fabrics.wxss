@@ -1,0 +1,168 @@
+@import "../../styles/icons.wxss";
+
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #F4F0E4;
+}
+
+/* ---------------- 导航栏 ---------------- */
+.nav {
+  flex-shrink: 0;
+  background: #F4F0E4;
+}
+
+.nav__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav__back {
+  position: absolute;
+  left: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+}
+
+.nav__back-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.nav__title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #191512;
+  letter-spacing: 3rpx;
+}
+
+.nav__count {
+  position: absolute;
+  font-size: 24rpx;
+  color: #9A9184;
+}
+
+/* ---------------- 内容区 ---------------- */
+.body {
+  flex: 1;
+  overflow: hidden;
+}
+
+.body__inner {
+  padding: 0 30rpx 40rpx;
+}
+
+.group {
+  padding-bottom: 10rpx;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.chips .chip {
+  height: 62rpx;
+  padding: 0 30rpx;
+  margin: 0 18rpx 18rpx 0;
+  font-size: 26rpx;
+}
+
+/* 展开更多材质 */
+.more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rpx 0 18rpx;
+  font-size: 24rpx;
+  color: #A98B4E;
+  letter-spacing: 1rpx;
+}
+
+.more__arrow {
+  width: 22rpx;
+  height: 22rpx;
+  margin-left: 8rpx;
+  background-color: #A98B4E;
+}
+
+/* ---------------- 当前筛选 ---------------- */
+.summary {
+  margin-top: 22rpx;
+  padding: 28rpx 30rpx;
+  border-radius: 16rpx;
+  background: #FFFDF7;
+}
+
+.summary__label {
+  display: block;
+  font-size: 23rpx;
+  color: #9A9184;
+  letter-spacing: 1rpx;
+}
+
+.summary__value {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  color: #2A2521;
+  letter-spacing: 1rpx;
+}
+
+.summary__count {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #6B6257;
+}
+
+/* ---------------- 底部操作 ---------------- */
+.bottom {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 18rpx 30rpx 18rpx;
+  background: #FCF8F0;
+  border-top: 1rpx solid #E7DFCF;
+  box-shadow: 0 -2rpx 16rpx rgba(120, 100, 70, 0.06);
+}
+
+.bottom__reset {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 200rpx;
+  height: 92rpx;
+  border-radius: 46rpx;
+  border: 2rpx solid #D9CFBB;
+  background: #FFFDF7;
+  font-size: 28rpx;
+  color: #2A2521;
+  letter-spacing: 2rpx;
+}
+
+.bottom__submit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 92rpx;
+  margin-left: 22rpx;
+  border-radius: 46rpx;
+  background: #9C2824;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #FDF6EC;
+  letter-spacing: 2rpx;
+}
+
+.bottom__reset:active,
+.bottom__submit:active {
+  opacity: 0.85;
+}

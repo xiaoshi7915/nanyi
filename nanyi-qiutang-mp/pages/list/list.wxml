@@ -1,0 +1,38 @@
+<view class="page">
+  <view class="nav" style="padding-top:{{statusBarHeight}}px">
+    <view class="nav__bar" style="height:{{navBarHeight}}px">
+      <view class="nav__back" bindtap="onBack">
+        <view class="nav__back-icon icon icon--arrow-left icon-c-ink" />
+      </view>
+      <text class="nav__title">布料列表</text>
+      <text class="nav__count" style="right:{{capsuleGap}}px">{{total}} 款</text>
+    </view>
+  </view>
+
+  <view class="filter-bar">
+    <text class="filter-bar__text ellipsis">{{summaryText}}</text>
+  </view>
+
+  <view class="body">
+    <view class="grid" wx:if="{{cards.length}}">
+      <view class="grid__item" wx:for="{{cards}}" wx:key="index">
+        <fabric-card
+          brand="{{item}}"
+          bind:tapcard="onTapCard"
+          bind:tryon="onCardTryOn"
+          bind:share="onCardShare"
+          bind:comment="onCardComment"
+        />
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{loading}}">加载中…</view>
+    <view class="empty" wx:elif="{{error}}">{{error}}</view>
+    <view class="empty" wx:elif="{{!cards.length}}">没有符合条件的布料</view>
+    <view class="list-end" wx:elif="{{!hasMore}}">— 已展示全部 {{total}} 款 —</view>
+  </view>
+
+  <view class="footer" style="padding-bottom:{{safeBottom + 40}}px">
+    <text>{{total}} 款布料 · 南意秋棠</text>
+  </view>
+</view>

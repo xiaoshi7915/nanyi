@@ -88,10 +88,10 @@
         }
 
         if (isWeChatBrowser()) {
-            if (opts.showToast) {
-                opts.showToast('正在打开分享卡片，请点击右上角「…」转发');
-            }
-            window.location.href = cardUrl;
+            // 立即跳转，不弹 toast，避免「反应慢」与多余黑色提示
+            const from = opts.from || 'home';
+            const navUrl = cardUrl + (cardUrl.indexOf('?') >= 0 ? '&' : '?') + 'from=' + encodeURIComponent(from);
+            window.location.href = navUrl;
             return true;
         }
 
@@ -108,7 +108,9 @@
             }
         }
 
-        const opened = window.open(cardUrl, '_blank');
+        const from = opts.from || 'home';
+        const openUrl = cardUrl + (cardUrl.indexOf('?') >= 0 ? '&' : '?') + 'from=' + encodeURIComponent(from);
+        const opened = window.open(openUrl, '_blank');
         if (!opened) {
             opts.showToast && opts.showToast('请允许弹窗，或在浏览器中开启新窗口');
             return false;

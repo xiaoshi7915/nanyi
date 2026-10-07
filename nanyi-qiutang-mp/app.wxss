@@ -1,0 +1,208 @@
+/**
+ * 全局样式与设计变量
+ * 色值取自 UI 设计图量化结果，禁止在页面内硬编码品牌色
+ */
+@import "styles/theme.wxss";
+
+page {
+  background: var(--c-bg);
+  color: var(--c-ink);
+  font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Source Han Sans SC", sans-serif;
+  font-size: 28rpx;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+view,
+text,
+image,
+scroll-view,
+swiper,
+button,
+input,
+textarea {
+  box-sizing: border-box;
+}
+
+/* 清除 button 默认样式 */
+button {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+}
+
+button::after {
+  border: none;
+}
+
+image {
+  display: block;
+  will-change: transform;
+}
+
+/* ---------- 通用布局 ---------- */
+.page {
+  min-height: 100vh;
+  background: var(--c-bg);
+}
+
+.page-body {
+  padding: 0 30rpx;
+}
+
+/* 自定义导航栏占位 */
+.nav-placeholder {
+  width: 100%;
+}
+
+/* ---------- 通用文本 ---------- */
+.t-title {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--c-ink-strong);
+  letter-spacing: 2rpx;
+}
+
+.t-sub {
+  font-size: 24rpx;
+  color: var(--c-ink-3);
+  letter-spacing: 2rpx;
+}
+
+.t-muted {
+  color: var(--c-ink-2);
+}
+
+.ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 区块标题（左侧金色竖条） ---------- */
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 36rpx 0 20rpx;
+}
+
+.section-head__title {
+  display: flex;
+  align-items: center;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--c-ink-strong);
+  letter-spacing: 2rpx;
+}
+
+.section-head__bar {
+  width: 6rpx;
+  height: 28rpx;
+  margin-right: 14rpx;
+  border-radius: 3rpx;
+  background: linear-gradient(180deg, #C6A566, #A98B4E);
+}
+
+.section-head__more {
+  font-size: 24rpx;
+  color: var(--c-gold);
+}
+
+/* ---------- 按钮 ---------- */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96rpx;
+  border-radius: 48rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  letter-spacing: 2rpx;
+  transition: opacity 0.15s;
+}
+
+.btn--primary {
+  background: var(--c-primary);
+  color: #FFF7EE;
+}
+
+.btn--outline {
+  background: transparent;
+  color: var(--c-ink-strong);
+  border: 2rpx solid var(--c-ink-strong);
+}
+
+.btn--ghost {
+  background: #FFFFFF;
+  color: var(--c-ink-strong);
+  border: 2rpx solid var(--c-line-strong);
+}
+
+.btn:active {
+  opacity: 0.82;
+}
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--c-surface);
+  border-radius: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(120, 100, 70, 0.05);
+}
+
+/* ---------- chip 标签 ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 60rpx;
+  padding: 0 28rpx;
+  margin: 0 18rpx 18rpx 0;
+  border-radius: 30rpx;
+  background: var(--c-chip-bg);
+  border: 2rpx solid var(--c-chip-line);
+  font-size: 26rpx;
+  color: var(--c-ink-2);
+}
+
+.chip--active {
+  background: var(--c-primary);
+  border-color: var(--c-primary);
+  color: #FFF7EE;
+  font-weight: 500;
+}
+
+/* ---------- 页脚版权 ---------- */
+.footer {
+  padding: 40rpx 0 60rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: var(--c-ink-3);
+  letter-spacing: 1rpx;
+  line-height: 1.9;
+}
+
+/* ---------- 空态 ---------- */
+.empty {
+  padding: 140rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: var(--c-ink-3);
+}
+
+/* ---------- 加载骨架 ---------- */
+.skeleton {
+  background: linear-gradient(90deg, #EFE9DC 25%, #F7F3E8 37%, #EFE9DC 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.4s ease infinite;
+  border-radius: 12rpx;
+}
+
+@keyframes skeleton-loading {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}

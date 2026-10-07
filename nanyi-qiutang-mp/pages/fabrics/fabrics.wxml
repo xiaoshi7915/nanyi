@@ -1,0 +1,116 @@
+<view class="page">
+  <!-- 导航栏 -->
+  <view class="nav" style="padding-top:{{statusBarHeight}}px">
+    <view class="nav__bar" style="height:{{navBarHeight}}px">
+      <view class="nav__back" bindtap="onBack">
+        <view class="nav__back-icon icon icon--arrow-left icon-c-ink" />
+      </view>
+      <text class="nav__title">全部布料</text>
+      <text class="nav__count" style="right:{{capsuleGap}}px">{{totalBrands}} 款</text>
+    </view>
+  </view>
+
+  <scroll-view class="body" scroll-y show-scrollbar="{{false}}">
+    <view class="body__inner">
+      <!-- 按年份 -->
+      <view class="group">
+        <view class="section-head">
+          <view class="section-head__title">
+            <view class="section-head__bar" />
+            <text>按年份</text>
+          </view>
+        </view>
+        <view class="chips">
+          <view
+            class="chip {{current.year === item ? 'chip--active' : ''}}"
+            wx:for="{{years}}"
+            wx:key="*this"
+            data-field="year"
+            data-value="{{item}}"
+            bindtap="onSelect"
+          >{{item}}</view>
+        </view>
+      </view>
+
+      <!-- 按主题系列 -->
+      <view class="group">
+        <view class="section-head">
+          <view class="section-head__title">
+            <view class="section-head__bar" />
+            <text>按主题系列</text>
+          </view>
+        </view>
+        <view class="chips">
+          <view
+            class="chip {{current.series === item ? 'chip--active' : ''}}"
+            wx:for="{{seriesList}}"
+            wx:key="*this"
+            data-field="series"
+            data-value="{{item}}"
+            bindtap="onSelect"
+          >{{item}}</view>
+        </view>
+      </view>
+
+      <!-- 按材质 -->
+      <view class="group">
+        <view class="section-head">
+          <view class="section-head__title">
+            <view class="section-head__bar" />
+            <text>按材质</text>
+          </view>
+        </view>
+        <view class="chips">
+          <view
+            class="chip {{current.material === item ? 'chip--active' : ''}}"
+            wx:for="{{displayMaterials}}"
+            wx:key="*this"
+            data-field="material"
+            data-value="{{item}}"
+            bindtap="onSelect"
+          >{{item}}</view>
+        </view>
+        <view class="more" wx:if="{{materialMoreCount > 0}}" bindtap="onToggleMaterials">
+          <text>{{showAllMaterials ? '收起材质' : '展开更多材质'}}</text>
+          <view class="more__arrow icon {{showAllMaterials ? 'icon--chevron-up' : 'icon--chevron-down'}}" />
+        </view>
+      </view>
+
+      <!-- 按印制尺寸 -->
+      <view class="group">
+        <view class="section-head">
+          <view class="section-head__title">
+            <view class="section-head__bar" />
+            <text>按印制尺寸</text>
+          </view>
+        </view>
+        <view class="chips">
+          <view
+            class="chip {{current.printSize === item ? 'chip--active' : ''}}"
+            wx:for="{{printSizes}}"
+            wx:key="*this"
+            data-field="printSize"
+            data-value="{{item}}"
+            bindtap="onSelect"
+          >{{item}}</view>
+        </view>
+      </view>
+
+      <!-- 当前筛选 -->
+      <view class="summary card" wx:if="{{!loading}}">
+        <text class="summary__label">当前筛选</text>
+        <text class="summary__value">{{summaryText}}</text>
+        <text class="summary__count">共匹配 {{matchCount}} 款布料</text>
+      </view>
+
+      <view class="empty" wx:if="{{loading}}">加载中…</view>
+      <view class="empty" wx:elif="{{error}}">{{error}}</view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部操作 -->
+  <view class="bottom" style="padding-bottom:{{safeBottom}}px">
+    <view class="bottom__reset" bindtap="onReset">重置</view>
+    <view class="bottom__submit" bindtap="onSubmit">查看 {{matchCount}} 款布料</view>
+  </view>
+</view>

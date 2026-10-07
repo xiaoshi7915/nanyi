@@ -1,0 +1,123 @@
+<view class="page">
+  <view class="header" style="padding-top:{{navTotalHeight}}px">
+    <text class="header__title">我的</text>
+  </view>
+
+  <view class="body">
+    <!-- 登录卡片 -->
+    <view class="login-card {{logged ? 'login-card--in' : ''}}" bindtap="onLoginTap">
+      <view class="login-card__avatar">
+        <view class="login-card__avatar-icon icon icon--user" />
+      </view>
+      <view class="login-card__text">
+        <text class="login-card__title">{{userLabel}}</text>
+        <text class="login-card__desc">{{userDesc}}</text>
+      </view>
+      <view class="login-card__wechat icon icon--chat" wx:if="{{!logged}}" />
+      <view class="login-card__more icon icon--chevron" wx:else />
+    </view>
+
+    <view class="alt-login" wx:if="{{!logged}}" bindtap="onPhoneLogin">
+      <text class="alt-login__text">微信登录不可用时 · 使用手机号登录 / 注册</text>
+    </view>
+
+    <!-- 我的试穿 / 最近浏览 -->
+    <view class="duo">
+      <view class="duo__card" bindtap="onTapTryOns">
+        <view class="duo__head">
+          <view class="duo__icon icon icon--dress" />
+          <text class="duo__title">我的试穿</text>
+        </view>
+        <view class="duo__thumbs">
+          <image
+            class="duo__thumb"
+            wx:for="{{tryOnThumbs}}"
+            wx:key="*this"
+            src="{{item}}"
+            mode="aspectFill"
+            lazy-load
+          />
+          <view class="duo__thumb duo__thumb--empty" wx:if="{{!tryOnThumbs.length}}">
+            <view class="duo__empty-icon icon icon--dress" />
+          </view>
+        </view>
+      </view>
+
+      <view class="duo__card" bindtap="onTapRecent">
+        <view class="duo__head">
+          <view class="duo__icon duo__icon--gold icon icon--history" />
+          <text class="duo__title">最近浏览</text>
+        </view>
+        <view class="duo__thumbs">
+          <image
+            class="duo__thumb"
+            wx:for="{{recentThumbs}}"
+            wx:key="*this"
+            src="{{item}}"
+            mode="aspectFill"
+            lazy-load
+          />
+          <view class="duo__thumb duo__thumb--empty" wx:if="{{!recentThumbs.length}}">
+            <view class="duo__empty-icon icon icon--history" />
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 购买渠道 -->
+    <view class="section-head">
+      <view class="section-head__title">
+        <view class="section-head__bar" />
+        <text>购买渠道 · CHANNEL</text>
+      </view>
+    </view>
+
+    <view class="list">
+      <view
+        class="row"
+        wx:for="{{channels}}"
+        wx:key="key"
+        data-key="{{item.key}}"
+        bindtap="onChannelTap"
+        hover-class="row--hover"
+      >
+        <view class="row__icon icon icon--{{item.icon}}" />
+        <text class="row__label">{{item.label}}</text>
+        <view class="row__arrow icon icon--chevron" />
+      </view>
+    </view>
+
+    <!-- 联系 -->
+    <view class="section-head" id="contact-section">
+      <view class="section-head__title">
+        <view class="section-head__bar" />
+        <text>联系 · CONTACT</text>
+      </view>
+    </view>
+
+    <view class="list">
+      <view
+        class="row"
+        wx:for="{{contacts}}"
+        wx:key="key"
+        data-value="{{item.value}}"
+        bindtap="onTapContact"
+      >
+        <view class="row__icon icon icon--{{item.icon}}" />
+        <text class="row__label">{{item.label}}</text>
+        <text class="row__value">{{item.value}}</text>
+        <view
+          class="row__copy"
+          wx:if="{{item.copyable}}"
+          data-value="{{item.value}}"
+          catchtap="onCopy"
+        >复制</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer" style="padding-bottom:{{safeBottom + 200}}px">
+    <text class="footer__line">{{brand.copyright}}</text>
+    <text class="footer__line">{{brand.icp}}</text>
+  </view>
+</view>

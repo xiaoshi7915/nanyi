@@ -1,0 +1,61 @@
+{
+  "description": "南意秋棠 · 微信小程序。当前 appid=touristappid 为占位，提审前须替换为正式 AppID（见 发布上架指南.md）。切勿编造正式 AppID。",
+  "appid": "touristappid",
+  "projectname": "nanyi-qiutang-mp",
+  "compileType": "miniprogram",
+  "libVersion": "3.5.5",
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "showShadowRootInWxmlPanel": true,
+    "packNpmManually": false,
+    "coverView": true,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    },
+    "useCompilerPlugins": false
+  },
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "首页",
+          "pathName": "pages/index/index",
+          "query": "",
+          "scene": null
+        },
+        {
+          "name": "全部布料",
+          "pathName": "pages/fabrics/fabrics",
+          "query": "",
+          "scene": null
+        },
+        {
+          "name": "款式详情-寒影",
+          "pathName": "pages/detail/detail",
+          "query": "name=%E5%AF%92%E5%BD%B1",
+          "scene": null
+        },
+        {
+          "name": "AI试穿",
+          "pathName": "pages/tryon/tryon",
+          "query": "",
+          "scene": null
+        },
+        {
+          "name": "我的",
+          "pathName": "pages/mine/mine",
+          "query": "",
+          "scene": null
+        }
+      ]
+    }
+  }
+}

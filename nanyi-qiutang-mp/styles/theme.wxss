@@ -1,0 +1,43 @@
+/**
+ * 设计变量（唯一色板来源）
+ * 数值由 UI 设计图颜色量化得出：
+ *   朱红 #9C2824 · 墨绿 #244048 · 金 #A98B4E · 米白 #F4F0E4 · 卡片 #FCF8F0
+ */
+page {
+  /* 背景与容器 */
+  --c-bg: #F4F0E4;
+  --c-surface: #FCF8F0;
+  --c-surface-2: #FFFDF7;
+  --c-line: #E7DFCF;
+  --c-line-strong: #D9CFBB;
+
+  /* 品牌主色 */
+  --c-primary: #9C2824;
+  --c-primary-deep: #7E1F1C;
+  --c-primary-soft: #C0524C;
+
+  /* 墨绿 */
+  --c-green: #244048;
+  --c-green-deep: #1B3138;
+
+  /* 金 */
+  --c-gold: #A98B4E;
+  --c-gold-deep: #8C7438;
+  --c-gold-soft: #C9AE74;
+
+  /* 文字 */
+  --c-ink-strong: #191512;
+  --c-ink: #2A2521;
+  --c-ink-2: #6B6257;
+  --c-ink-3: #9A9184;
+
+  /* 组件态 */
+  --c-chip-bg: #FCF8F0;
+  --c-chip-line: #E2DACA;
+  --c-mask: rgba(20, 16, 12, 0.55);
+
+  /* 圆角 */
+  --r-sm: 12rpx;
+  --r-md: 20rpx;
+  --r-lg: 28rpx;
+}

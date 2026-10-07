@@ -1,0 +1,12 @@
+<view class="tabbar" style="padding-bottom: {{safeBottom}}px">
+  <view
+    class="tabbar__item {{item.emphasize ? 'tabbar__item--emphasize' : ''}}"
+    wx:for="{{list}}"
+    wx:key="pagePath"
+    data-index="{{index}}"
+    bindtap="onTap"
+  >
+    <view class="tabbar__icon icon icon--{{item.icon}} {{selected === index ? 'is-active' : ''}}" />
+    <text class="tabbar__text {{selected === index ? 'is-active' : ''}}">{{item.text}}</text>
+  </view>
+</view>

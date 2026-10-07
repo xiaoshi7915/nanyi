@@ -84,10 +84,10 @@
 
 .try-on-modal-content {
     background: white;
-    border-radius: 20px;
+    border-radius: 16px;
     width: 100%;
-    max-width: 800px;
-    max-height: 90vh;
+    max-width: 560px;
+    max-height: 88vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -110,17 +110,17 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.5rem 2rem;
+    padding: 0.85rem 1.1rem;
     border-bottom: 1px solid #f0f0f0;
 }
 
 .try-on-modal-title {
-    font-size: 1.5rem;
+    font-size: 1.15rem;
     font-weight: 600;
     color: #333;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     margin: 0;
 }
 
@@ -151,32 +151,36 @@
 
 .try-on-modal-body {
     flex: 1;
-    padding: 2rem;
+    padding: 1rem 1.1rem;
     overflow-y: auto;
 }
 
 .try-on-step {
-    margin-bottom: 2rem;
+    margin-bottom: 1rem;
+}
+
+.try-on-step-combined .step-title-upload {
+    margin-top: 0.85rem;
 }
 
 .step-title {
-    font-size: 1.2rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: #333;
-    margin-bottom: 1rem;
+    margin-bottom: 0.55rem;
 }
 
 .step-hint {
     color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 1.5rem;
+    font-size: 0.78rem;
+    margin-bottom: 0.75rem;
     font-style: italic;
 }
 
 /* 加载容器 */
 .loading-container {
     text-align: center;
-    padding: 3rem 1rem;
+    padding: 1.25rem 0.75rem;
 }
 
 .loading-spinner {
@@ -236,37 +240,37 @@
 /* 款式网格 */
 .styles-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
-    max-height: 400px;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 0.55rem;
+    max-height: 220px;
     overflow-y: auto;
-    padding: 0.5rem;
+    padding: 0.25rem;
 }
 
 .style-card {
     position: relative;
     background: white;
     border: 2px solid #e0e0e0;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .style-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     border-color: #f5576c;
 }
 
 .style-card.selected {
     border-color: #f5576c;
-    box-shadow: 0 0 0 3px rgba(245, 87, 108, 0.2);
+    box-shadow: 0 0 0 2px rgba(245, 87, 108, 0.2);
 }
 
 .style-preview {
     width: 100%;
-    height: 120px;
+    height: 72px;
     background: #f5f5f5;
     display: flex;
     align-items: center;
@@ -283,24 +287,30 @@
 
 .style-placeholder {
     color: #ccc;
-    font-size: 2rem;
+    font-size: 1.25rem;
 }
 
 .style-info {
-    padding: 0.75rem;
+    padding: 0.35rem 0.3rem;
     text-align: center;
 }
 
 .style-name {
     font-weight: 600;
     color: #333;
-    font-size: 0.9rem;
-    margin-bottom: 0.25rem;
+    font-size: 0.7rem;
+    margin-bottom: 0;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .style-color {
-    font-size: 0.8rem;
+    font-size: 0.65rem;
     color: #666;
+    margin-top: 0.15rem;
 }
 
 .selected-badge {
@@ -321,12 +331,16 @@
 /* 上传区域 */
 .upload-area {
     border: 2px dashed #d0d0d0;
-    border-radius: 12px;
-    padding: 3rem 2rem;
+    border-radius: 10px;
+    padding: 1.25rem 1rem;
     text-align: center;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     background: #fafafa;
     position: relative;
+}
+
+.upload-area.upload-disabled {
+    opacity: 0.72;
 }
 
 .upload-area:hover {
@@ -344,21 +358,22 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.45rem;
 }
 
 .upload-placeholder i {
-    font-size: 4rem;
+    font-size: 2rem;
     color: #d0d0d0;
 }
 
 .upload-placeholder p {
     color: #666;
     margin: 0;
+    font-size: 0.85rem;
 }
 
 .upload-hint {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: #999;
 }
 
@@ -370,25 +385,32 @@
     display: inline-block;
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     color: white;
-    padding: 0.75rem 2rem;
-    border-radius: 25px;
+    padding: 0.45rem 1.25rem;
+    border-radius: 20px;
     cursor: pointer;
     font-weight: 600;
-    transition: all 0.3s ease;
+    font-size: 0.82rem;
+    transition: all 0.2s ease;
     border: none;
 }
 
+.upload-btn.disabled,
+.upload-btn[disabled] {
+    pointer-events: none;
+    opacity: 0.55;
+}
+
 .upload-btn:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);
 }
 
 .uploaded-preview {
     position: relative;
     width: 100%;
-    max-width: 400px;
+    max-width: 220px;
     margin: 0 auto;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
 }
 
@@ -423,13 +445,70 @@
 /* 处理中容器 */
 .processing-container {
     text-align: center;
-    padding: 3rem 1rem;
+    padding: 1.25rem 0.75rem;
 }
 
 .processing-container p {
     color: #666;
-    margin-top: 1rem;
-    margin-bottom: 1.5rem;
+    margin-top: 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.try-on-exit-hint {
+    margin-left: 0;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.35;
+    flex: 1;
+    min-width: 0;
+}
+
+/* 原图预览 / 长按保存层 */
+.try-on-original-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    gap: 0.75rem;
+}
+
+.try-on-original-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.try-on-original-img {
+    max-width: 100%;
+    max-height: 78vh;
+    object-fit: contain;
+    border-radius: 8px;
+    -webkit-touch-callout: default;
+    user-select: none;
+}
+
+.try-on-original-tip {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.85rem;
+    text-align: center;
+    max-width: 90%;
+    line-height: 1.4;
+    margin: 0;
 }
 
 .progress-bar {
@@ -638,26 +717,104 @@
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+    .try-on-modal-overlay {
+        padding: 0;
+        align-items: stretch;
+    }
+
     .try-on-modal-content {
         max-width: 100%;
         max-height: 100vh;
+        height: 100%;
         border-radius: 0;
     }
 
-    .try-on-modal-header,
-    .try-on-modal-body,
+    .try-on-modal-header {
+        position: sticky;
+        top: 0;
+        z-index: 6;
+        background: #fff;
+        padding: 0.65rem 0.85rem;
+        flex-shrink: 0;
+    }
+
+    .try-on-modal-title {
+        font-size: 1.05rem;
+    }
+
+    .try-on-close-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 1.1rem;
+        padding: 0.25rem;
+    }
+
+    .try-on-modal-body {
+        padding: 0.75rem 0.85rem 0.5rem;
+    }
+
     .try-on-modal-footer {
-        padding: 1rem;
+        padding: 0.65rem 0.85rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.5rem;
+        justify-content: flex-start;
+    }
+
+    .try-on-step {
+        margin-bottom: 1rem;
+    }
+
+    .step-title {
+        font-size: 1rem;
+        margin-bottom: 0.65rem;
+    }
+
+    .loading-spinner-large {
+        width: 42px;
+        height: 42px;
+        border-width: 4px;
+        margin-bottom: 0.75rem;
+    }
+
+    .processing-container {
+        padding: 0.85rem 0.35rem;
     }
 
     .styles-grid {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 0.75rem;
-        max-height: 300px;
+        grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+        gap: 0.45rem;
+        max-height: 190px;
+    }
+
+    .style-preview {
+        height: 64px;
+    }
+
+    .style-name {
+        font-size: 0.65rem;
     }
 
     .upload-area {
-        padding: 2rem 1rem;
+        padding: 0.85rem 0.65rem;
+    }
+
+    .upload-placeholder i {
+        font-size: 1.5rem;
+    }
+
+    .upload-placeholder p {
+        font-size: 0.8rem;
+    }
+
+    .upload-hint {
+        font-size: 0.7rem;
+    }
+
+    .upload-btn.disabled {
+        pointer-events: none;
+        opacity: 0.55;
     }
 
     .modal-actions .action-buttons {
@@ -684,28 +841,50 @@
         margin-right: 0;
     }
 
-    .result-actions {
-        flex-direction: column;
-        width: 100%;
-    }
-
-    .result-btn {
-        width: 100%;
-        justify-content: center;
+    .try-on-save-notice {
+        padding: 0.5rem 0.65rem;
+        font-size: 0.75rem;
+        margin-bottom: 0.65rem;
     }
 
     .result-image {
         max-width: 100%;
-        max-height: 60vh;
+        max-height: 48vh;
+        margin-bottom: 0.75rem;
     }
 
-    .try-on-modal-footer {
-        flex-direction: column;
+    .result-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+        width: 100%;
+        gap: 0.45rem;
+    }
+
+    .result-btn {
+        flex: 1 1 calc(33.33% - 0.45rem);
+        min-width: 0;
+        width: auto;
+        justify-content: center;
+        padding: 0.45rem 0.35rem;
+        font-size: 0.72rem;
+        border-radius: 14px;
+        gap: 0.25rem;
+    }
+
+    .result-btn i {
+        font-size: 0.7rem;
     }
 
     .start-try-on-btn,
     .cancel-btn {
-        width: 100%;
+        width: auto;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        border-radius: 16px;
+    }
+
+    .cancel-btn {
+        min-width: 4.5rem;
     }
 }
 
@@ -718,5 +897,11 @@
     
     .try-on-btn i {
         font-size: 0.7rem;
+    }
+
+    .result-btn {
+        flex: 1 1 100%;
+        padding: 0.48rem 0.6rem;
+        font-size: 0.78rem;
     }
 }

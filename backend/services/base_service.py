@@ -142,9 +142,9 @@ class BaseService:
         """
         try:
             count = cache_service.clear_pattern(pattern)
-            if count > 0:
+            if count and count > 0:
                 self.logger.info(f"清理缓存模式成功: {pattern} (清理了 {count} 个缓存)")
-            return count
+            return count or 0
         except Exception as e:
             self.logger.warning(f"清理缓存模式失败 {pattern}: {e}", exc_info=True)
             return 0

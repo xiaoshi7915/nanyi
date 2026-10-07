@@ -1,0 +1,54 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/fabrics/fabrics",
+    "pages/list/list",
+    "pages/detail/detail",
+    "pages/tryon/tryon",
+    "pages/mine/mine",
+    "pages/login/login"
+  ],
+  "window": {
+    "navigationStyle": "custom",
+    "backgroundColor": "#F4F0E4",
+    "backgroundColorTop": "#F4F0E4",
+    "backgroundColorBottom": "#F4F0E4",
+    "backgroundTextStyle": "dark",
+    "navigationBarTextStyle": "black"
+  },
+  "tabBar": {
+    "custom": true,
+    "color": "#9A9184",
+    "selectedColor": "#9C2824",
+    "backgroundColor": "#FCF8F0",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/tryon/tryon",
+        "text": "试穿"
+      },
+      {
+        "pagePath": "pages/mine/mine",
+        "text": "我的"
+      }
+    ]
+  },
+  "networkTimeout": {
+    "request": 60000,
+    "uploadFile": 60000,
+    "downloadFile": 60000
+  },
+  "permission": {
+    "scope.writePhotosAlbum": {
+      "desc": "用于将试穿效果图保存到您的相册"
+    }
+  },
+  "requiredPrivateInfos": [],
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}

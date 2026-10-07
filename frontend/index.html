@@ -47,6 +47,8 @@
     <!-- 微信 JS-SDK：保留供试衣保存图片等 API；分享走 OG-only（无 wx.config 签名） -->
     <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
     
+    <!-- Vue 未挂载前隐藏带 v-cloak 的节点，避免弹窗 FOUC（须尽早） -->
+    <style id="nanyi-cloak-early">[v-cloak]{display:none!important;}</style>
     <!-- Vue.js 3 生产版本 -->
     <script src="static/lib/vue.global.prod.js"></script>
     
@@ -59,21 +61,21 @@
     <link rel="stylesheet" href="static/lib/all.min.css">
     
     <!-- 发布版本号（发布时与 js/app-version.js 同步修改） -->
-    <script src="js/app-version.js?v=20260906-6"></script>
+    <script src="js/app-version.js?v=20260926-1"></script>
     
     <!-- 引入样式文件 -->
-    <link rel="stylesheet" href="css/main.css?v=20260906-6">
-    <link rel="stylesheet" href="static/css/responsive.css?v=20260906-6">
-    <link rel="stylesheet" href="css/skeleton.css?v=20260906-6">
-    <link rel="stylesheet" href="css/try-on.css?v=20260906-6">
+    <link rel="stylesheet" href="css/main.css?v=20260922-3">
+    <link rel="stylesheet" href="static/css/responsive.css?v=20260922-2">
+    <link rel="stylesheet" href="css/skeleton.css?v=20260922-2">
+    <link rel="stylesheet" href="css/try-on.css?v=20260922-2">
     
     <!-- 引入性能优化配置 -->
     <script src="js/performance-config.js"></script>
     
     <!-- 引入图片预加载管理器 -->
     <script src="js/image-preloader.js"></script>
-    <script src="js/share-card.js"></script>
-    <script src="js/try-on-helpers.js?v=20260906-6"></script>
+    <script src="js/share-card.js?v=20260922-2"></script>
+    <script src="js/try-on-helpers.js?v=20260922-1"></script>
     
     <!-- 注册Service Worker (PWA) -->
     <script>
@@ -210,8 +212,8 @@
     
     <!-- 引入API客户端 -->
     <!-- 恢复使用正式API文件 -->
-    <script src="js/api.js?v=20260906-6"></script>
-    <script src="js/auth-session.js?v=20260906-6"></script>
+    <script src="js/api.js?v=20260926-1"></script>
+    <script src="js/auth-session.js?v=20260926-1"></script>
     <script>
         // 确保API已加载并验证方法存在
         (function() {
@@ -248,8 +250,18 @@
     <!-- <script src="static/js/main.js"></script> -->
 
 <style id="nanyi-auth-style">
-.nanyi-auth-overlay{position:fixed;inset:0;z-index:10050;background:rgba(28,52,59,.42);display:flex;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));}
-@media(min-width:720px){.nanyi-auth-overlay{align-items:center;}}
+/* 默认隐藏：原始 HTML 在 Vue 挂载前不得以 display:flex 闪现；仅 .is-open 显示 */
+.nanyi-auth-overlay{position:fixed;inset:0;z-index:10050;background:rgba(28,52,59,.42);display:none;align-items:flex-end;justify-content:center;padding:12px;padding-bottom:calc(12px + env(safe-area-inset-bottom));}
+.nanyi-auth-overlay.is-open{display:flex;}
+@media(min-width:720px){.nanyi-auth-overlay.is-open{align-items:center;}}
+/* Vue 挂载前兜底：所有固定层 overlay 一律隐藏 */
+html:not(.vue-ready) .nanyi-auth-overlay,
+html:not(.vue-ready) .modal-overlay,
+html:not(.vue-ready) .image-preview-overlay,
+html:not(.vue-ready) .try-on-modal-overlay,
+html:not(.vue-ready) .review-modal-overlay,
+html:not(.vue-ready) .catalog-modal-overlay,
+html:not(.vue-ready) .nyt-agent-modal-overlay{display:none!important;visibility:hidden!important;pointer-events:none!important;}
 .nanyi-auth-sheet{width:min(420px,100%);background:#FCFAF3;border-radius:20px;max-height:88vh;overflow:auto;box-shadow:0 24px 64px rgba(20,35,40,.28);border:1px solid rgba(194,161,90,.35);}
 .nanyi-auth-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid #EAE3D2;color:#1C343B;}
 .nanyi-auth-head button{border:0;background:transparent;font-size:22px;line-height:1;cursor:pointer;color:#6B6350;}
@@ -677,17 +689,20 @@
         </main>
 
         <!-- 品牌详情模态框 -->
-        <div v-if="selectedBrand && showModal" :class="['modal-overlay', { active: showModal }]" @click="closeModal">
+        <div v-if="selectedBrand && showModal" v-cloak class="modal-overlay active" @click="closeModal">
+            <button type="button" class="modal-close-fab" @click.stop="closeModal" aria-label="关闭详情">
+                <i class="fas fa-times"></i>
+            </button>
             <div class="modal-content" @click.stop>
                 <div class="modal-header">
                     <h2 class="modal-title">{{ selectedBrand.name || selectedBrand.brand_name }}</h2>
-                    <button @click="closeModal" class="close-btn">
+                    <button @click="closeModal" class="close-btn" aria-label="关闭">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 <div class="modal-body">
                     <!-- 加载状态骨架屏 -->
-                    <div v-if="!brandImages || brandImages.length === 0" class="modal-skeleton">
+                    <div v-if="(!brandImages || brandImages.length === 0) && (!brandVideos || brandVideos.length === 0)" class="modal-skeleton">
                         <div class="skeleton skeleton-title"></div>
                         <div class="skeleton skeleton-text"></div>
                         <div class="skeleton skeleton-text"></div>
@@ -745,7 +760,7 @@
                             <h4 v-if="Object.keys(groupImagesByColor(images)).length > 1" class="color-title">{{ color }}</h4>
                             <div class="image-gallery">
                                 <div 
-                                    v-for="image in colorImages" 
+                                    v-for="image in getVisibleGalleryImages(type, color, colorImages)" 
                                     :key="image.filename"
                                     class="gallery-item"
                                     @click="openImagePreview(image)"
@@ -765,6 +780,14 @@
                                     </div>
                                 </div>
                             </div>
+                            <button
+                                v-if="colorImages.length > DETAIL_GALLERY_INITIAL && !isGalleryExpanded(type, color)"
+                                type="button"
+                                class="gallery-expand-btn"
+                                @click="expandGallery(type, color)"
+                            >
+                                展开更多（还有 {{ colorImages.length - DETAIL_GALLERY_INITIAL }} 张）
+                            </button>
                         </div>
                     </div>
 
@@ -778,6 +801,29 @@
                         <h3 class="section-title">{{ type }} <span class="detail-loading-hint">加载中…</span></h3>
                         <div class="skeleton-image-grid modal-category-skeleton-grid">
                             <div v-for="n in 4" :key="n" class="skeleton skeleton-image-item"></div>
+                        </div>
+                    </div>
+
+                    <!-- 视频：所有图片分类之后单独一列 -->
+                    <div v-if="getBrandVideos().length" class="detail-section video-section">
+                        <h3 class="section-title">视频</h3>
+                        <div class="video-column">
+                            <div
+                                v-for="(video, vIndex) in getBrandVideos()"
+                                :key="video.filename || ('video-' + vIndex)"
+                                class="video-card"
+                            >
+                                <video
+                                    class="detail-video"
+                                    controls
+                                    playsinline
+                                    preload="none"
+                                    :poster="getVideoPoster(video)"
+                                    :data-video-src="getImageURL(video)"
+                                    @play="onDetailVideoPlay($event)"
+                                    ref="detailVideos"
+                                ></video>
+                            </div>
                         </div>
                     </div>
 
@@ -822,11 +868,27 @@
             </div>
         </div>
 
-        <!-- 图片预览模态框 -->
-        <div v-if="previewImage" class="image-preview-overlay" @click="closeImagePreview">
+        <!-- 图片预览模态框（支持同详情左右切换） -->
+        <div
+            v-if="previewImage"
+            v-cloak
+            class="image-preview-overlay"
+            @click="closeImagePreview"
+            @touchstart.passive="onPreviewTouchStart"
+            @touchend.passive="onPreviewTouchEnd"
+        >
             <div class="image-preview-content" @click.stop>
-                <button @click="closeImagePreview" class="preview-close-btn">
+                <button type="button" @click="closeImagePreview" class="preview-close-btn" aria-label="关闭预览">
                     <i class="fas fa-times"></i>
+                </button>
+                <button
+                    v-if="previewImageList.length > 1"
+                    type="button"
+                    class="preview-nav-btn preview-nav-prev"
+                    @click.stop="navigatePreview(-1)"
+                    aria-label="上一张"
+                >
+                    <i class="fas fa-chevron-left"></i>
                 </button>
                 <img 
                     :src="getImageURL(previewImage)" 
@@ -834,11 +896,23 @@
                     class="preview-image"
                     @error="handleImageError"
                 >
+                <button
+                    v-if="previewImageList.length > 1"
+                    type="button"
+                    class="preview-nav-btn preview-nav-next"
+                    @click.stop="navigatePreview(1)"
+                    aria-label="下一张"
+                >
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div v-if="previewImageList.length > 1" class="preview-counter">
+                    {{ previewImageIndex + 1 }} / {{ previewImageList.length }}
+                </div>
             </div>
         </div>
 
         <!-- AI试衣模态框 -->
-        <div v-if="showTryOnModal" class="try-on-modal-overlay" @click="closeTryOnModal">
+        <div v-if="showTryOnModal" v-cloak class="try-on-modal-overlay" @click="closeTryOnModal">
             <div class="try-on-modal-content" @click.stop>
                 <!-- 模态框头部 -->
                 <div class="try-on-modal-header">
@@ -853,8 +927,8 @@
 
                 <!-- 模态框主体 -->
                 <div class="try-on-modal-body">
-                    <!-- 步骤1: 选择款式 -->
-                    <div v-if="!tryOnTaskId" class="try-on-step">
+                    <!-- 步骤1+2 同屏：选择款式 + 上传照片 -->
+                    <div v-if="!tryOnTaskId" class="try-on-step try-on-step-combined">
                         <h3 class="step-title">步骤1: 选择款式</h3>
                         
                         <!-- 加载中 -->
@@ -891,24 +965,24 @@
                                 </div>
                                 <div class="style-info">
                                     <div class="style-name">{{ style.brand_name }}</div>
-                                    <div v-if="style.color" class="style-color">{{ style.color }}</div>
+                                    <div
+                                        v-if="style.color && !String(style.brand_name || '').includes(String(style.color))"
+                                        class="style-color"
+                                    >{{ style.color }}</div>
                                 </div>
                                 <div v-if="selectedStyle && selectedStyle.brand_name === style.brand_name" class="selected-badge">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- 步骤2: 上传照片 -->
-                    <div v-if="!tryOnTaskId && selectedStyle" class="try-on-step">
-                        <h3 class="step-title">步骤2: 上传照片</h3>
-                        <p class="step-hint">支持上传全身、半身或头像照片，生成结果统一为全身效果</p>
+                        <h3 class="step-title step-title-upload">步骤2: 上传照片</h3>
+                        <p class="step-hint">支持全身、半身或头像，结果为全身效果</p>
                         
                         <!-- 上传区域 -->
                         <div 
                             class="upload-area"
-                            :class="{ 'has-image': uploadedImagePreview }"
+                            :class="{ 'has-image': uploadedImagePreview, 'upload-disabled': !selectedStyle }"
                             @drop="handleDrop"
                             @dragover="handleDragOver"
                             @dragenter="handleDragOver"
@@ -924,16 +998,17 @@
                             <!-- 上传提示 -->
                             <div v-else class="upload-placeholder">
                                 <i class="fas fa-cloud-upload-alt"></i>
-                                <p>拖拽照片到此处或点击选择</p>
-                                <p class="upload-hint">支持 JPG、PNG、WEBP 格式，最大 10MB</p>
+                                <p>{{ selectedStyle ? '拖拽照片到此处或点击选择' : '请先选择上方款式' }}</p>
+                                <p class="upload-hint">支持 JPG、PNG、WEBP，最大 10MB</p>
                                 <input 
                                     type="file" 
                                     accept="image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp"
                                     @change="handleFileSelect"
                                     class="file-input"
                                     id="try-on-file-input"
+                                    :disabled="!selectedStyle"
                                 >
-                                <label for="try-on-file-input" class="upload-btn">
+                                <label for="try-on-file-input" class="upload-btn" :class="{ disabled: !selectedStyle }">
                                     选择照片
                                 </label>
                             </div>
@@ -1025,9 +1100,9 @@
                     </button>
                     <span
                         v-if="tryOnTaskId && tryOnStatus !== 'completed' && tryOnStatus !== 'failed'"
-                        style="margin-left: 8px; font-size: 12px; color: #666;"
+                        class="try-on-exit-hint"
                     >
-                        点击退出按钮后，生成任务会在后台执行
+                        退出后后台继续生成
                     </span>
                     <button 
                         v-if="selectedStyle && uploadedImage && !tryOnTaskId"
@@ -1040,10 +1115,28 @@
                     </button>
                 </div>
             </div>
+            <!-- 原图预览 / 微信长按保存 -->
+            <div
+                v-if="tryOnOriginalPreviewUrl"
+                class="try-on-original-overlay"
+                @click.stop="closeTryOnOriginalPreview"
+            >
+                <button type="button" class="try-on-original-close" @click.stop="closeTryOnOriginalPreview" aria-label="关闭">
+                    <i class="fas fa-times"></i>
+                </button>
+                <img
+                    class="try-on-original-img"
+                    :src="tryOnOriginalPreviewUrl"
+                    alt="试衣原图"
+                    referrerpolicy="no-referrer"
+                    @click.stop
+                >
+                <p class="try-on-original-tip">{{ tryOnOriginalPreviewTip || '长按图片可保存到相册' }}</p>
+            </div>
         </div>
 
         <!-- 品牌评价模态框 -->
-        <div v-if="showReviewModal" class="review-modal-overlay" @click="closeReviewModal">
+        <div v-if="showReviewModal" v-cloak class="review-modal-overlay" @click="closeReviewModal">
             <div class="review-modal-content" @click.stop>
                 <div class="review-modal-header">
                     <h2 class="review-modal-title">
@@ -1155,8 +1248,8 @@
             </button>
         </div>
 
-        <!-- 登录注册弹窗 -->
-        <div id="nanyiAuthModal" class="nanyi-auth-overlay" v-show="authModalOpen" @click.self="closeAuthModal">
+        <!-- 登录注册弹窗：v-if + is-open；默认 CSS display:none，挂载前 html:not(.vue-ready) 兜底 -->
+        <div id="nanyiAuthModal" class="nanyi-auth-overlay is-open" v-cloak v-if="authModalOpen" @click.self="closeAuthModal">
             <div class="nanyi-auth-sheet" @click.stop>
                 <div class="nanyi-auth-head">
                     <strong>{{ authTab === 'register' ? '注册' : (authTab === 'forgot' ? '忘记密码' : (authTab === 'reset' ? '重置密码' : '登录')) }}</strong>
@@ -1208,7 +1301,7 @@
         </div>
 
         <!-- 浏览全部：按单一维度分组展示品牌（Tab 切换） -->
-        <div v-if="showBrowseAllModal" class="catalog-modal-overlay" @click="closeBrowseAllModal">
+        <div v-if="showBrowseAllModal" v-cloak class="catalog-modal-overlay" @click="closeBrowseAllModal">
             <div class="catalog-modal-sheet" @click.stop>
                 <div class="catalog-modal-header">
                     <h3>浏览全部</h3>
@@ -1248,7 +1341,7 @@
         </div>
 
         <!-- 了解系列：点击打开智能客服并询问系列介绍 -->
-        <div v-if="showSeriesModal" class="catalog-modal-overlay" @click="closeSeriesModal">
+        <div v-if="showSeriesModal" v-cloak class="catalog-modal-overlay" @click="closeSeriesModal">
             <div class="catalog-modal-sheet" @click.stop>
                 <div class="catalog-modal-header">
                     <h3>了解系列</h3>
@@ -1276,6 +1369,7 @@
         <!-- 智能客服弹框：内嵌 nyt_agent 客户端 -->
         <div
             v-if="showNytAgentModal"
+            v-cloak
             class="nyt-agent-modal-overlay"
             @click="closeNytAgentChat"
             role="dialog"
@@ -1349,8 +1443,7 @@
                 <ul>
                     <li>客服微信 LPumpkin0217</li>
                     <li>客服微信 moonysy511</li>
-                    <li>邮箱 hi@nanyiqiutang.cn</li>
-                    <li>合作 contact@nanyiqiutang.cn</li>
+                    <li>邮箱 502517787@qq.com</li>
                 </ul>
             </div>
         </div>
@@ -1390,11 +1483,19 @@
                     filteredBrands: [],
                     selectedBrand: null,
                     brandImages: [],
+                    brandVideos: [],
                     showModal: false,
                     previewImage: null,
+                    previewImageList: [],
+                    previewImageIndex: 0,
+                    _previewTouchX: null,
+                    _previewKeyHandler: null,
                     preloadTimer: null, // 预加载定时器
                     detailFetchGeneration: 0, // 详情请求代次，用于忽略过期响应
                     detailImagesLoading: false, // 详情全量图尚未就绪（列表仅含封面）
+                    galleryExpanded: {}, // 详情 gallery「展开更多」状态 type|color → true
+                    DETAIL_GALLERY_INITIAL: 8, // 每类每色初始展示张数
+                    _detailVideoObserver: null, // 视频懒加载观察器
                     cardSlideByBrand: {}, // 首页卡片轮播下标
                     cardCarouselTimers: {}, // 品牌名 → 自动轮播 timer
                     cardCarouselPaused: {}, // 品牌名 → 悬停暂停
@@ -1479,6 +1580,14 @@
                     tryOnTrackingStartedTaskId: null, // 当前任务是否已经建立了状态追踪连接（避免重复 SSE/轮询）
                     tryOnCheckTaskInFlight: false, // checkTaskResult 是否正在进行中（避免并发补查造成闪屏/重复连接）
                     tryOnCheckTaskInFlightTaskId: null,
+                    tryOnOriginalPreviewUrl: null, // 原图预览 / 长按保存层
+                    tryOnOriginalPreviewTip: '',
+                    detailHistoryPushed: false, // 详情是否已 pushState
+                    detailHistoryFromQuery: false, // 由 URL ?brand= 直接进入详情（关闭时 replace 清参，勿 back）
+                    ignoreDetailPopstate: false, // 关闭详情主动 back 时忽略一次 popstate
+                    shareCardBootstrapCache: Object.create(null), // 预生成分享卡片数据缓存
+                    shareCardOpening: false, // 分享点击防抖
+
                     brandLikeStatus: {
                         liked: false,
                         count: 0,
@@ -1519,6 +1628,17 @@
                     await this.loadData();
                     this.setupBrandCardViewportPrefetch();
                     this.setupCardCarouselAutoplay();
+                    // 从布料卡片返回且带 brand 参数时，重新打开详情
+                    try {
+                        const bootSp = new URLSearchParams(window.location.search || '');
+                        const bootBrand = bootSp.get('brand');
+                        if (bootBrand && !this.showModal) {
+                            const hit = (this.filteredBrands || []).find((b) =>
+                                (b.name || b.brand_name) === bootBrand
+                            ) || { name: bootBrand, brand_name: bootBrand, images: [], like_count: 0 };
+                            this.openBrandDetail(hit);
+                        }
+                    } catch (e) { /* ignore */ }
 
                     // 登录态：本地 JWT 静默续期并拉取 /api/me（回访不重复走微信授权）
                     if (window.NanyiAuth && typeof window.NanyiAuth.bootstrap === 'function') {
@@ -1552,6 +1672,9 @@
 
                     // 恢复未完成的试衣任务（页面刷新/重开后继续追踪）
                     this.restoreTryOnTaskState();
+
+                    // 详情页浏览器后退：关闭详情并留在站内首页
+                    window.addEventListener('popstate', this.handleDetailPopState);
                     
                     // 回到前台时立即补查任务状态
                     document.addEventListener('visibilitychange', this.handleTryOnVisibilityChange);
@@ -1581,6 +1704,7 @@
             },
 
             beforeUnmount() {
+                this.unbindPreviewKeyboard();
                 this.stopAllCardAutoplays();
                 if (this._cardCarouselObserver) {
                     this._cardCarouselObserver.disconnect();
@@ -2402,7 +2526,14 @@
                 /** 判断详情 payload 是否包含完整图片集（相对列表 imageCount / preview_images） */
                 isCompleteDetailPayload(payload, expectedCount = 0, brand = null) {
                     const images = payload?.images || payload?.brand_info?.images || [];
-                    if (!images.length) return false;
+                    const videos = payload?.videos || payload?.brand_info?.videos || [];
+                    const expectedVideos = Number(brand?.videoCount) || 0;
+                    if (!images.length && !videos.length) return false;
+                    // 仅有视频的品牌：视频齐即可视为完整
+                    if (!images.length && videos.length) {
+                        if (expectedVideos > 0 && videos.length < expectedVideos) return false;
+                        return true;
+                    }
                     const expected = Number(expectedCount) || 0;
                     if (expected > 0 && images.length < expected) return false;
                     // 列表 preview_images 每类最多一张；缓存张数未超过预览规模时视为未拉全量
@@ -2410,6 +2541,7 @@
                     if (previewLen > 0 && images.length <= previewLen) {
                         if (expected > previewLen || expected === 0) return false;
                     }
+                    if (expectedVideos > 0 && videos.length < expectedVideos) return false;
                     return true;
                 },
 
@@ -2418,7 +2550,10 @@
                     if (!raw) return null;
                     return {
                         brand_info: raw.brand_info || brand,
-                        images: raw.images || raw.brand_info?.images || []
+                        images: raw.images || raw.brand_info?.images || [],
+                        videos: raw.videos || raw.brand_info?.videos || [],
+                        imageCount: raw.imageCount,
+                        videoCount: raw.videoCount
                     };
                 },
 
@@ -2429,8 +2564,14 @@
                     let cached = window.cacheManager.get('brand_detail', brandName);
                     if (!cached) {
                         const imagesOnly = window.cacheManager.get('brand_images', brandName);
-                        if (imagesOnly && imagesOnly.images) {
-                            cached = { brand_info: brand, images: imagesOnly.images };
+                        if (imagesOnly && (imagesOnly.images || imagesOnly.videos)) {
+                            cached = {
+                                brand_info: brand,
+                                images: imagesOnly.images || [],
+                                videos: imagesOnly.videos || [],
+                                imageCount: imagesOnly.imageCount,
+                                videoCount: imagesOnly.videoCount
+                            };
                         }
                     }
                     const payload = this.normalizeBrandDetailPayload(cached, brand);
@@ -2478,22 +2619,35 @@
                     return order.filter(type => !loadedTypes.includes(type));
                 },
 
-                /** 过滤并同步详情中的品牌信息与图片列表 */
-                applyBrandDetailData(brandInfo, images) {
-                    const filtered = (images || []).filter(img => img && !this.isGeneratedImageSource(img));
-                    const info = { ...(brandInfo || {}), images: filtered };
+                /** 过滤并同步详情中的品牌信息、图片与视频 */
+                applyBrandDetailData(brandInfo, images, videos) {
+                    const filtered = (images || []).filter(img =>
+                        img && !this.isGeneratedImageSource(img) && !this.isVideoMedia(img)
+                    );
+                    const videoList = (videos && videos.length)
+                        ? videos.filter(v => v && this.isVideoMedia(v))
+                        : (images || []).filter(img => img && this.isVideoMedia(img));
+                    const info = { ...(brandInfo || {}), images: filtered, videos: videoList };
                     this.selectedBrand = info;
                     this.brandImages = filtered;
+                    this.brandVideos = videoList;
+                    this.galleryExpanded = {};
+                    this.$nextTick(() => this.setupDetailVideoLazyLoad());
                 },
 
-                /** 预加载详情图 URL（按分类优先级，不阻塞弹窗） */
-                preloadDetailImageUrls(images, limit = 24) {
+                /** 预加载详情图 URL（仅概念/设计，限制数量，排除视频） */
+                preloadDetailImageUrls(images, limit = 8) {
                     if (!window.imagePreloader || !images || images.length === 0) return;
-                    const typeOrder = ['概念图', '设计图', '布料图', '成衣图', '模特图', '买家秀图', '其他'];
-                    const safe = images.filter(img => img && !this.isGeneratedImageSource(img));
+                    const typeOrder = ['概念图', '设计图'];
+                    const safe = images.filter(img =>
+                        img
+                        && !this.isGeneratedImageSource(img)
+                        && !this.isVideoMedia(img)
+                        && typeOrder.includes(img.image_type || '')
+                    );
                     const sorted = [...safe].sort((a, b) => {
-                        const ai = typeOrder.indexOf(a.image_type || '其他');
-                        const bi = typeOrder.indexOf(b.image_type || '其他');
+                        const ai = typeOrder.indexOf(a.image_type || '');
+                        const bi = typeOrder.indexOf(b.image_type || '');
                         return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
                     });
                     const urls = sorted.slice(0, limit).map(img => this.getImageURL(img)).filter(Boolean);
@@ -2508,7 +2662,7 @@
                 /** 空闲时预加载详情图，不阻塞弹窗打开 */
                 scheduleDetailImagePreload(images) {
                     if (!images || images.length === 0) return;
-                    const run = () => this.preloadDetailImageUrls(images, 24);
+                    const run = () => this.preloadDetailImageUrls(images, 8);
                     if (typeof requestIdleCallback === 'function') {
                         requestIdleCallback(run, { timeout: 1500 });
                     } else {
@@ -2536,6 +2690,7 @@
                         try {
                             // 优先轻量图片接口（跳过 DB/点赞，响应更小更快）
                             let images = [];
+                            let videos = [];
                             let imageCount = 0;
                             const imagesResp = await window.api.getBrandImages(brandName);
                             const imagesData = (imagesResp && imagesResp.data && typeof imagesResp.data === 'object')
@@ -2543,6 +2698,7 @@
                                 : imagesResp;
                             if (imagesData && imagesData.success !== false && imagesData.images) {
                                 images = imagesData.images;
+                                videos = imagesData.videos || [];
                                 imageCount = imagesData.imageCount || images.length;
                             } else {
                                 const response = await window.api.getBrandDetail(brandName);
@@ -2551,19 +2707,27 @@
                                     : response;
                                 if (detail && detail.success !== false && (detail.images || detail.brand_info)) {
                                     images = detail.images || detail.brand_info?.images || [];
+                                    videos = detail.videos || detail.brand_info?.videos || [];
                                     imageCount = detail.imageCount || images.length;
                                 }
                             }
 
-                            if (images.length) {
+                            if (images.length || videos.length) {
                                 const payload = {
                                     brand_info: brand,
                                     images,
-                                    imageCount
+                                    videos,
+                                    imageCount,
+                                    videoCount: videos.length
                                 };
                                 if (window.cacheManager) {
                                     window.cacheManager.set('brand_detail', payload, brandName);
-                                    window.cacheManager.set('brand_images', { images, imageCount }, brandName);
+                                    window.cacheManager.set('brand_images', {
+                                        images,
+                                        videos,
+                                        imageCount,
+                                        videoCount: videos.length
+                                    }, brandName);
                                 }
                                 return payload;
                             }
@@ -2573,7 +2737,8 @@
 
                         return {
                             brand_info: brand,
-                            images: []
+                            images: [],
+                            videos: []
                         };
                     })();
 
@@ -2596,10 +2761,13 @@
                     // 优先使用已缓存的全量详情；否则用 preview_images（每类最多一张）乐观展示
                     const cachedPayload = this.getCachedBrandDetailPayload(brand);
                     const expectedImageCount = Number(brand.imageCount) || 0;
+                    const expectedVideoCount = Number(brand.videoCount) || 0;
                     const cachedImageCount = cachedPayload?.images?.length || 0;
+                    const cachedVideoCount = cachedPayload?.videos?.length || 0;
                     const stillNeedsFullImages = needsFetch
                         || !cachedPayload
-                        || (expectedImageCount > 0 && cachedImageCount < expectedImageCount);
+                        || (expectedImageCount > 0 && cachedImageCount < expectedImageCount)
+                        || (expectedVideoCount > 0 && cachedVideoCount < expectedVideoCount);
 
                     if (cachedPayload) {
                         const mergedInfo = {
@@ -2607,12 +2775,12 @@
                             ...(cachedPayload.brand_info || {}),
                             name: brandName
                         };
-                        this.applyBrandDetailData(mergedInfo, cachedPayload.images);
+                        this.applyBrandDetailData(mergedInfo, cachedPayload.images, cachedPayload.videos);
                         this.detailImagesLoading = stillNeedsFullImages;
                         this.scheduleDetailImagePreload(cachedPayload.images);
                     } else {
                         const optimisticImages = this.getBrandPreviewImages(brand);
-                        this.applyBrandDetailData(brand, optimisticImages);
+                        this.applyBrandDetailData(brand, optimisticImages, []);
                         this.detailImagesLoading = needsFetch && !this.hasSubstantialPreview(brand);
                         if (optimisticImages.length) {
                             this.scheduleDetailImagePreload(optimisticImages);
@@ -2625,6 +2793,8 @@
                     this.detailHeroIndex = 0;
                     this.showModal = true;
                     document.body.style.overflow = 'hidden';
+                    this.pushDetailHistory(brandName);
+                    this.warmShareCardBootstrap(this.selectedBrand || brand);
 
                     if (brandName) {
                         this.getLikeStatus(brandName);
@@ -2645,6 +2815,7 @@
                             name: brandName
                         };
                         const apiImages = brandDetail.images || brandDetail.brand_info?.images || [];
+                        const apiVideos = brandDetail.videos || brandDetail.brand_info?.videos || [];
                         const mergedImages = this.mergeDetailImages(
                             this.brandImages,
                             apiImages,
@@ -2652,7 +2823,8 @@
                         );
                         this.applyBrandDetailData(
                             mergedInfo,
-                            mergedImages.length > 0 ? mergedImages : (brand.images || apiImages)
+                            mergedImages.length > 0 ? mergedImages : (brand.images || apiImages),
+                            apiVideos
                         );
                         this.detailImagesLoading = false;
 
@@ -2687,7 +2859,7 @@
                                 const cached = window.cacheManager.get('brand_detail', brandName);
                                 const payload = this.normalizeBrandDetailPayload(cached, brand);
                                 this.mergeCarouselImagesIntoBrand(brandName, payload?.images || []);
-                                this.preloadDetailImageUrls(payload?.images || [], 24);
+                                this.preloadDetailImageUrls(payload?.images || [], 8);
                                 // 全量图到位后可启动/刷新自动轮播
                                 if (this.getBrandCarouselImages(this.brandData[brandName] || brand).length > 1) {
                                     this.startCardAutoplay(brandName);
@@ -2701,8 +2873,9 @@
                                 window.cacheManager.set('brand_detail', payload, brandName);
                             }
                             this.mergeCarouselImagesIntoBrand(brandName, payload?.images || []);
-                            this.preloadDetailImageUrls(payload?.images || [], 24);
+                            this.preloadDetailImageUrls(payload?.images || [], 8);
                             this.prefetchShareCardInBackground(brandName, this.getShareCardApiUrl(brandName));
+                            this.warmShareCardBootstrap(this.brandData[brandName] || brand);
                             if (this.getBrandCarouselImages(this.brandData[brandName] || brand).length > 1) {
                                 this.startCardAutoplay(brandName);
                             }
@@ -2760,7 +2933,7 @@
                     });
                 },
 
-                closeModal() {
+                closeModal(fromPopstate = false) {
                     // 清除预加载定时器
                     if (this.preloadTimer) {
                         clearTimeout(this.preloadTimer);
@@ -2768,13 +2941,92 @@
                     }
                     this.detailFetchGeneration++;
                     this.detailImagesLoading = false;
+                    this.releaseDetailVideos();
 
                     this.showModal = false;
                     document.body.style.overflow = 'auto';
+                    if (!fromPopstate) {
+                        if (this.detailHistoryFromQuery) {
+                            this.clearDetailQueryParam();
+                            this.detailHistoryFromQuery = false;
+                        } else {
+                            this.popDetailHistoryIfNeeded();
+                        }
+                    } else {
+                        this.detailHistoryPushed = false;
+                        this.detailHistoryFromQuery = false;
+                        this.clearDetailQueryParam();
+                    }
                     setTimeout(() => {
                         this.selectedBrand = null;
                         this.brandImages = [];
+                        this.brandVideos = [];
+                        this.galleryExpanded = {};
                     }, 300);
+                },
+
+                /** 打开详情时 pushState，使浏览器后退关闭详情而非退出站点 */
+                pushDetailHistory(brandName) {
+                    try {
+                        if (this.detailHistoryPushed || this.detailHistoryFromQuery) return;
+                        const url = new URL(window.location.href);
+                        // 已是 ?brand= 深链进入：关闭时清参即可，避免 history.back 退回卡片页
+                        if (brandName && url.searchParams.get('brand') === brandName) {
+                            this.detailHistoryFromQuery = true;
+                            return;
+                        }
+                        if (brandName) {
+                            url.searchParams.set('brand', brandName);
+                        }
+                        history.pushState(
+                            { nanyiDetail: true, brand: brandName || null },
+                            '',
+                            url.pathname + url.search + url.hash
+                        );
+                        this.detailHistoryPushed = true;
+                    } catch (e) {
+                        // ignore
+                    }
+                },
+
+                clearDetailQueryParam() {
+                    try {
+                        const url = new URL(window.location.href);
+                        if (!url.searchParams.has('brand')) return;
+                        url.searchParams.delete('brand');
+                        const next = url.pathname + (url.searchParams.toString() ? '?' + url.searchParams.toString() : '') + url.hash;
+                        history.replaceState(history.state && !history.state.nanyiDetail ? history.state : {}, '', next);
+                    } catch (e) {
+                        // ignore
+                    }
+                },
+
+                popDetailHistoryIfNeeded() {
+                    if (!this.detailHistoryPushed) return;
+                    this.detailHistoryPushed = false;
+                    this.ignoreDetailPopstate = true;
+                    try {
+                        history.back();
+                    } catch (e) {
+                        this.ignoreDetailPopstate = false;
+                    }
+                },
+
+                handleDetailPopState(event) {
+                    if (this.ignoreDetailPopstate) {
+                        this.ignoreDetailPopstate = false;
+                        return;
+                    }
+                    // 仅处理本站详情层；外链/其它 history 条目不拦截
+                    if (this.showModal) {
+                        this.closeModal(true);
+                        return;
+                    }
+                    const st = event && event.state;
+                    if (st && st.nanyiDetail && !this.showModal) {
+                        // 前进到详情态但当前未打开：忽略，避免误开
+                        return;
+                    }
                 },
 
                 getCategorizedImages() {
@@ -2791,6 +3043,9 @@
                     sourceImages.forEach(img => {
                         // 不展示 AI 试穿生成目录的图片（该目录用于生成结果/内部用途）
                         if (this.isGeneratedImageSource(img)) return;
+                        // 视频单独分区，不进图片 gallery
+                        if (this.isVideoMedia(img)) return;
+                        if ((img.image_type || '') === '视频' || img.is_video_poster) return;
 
                         // 优先检查image_type字段，如果没有则从文件名中提取图片类型
                         let type = '其他';
@@ -2832,6 +3087,124 @@
                     });
                     
                     return orderedCategories;
+                },
+
+                isVideoMedia(item) {
+                    if (!item) return false;
+                    if (item.media_type === 'video') return true;
+                    if ((item.image_type || '') === '视频') {
+                        const fn = String(item.filename || item.url || '').toLowerCase();
+                        return fn.endsWith('.mp4') || fn.endsWith('.webm');
+                    }
+                    const fn = String(item.filename || item.url || item.relative_path || '').toLowerCase();
+                    return fn.endsWith('.mp4') || fn.endsWith('.webm');
+                },
+
+                getBrandVideos() {
+                    const fromState = this.brandVideos || [];
+                    if (fromState.length) return fromState;
+                    const fromBrand = this.selectedBrand?.videos || [];
+                    if (fromBrand.length) return fromBrand;
+                    const merged = this.mergeDetailImages(
+                        this.brandImages,
+                        this.selectedBrand?.images || []
+                    );
+                    return (merged || []).filter(img => this.isVideoMedia(img));
+                },
+
+                getVideoPoster(video) {
+                    if (!video) return '';
+                    if (video.poster) return video.poster;
+                    return '';
+                },
+
+                galleryExpandKey(type, color) {
+                    return `${type || ''}||${color || '默认色'}`;
+                },
+
+                isGalleryExpanded(type, color) {
+                    return !!this.galleryExpanded[this.galleryExpandKey(type, color)];
+                },
+
+                expandGallery(type, color) {
+                    const key = this.galleryExpandKey(type, color);
+                    this.galleryExpanded = { ...this.galleryExpanded, [key]: true };
+                },
+
+                getVisibleGalleryImages(type, color, colorImages) {
+                    const list = colorImages || [];
+                    if (this.isGalleryExpanded(type, color)) return list;
+                    return list.slice(0, this.DETAIL_GALLERY_INITIAL);
+                },
+
+                onDetailVideoPlay(event) {
+                    const current = event?.target;
+                    const nodes = this.$refs.detailVideos;
+                    const list = Array.isArray(nodes) ? nodes : (nodes ? [nodes] : []);
+                    list.forEach(video => {
+                        if (video && video !== current && !video.paused) {
+                            video.pause();
+                        }
+                    });
+                },
+
+                setupDetailVideoLazyLoad() {
+                    this.teardownDetailVideoObserver();
+                    if (!('IntersectionObserver' in window)) {
+                        this.hydrateAllDetailVideoSrc();
+                        return;
+                    }
+                    const nodes = this.$refs.detailVideos;
+                    const list = Array.isArray(nodes) ? nodes : (nodes ? [nodes] : []);
+                    if (!list.length) return;
+                    this._detailVideoObserver = new IntersectionObserver((entries) => {
+                        entries.forEach(entry => {
+                            if (!entry.isIntersecting) return;
+                            const el = entry.target;
+                            const src = el.getAttribute('data-video-src');
+                            if (src && !el.getAttribute('src')) {
+                                el.setAttribute('src', src);
+                                el.load();
+                            }
+                            this._detailVideoObserver?.unobserve(el);
+                        });
+                    }, { root: null, rootMargin: '200px 0px', threshold: 0.01 });
+                    list.forEach(el => {
+                        if (el) this._detailVideoObserver.observe(el);
+                    });
+                },
+
+                hydrateAllDetailVideoSrc() {
+                    const nodes = this.$refs.detailVideos;
+                    const list = Array.isArray(nodes) ? nodes : (nodes ? [nodes] : []);
+                    list.forEach(el => {
+                        const src = el?.getAttribute?.('data-video-src');
+                        if (src && !el.getAttribute('src')) {
+                            el.setAttribute('src', src);
+                            el.load();
+                        }
+                    });
+                },
+
+                teardownDetailVideoObserver() {
+                    if (this._detailVideoObserver) {
+                        this._detailVideoObserver.disconnect();
+                        this._detailVideoObserver = null;
+                    }
+                },
+
+                releaseDetailVideos() {
+                    this.teardownDetailVideoObserver();
+                    const nodes = this.$refs.detailVideos;
+                    const list = Array.isArray(nodes) ? nodes : (nodes ? [nodes] : []);
+                    list.forEach(video => {
+                        if (!video) return;
+                        try {
+                            video.pause();
+                            video.removeAttribute('src');
+                            video.load();
+                        } catch (e) {}
+                    });
                 },
 
                 groupImagesByColor(images) {
@@ -3120,14 +3493,87 @@
                     img.parentNode.insertBefore(placeholder, img);
                 },
 
+                getPreviewImageList() {
+                    const cats = this.getCategorizedImages();
+                    const list = [];
+                    Object.keys(cats).forEach((type) => {
+                        (cats[type] || []).forEach((img) => list.push(img));
+                    });
+                    return list;
+                },
+
                 openImagePreview(image) {
-                    this.previewImage = image;
+                    const list = this.getPreviewImageList();
+                    let idx = list.findIndex((img) =>
+                        img === image ||
+                        (img.filename && image && img.filename === image.filename) ||
+                        (img.url && image && img.url === image.url)
+                    );
+                    if (idx < 0 && image) {
+                        list.unshift(image);
+                        idx = 0;
+                    }
+                    this.previewImageList = list;
+                    this.previewImageIndex = idx >= 0 ? idx : 0;
+                    this.previewImage = list[this.previewImageIndex] || image;
                     document.body.style.overflow = 'hidden';
+                    this.bindPreviewKeyboard();
                 },
 
                 closeImagePreview() {
                     this.previewImage = null;
-                    document.body.style.overflow = 'auto';
+                    this.previewImageList = [];
+                    this.previewImageIndex = 0;
+                    this._previewTouchX = null;
+                    this.unbindPreviewKeyboard();
+                    if (!this.showModal && !this.showTryOnModal && !this.showNytAgentModal) {
+                        document.body.style.overflow = 'auto';
+                    }
+                },
+
+                navigatePreview(delta) {
+                    const n = this.previewImageList.length;
+                    if (n < 2) return;
+                    this.previewImageIndex = (this.previewImageIndex + delta + n) % n;
+                    this.previewImage = this.previewImageList[this.previewImageIndex];
+                },
+
+                bindPreviewKeyboard() {
+                    this.unbindPreviewKeyboard();
+                    this._previewKeyHandler = (e) => {
+                        if (!this.previewImage) return;
+                        if (e.key === 'ArrowLeft') {
+                            e.preventDefault();
+                            this.navigatePreview(-1);
+                        } else if (e.key === 'ArrowRight') {
+                            e.preventDefault();
+                            this.navigatePreview(1);
+                        } else if (e.key === 'Escape') {
+                            e.preventDefault();
+                            this.closeImagePreview();
+                        }
+                    };
+                    document.addEventListener('keydown', this._previewKeyHandler);
+                },
+
+                unbindPreviewKeyboard() {
+                    if (this._previewKeyHandler) {
+                        document.removeEventListener('keydown', this._previewKeyHandler);
+                        this._previewKeyHandler = null;
+                    }
+                },
+
+                onPreviewTouchStart(e) {
+                    if (!e.touches || !e.touches[0]) return;
+                    this._previewTouchX = e.touches[0].clientX;
+                },
+
+                onPreviewTouchEnd(e) {
+                    if (this._previewTouchX == null || !e.changedTouches || !e.changedTouches[0]) return;
+                    const dx = e.changedTouches[0].clientX - this._previewTouchX;
+                    this._previewTouchX = null;
+                    if (Math.abs(dx) < 50) return;
+                    this.navigatePreview(dx > 0 ? -1 : 1);
                 },
 
                 downloadImage(image) {
@@ -3455,12 +3901,18 @@
                         return false;
                     }
 
-                    // 桌面：允许新标签；失败则同页跳转
-                    if (event) event.preventDefault();
-                    const win = window.open(url, '_blank', 'noopener,noreferrer');
-                    if (!win) {
-                        window.location.href = url;
+                    // 桌面：只开新标签，保留当前产品站页面。
+                    // 注意：window.open(..., 'noopener') 在多数浏览器会返回 null，
+                    // 若据此回退 location.href 会变成「新标签 + 当前页」双跳转。
+                    if (event) {
+                        event.preventDefault();
+                        event.stopPropagation();
                     }
+                    const win = window.open(url, '_blank');
+                    if (win) {
+                        try { win.opener = null; } catch (e) { /* ignore */ }
+                    }
+                    // 弹窗被拦截时也不改当前页，避免双跳转；用户可再次点击或允许弹窗
                     return false;
                 },
 
@@ -4008,6 +4460,26 @@
                     };
                 },
 
+                /** 空闲时预生成分享卡片 bootstrap，点击时直接用缓存 */
+                warmShareCardBootstrap(brand) {
+                    if (!brand) return;
+                    const brandName = brand.name || brand.brand_name;
+                    if (!brandName) return;
+                    const run = () => {
+                        try {
+                            if (this.shareCardBootstrapCache[brandName]) return;
+                            const bootstrap = this.buildShareCardBootstrapFromBrand(brand);
+                            this.shareCardBootstrapCache[brandName] = bootstrap;
+                            this.writeShareCardSessionBootstrap(brandName, bootstrap);
+                        } catch (e) { /* ignore */ }
+                    };
+                    if (typeof requestIdleCallback === 'function') {
+                        requestIdleCallback(run, { timeout: 1200 });
+                    } else {
+                        setTimeout(run, 0);
+                    }
+                },
+
                 writeShareCardSessionBootstrap(brandName, payload) {
                     try {
                         sessionStorage.setItem(
@@ -4028,6 +4500,7 @@
                             const cardData = data.data || data.card_data;
                             if (!data.success || !cardData) return;
                             try {
+                                this.shareCardBootstrapCache[brandName] = cardData;
                                 sessionStorage.setItem(
                                     'share_card_prefetch_' + brandName,
                                     JSON.stringify({ value: cardData, timestamp: Date.now() })
@@ -4038,12 +4511,12 @@
                 },
 
                 /**
-                 * 为指定品牌打开 card.html：先写 session bootstrap 并立即开窗，API 后台刷新
+                 * 为指定品牌打开 card.html：优先用缓存，防抖，尽快跳转
                  * @param {object} brand - 列表项品牌对象，需含 name 或 brand_name
                  */
                 openShareCardForBrand(brand) {
-                    if (!brand) {
-                        this.showToast('无法识别品牌信息');
+                    if (!brand || this.shareCardOpening) {
+                        if (!brand) this.showToast('无法识别品牌信息');
                         return;
                     }
                     const brandName = brand.name || brand.brand_name;
@@ -4052,20 +4525,34 @@
                         return;
                     }
 
-                    const bootstrap = this.buildShareCardBootstrapFromBrand(brand);
+                    this.shareCardOpening = true;
+                    setTimeout(() => { this.shareCardOpening = false; }, 700);
+
+                    let bootstrap = this.shareCardBootstrapCache[brandName];
+                    if (!bootstrap) {
+                        bootstrap = this.buildShareCardBootstrapFromBrand(brand);
+                        this.shareCardBootstrapCache[brandName] = bootstrap;
+                    }
+
+                    // 先同步写入 session，再立刻跳转；API 预取放到后台
+                    this.writeShareCardSessionBootstrap(brandName, bootstrap);
+                    const apiUrl = this.getShareCardApiUrl(brandName);
+                    const from = this.showModal ? 'detail' : 'home';
+
                     const helper = window.ShareCardHelper;
                     if (!helper || typeof helper.shareBrandCard !== 'function') {
-                        this.writeShareCardSessionBootstrap(brandName, bootstrap);
-                        window.open(`card.html?brand=${encodeURIComponent(brandName)}`, '_blank');
+                        window.open(`card.html?brand=${encodeURIComponent(brandName)}&from=${from}`, '_blank');
+                        this.prefetchShareCardInBackground(brandName, apiUrl);
                         return;
                     }
 
                     helper.shareBrandCard(brand, {
                         cardData: bootstrap,
+                        from,
                         showToast: (msg) => this.showToast(msg),
-                        beforeShare: (name) => {
-                            this.writeShareCardSessionBootstrap(name, bootstrap);
-                            this.prefetchShareCardInBackground(name, this.getShareCardApiUrl(name));
+                        beforeShare: () => {
+                            // session 已写好；仅后台刷新 API，不阻塞跳转
+                            this.prefetchShareCardInBackground(brandName, apiUrl);
                         }
                     });
                 },
@@ -4636,10 +5123,34 @@
                     const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
 
                     const fallbackDownload = () => {
-                        // 优先使用退出时已打开的辅助窗口，避免异步下载被浏览器拦截
+                        // 微信内禁止 a[download]（会提示去浏览器下载），改为预览长按保存
+                        if (isWeChat) {
+                            this.showTryOnModal = true;
+                            document.body.style.overflow = 'hidden';
+                            this.tryOnOriginalPreviewTip = '请长按图片，选择「保存到相册」';
+                            this.tryOnOriginalPreviewUrl = absUrl;
+                            this.showToast('请长按图片保存到相册');
+                            return;
+                        }
+
                         if (this.tryOnSaveHelperWindow && !this.tryOnSaveHelperWindow.closed) {
                             this.tryOnSaveHelperWindow.location.href = absUrl;
                             this.showToast('结果已打开，请长按图片保存到相册');
+                            return;
+                        }
+
+                        const H2 = window.NanyiTryOnHelpers;
+                        if (H2 && H2.fetchImageBlob && H2.triggerBlobDownload) {
+                            H2.fetchImageBlob(absUrl).then((blob) => {
+                                H2.triggerBlobDownload(blob, filename);
+                                this.showToast('图片已开始下载');
+                            }).catch(() => {
+                                this.tryOnOriginalPreviewTip = '请长按图片保存到相册';
+                                this.tryOnOriginalPreviewUrl = absUrl;
+                                this.showTryOnModal = true;
+                                document.body.style.overflow = 'hidden';
+                                this.showToast('请长按图片保存到相册');
+                            });
                             return;
                         }
 
@@ -4647,14 +5158,12 @@
                             const link = document.createElement('a');
                             link.href = absUrl;
                             link.download = filename;
-                            link.target = '_blank';
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
                             this.showToast('图片已开始下载');
                         } catch (e) {
-                            // 最兜底：打开图片让系统提供保存入口
-                            window.open(absUrl, '_blank');
+                            this.tryOnOriginalPreviewUrl = absUrl;
                             this.showToast('请长按图片保存到相册');
                         }
                     };
@@ -4807,6 +5316,10 @@
                  * 处理图片上传
                  */
                 handleImageUpload(file) {
+                    if (!this.selectedStyle) {
+                        this.showToast('请先选择款式');
+                        return;
+                    }
                     // 验证文件类型
                     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp'];
                     if (!allowedTypes.includes(file.type)) {
@@ -4925,11 +5438,10 @@
                             return;
                         }
                         
-                        // 计算已处理时间
+                        // 计算已处理时间（间隔不宜过密，避免重复请求拖慢体验）
                         const elapsed = Date.now() - this.tryOnPollingStartTime;
-                        // 如果处理时间超过预计时间的一半，使用更短的间隔（0.5秒）
-                        // 否则使用正常间隔（1秒）
-                        const interval = elapsed > (this.tryOnEstimatedTime / 2) ? 500 : 1000;
+                        // 前期 2s；超过预计时间一半后 1.5s 稍加快感知
+                        const interval = elapsed > (this.tryOnEstimatedTime / 2) ? 1500 : 2000;
                         
                         // 设置下一次轮询
                         this.tryOnPollingInterval = setTimeout(() => {
@@ -5028,31 +5540,25 @@
                                             this.tryOnResultUrl = payload.result_image_url;
                                         }
 
-                                        // 前台展示完毕后清理；如果用户处于“退出后台模式”，保留本地任务态用于重进失败/成功提醒
+                                        // 前台展示完毕后清理；后台模式保留本地任务态
                                         if (!wasInBackground) {
                                             this.clearTryOnTaskState();
                                         }
-                                        this.stopSSEStatusTracking(); // 停止 SSE 追踪
+                                        this.stopSSEStatusTracking();
 
-                                        if (!wasInBackground) {
-                                            this.showToast('试衣效果生成成功！'); // 前台弹窗内给用户反馈
+                                        if (wasInBackground) {
+                                            // 尽早展示结果：重新打开弹窗，避免用户错过
+                                            this.showTryOnModal = true;
+                                            document.body.style.overflow = 'hidden';
+                                            this.showToast('试衣效果已生成！');
+                                        } else {
+                                            this.showToast('试衣效果生成成功！');
                                         }
 
                                         if (this.tryOnAutoDownloadAfterExit) {
-                                            this.autoDownloadTryOnResult(); // 根据退出后的标记自动保存/下载
+                                            this.autoDownloadTryOnResult();
                                             this.tryOnAutoDownloadAfterExit = false;
                                         }
-
-                                        // 强制触发图片加载
-                                        this.$nextTick(() => {
-                                            const imgElement = document.querySelector('.result-image');
-                                            if (imgElement && this.tryOnResultUrl) {
-                                                imgElement.src = '';
-                                                this.$nextTick(() => {
-                                                    imgElement.src = this.encodeImageURL(this.tryOnResultUrl);
-                                                });
-                                            }
-                                        });
                                         return;
                                     }
 
@@ -5166,62 +5672,20 @@
                                 
                                 
                                 this.stopPolling();
-                                this.showToast('试衣效果生成成功！');
+                                const wasInBackground = !!this.tryOnBackgroundMode || !this.showTryOnModal;
+                                this.tryOnBackgroundMode = false;
+                                if (wasInBackground) {
+                                    this.showTryOnModal = true;
+                                    document.body.style.overflow = 'hidden';
+                                    this.showToast('试衣效果已生成！');
+                                } else {
+                                    this.showToast('试衣效果生成成功！');
+                                }
                                 this.clearTryOnTaskState();
                                 if (this.tryOnAutoDownloadAfterExit) {
                                     this.autoDownloadTryOnResult();
                                     this.tryOnAutoDownloadAfterExit = false;
                                 }
-                                
-                                
-                                // 强制触发 Vue 响应式更新，确保图片立即加载
-                                // 使用 $forceUpdate() 确保 Vue 立即重新渲染
-                                this.$forceUpdate();
-                                
-                                this.$nextTick(() => {
-                                    
-                                    const imgElement = document.querySelector('.result-image');
-                                    
-                                    
-                                    if (imgElement) {
-                                        // 强制设置图片src，触发加载
-                                        imgElement.src = '';
-                                        this.$nextTick(() => {
-                                            imgElement.src = encodedUrl;
-                                            
-                                        });
-                                    } else {
-                                        console.warn('未找到图片元素，可能DOM尚未更新，等待Vue渲染...');
-                                        
-                                        
-                                        // 如果图片元素未找到，可能是Vue尚未渲染，等待一段时间后重试
-                                        setTimeout(() => {
-                                            const imgElementRetry = document.querySelector('.result-image');
-                                            if (imgElementRetry) {
-                                                imgElementRetry.src = '';
-                                                this.$nextTick(() => {
-                                                    imgElementRetry.src = encodedUrl;
-                                                });
-                                            }
-                                        }, 100);
-                                    }
-                                    
-                                    // 检查图片是否成功加载，如果没有则尝试重试
-                                    setTimeout(() => {
-                                        if (!this.tryOnResultImageLoaded && !this.tryOnResultImageError) {
-                                            console.log('图片可能未加载，检查状态...');
-                                            // 触发图片重新加载
-                                            const imgElement2 = document.querySelector('.result-image');
-                                            if (imgElement2 && imgElement2.src) {
-                                                const currentSrc = imgElement2.src;
-                                                imgElement2.src = '';
-                                                this.$nextTick(() => {
-                                                    imgElement2.src = currentSrc;
-                                                });
-                                            }
-                                        }
-                                    }, 1000);
-                                });
                             } else if (this.tryOnStatus === 'failed') {
                                 // 任务失败
                                 this.tryOnError = responseData.error || '试衣任务失败';
@@ -5554,39 +6018,115 @@
                 },
 
                 /**
-                 * 保存试衣结果
+                 * 保存试衣结果（移动端优先相册可行方案；微信内不走 a[download]）
+                 * 微信限制：网页无法 100% 直达系统相册，需长按图片「保存到相册」；
+                 * 非微信浏览器用 Blob + a[download]；失败再 canvas/原图预览兜底。
                  */
-                saveTryOnResult() {
+                async saveTryOnResult() {
                     try {
                         if (!this.tryOnResultUrl) {
                             this.showToast('当前没有可保存的结果图');
                             return;
                         }
-                        const safeBrandName = (this.selectedStyle && this.selectedStyle.brand_name) ? this.selectedStyle.brand_name : '试衣结果';
-                        const link = document.createElement('a');
-                        link.href = this.encodeImageURL(this.tryOnResultUrl);
-                        link.download = `试衣效果_${safeBrandName}_${Date.now()}.jpg`;
-                        link.target = '_blank';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        this.showToast('图片已开始保存/下载');
+                        const H = window.NanyiTryOnHelpers;
+                        const encoded = this.encodeImageURL(this.tryOnResultUrl);
+                        const absUrl = H ? H.toAbsoluteUrl(encoded) : (
+                            encoded.startsWith('http') ? encoded : (window.location.origin + encoded)
+                        );
+                        const safeBrandName = (this.selectedStyle && this.selectedStyle.brand_name)
+                            ? this.selectedStyle.brand_name : '试衣结果';
+                        const filename = `试衣效果_${safeBrandName}_${Date.now()}.jpg`;
+                        const isWeChat = H ? H.isWeChatUA() : /MicroMessenger/i.test(navigator.userAgent || '');
+
+                        // 微信内：a[download] 会提示「可在浏览器打开此网页来下载文件」——改为长按保存引导
+                        if (isWeChat) {
+                            let previewUrl = absUrl;
+                            try {
+                                const imgEl = document.querySelector('.result-image');
+                                if (H && imgEl && imgEl.complete && imgEl.naturalWidth) {
+                                    const blob = await H.canvasBlobFromImageEl(imgEl);
+                                    previewUrl = URL.createObjectURL(blob);
+                                }
+                            } catch (e) { /* 用原图 URL */ }
+                            this.tryOnOriginalPreviewTip = '请长按上方图片，选择「保存到相册」';
+                            this.tryOnOriginalPreviewUrl = previewUrl;
+                            this.showToast('请长按图片保存到相册');
+                            return;
+                        }
+
+                        // 非微信：Blob 下载（比直接链到跨域 URL 的 download 更可靠）
+                        try {
+                            let blob = null;
+                            if (H && H.fetchImageBlob) {
+                                blob = await H.fetchImageBlob(absUrl);
+                            } else {
+                                const resp = await fetch(absUrl, { mode: 'cors', credentials: 'omit' });
+                                if (!resp.ok) throw new Error('fetch failed');
+                                blob = await resp.blob();
+                            }
+                            if (H && H.triggerBlobDownload) {
+                                H.triggerBlobDownload(blob, filename);
+                            } else {
+                                const blobUrl = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = blobUrl;
+                                link.download = filename;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+                            }
+                            this.showToast('图片已开始保存');
+                            return;
+                        } catch (fetchErr) {
+                            console.warn('Blob 下载失败，尝试 canvas / 预览:', fetchErr);
+                        }
+
+                        try {
+                            const imgEl = document.querySelector('.result-image');
+                            if (H && imgEl && imgEl.naturalWidth) {
+                                const blob = await H.canvasBlobFromImageEl(imgEl);
+                                H.triggerBlobDownload(blob, filename);
+                                this.showToast('图片已开始保存');
+                                return;
+                            }
+                        } catch (canvasErr) {
+                            console.warn('canvas 保存失败:', canvasErr);
+                        }
+
+                        this.tryOnOriginalPreviewTip = '请长按图片保存，或使用浏览器「下载」';
+                        this.tryOnOriginalPreviewUrl = absUrl;
+                        this.showToast('请长按图片保存到相册');
                     } catch (e) {
                         console.error('保存图片失败:', e);
-                        this.showToast('保存失败，请点击打开原图后长按保存');
+                        this.showToast('保存失败，请打开原图后长按保存');
                     }
                 },
 
                 /**
-                 * 打开结果原图（兜底入口）
+                 * 打开结果原图：站内预览层（避免微信 window.open 空链/拦截）
                  */
                 openTryOnOriginal() {
                     if (!this.tryOnResultUrl) {
                         this.showToast('暂无可查看的结果图');
                         return;
                     }
-                    const url = this.encodeImageURL(this.tryOnResultUrl);
-                    window.open(url, '_blank');
+                    const H = window.NanyiTryOnHelpers;
+                    const encoded = this.encodeImageURL(this.tryOnResultUrl);
+                    const absUrl = H ? H.toAbsoluteUrl(encoded) : (
+                        encoded.startsWith('http') ? encoded : (window.location.origin + encoded)
+                    );
+                    this.tryOnOriginalPreviewTip = '可双指缩放查看；长按可保存到相册';
+                    this.tryOnOriginalPreviewUrl = absUrl;
+                },
+
+                closeTryOnOriginalPreview() {
+                    const url = this.tryOnOriginalPreviewUrl;
+                    this.tryOnOriginalPreviewUrl = null;
+                    this.tryOnOriginalPreviewTip = '';
+                    if (url && String(url).indexOf('blob:') === 0) {
+                        try { URL.revokeObjectURL(url); } catch (e) { /* ignore */ }
+                    }
                 },
 
                 /**
@@ -5757,9 +6297,14 @@
 
                             if (status === 'completed') {
                                 // 任务已完成，显示结果
-                                const wasInBackground = !!this.tryOnBackgroundMode;
+                                const wasInBackground = !!this.tryOnBackgroundMode || !this.showTryOnModal;
                                 this.tryOnStatus = 'completed';
                                 this.tryOnBackgroundMode = false;
+                                if (wasInBackground) {
+                                    this.showTryOnModal = true;
+                                    document.body.style.overflow = 'hidden';
+                                    if (!silent) this.showToast('试衣效果已生成！');
+                                }
                                 // 如果响应里没有返回结果图 URL，则保留已有 URL，避免置空导致闪回
                                 const originalUrl = responseData.result_image_url || this.tryOnResultUrl;
                                 if (originalUrl) {
@@ -5873,6 +6418,7 @@
         // 挂载应用
         try {
             app.mount('#app');
+            document.documentElement.classList.add('vue-ready');
             // 移除调试日志
             
             // 初始化图片懒加载

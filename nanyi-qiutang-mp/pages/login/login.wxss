@@ -1,0 +1,166 @@
+@import "../../styles/icons.wxss";
+
+.page {
+  min-height: 100vh;
+  background: #F4F0E4;
+}
+
+.nav {
+  background: #F4F0E4;
+}
+
+.nav__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nav__back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+  margin-left: 20rpx;
+}
+
+.nav__back-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.body {
+  padding: 20rpx 50rpx 0;
+}
+
+/* 品牌 */
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30rpx 0 50rpx;
+}
+
+.brand__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 18rpx;
+  background: #9C2824;
+  color: #FCF8F0;
+  font-size: 56rpx;
+  font-family: "Songti SC", "STSong", serif;
+  line-height: 1;
+}
+
+.brand__name {
+  margin-top: 22rpx;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #191512;
+  letter-spacing: 6rpx;
+}
+
+.brand__en {
+  margin-top: 8rpx;
+  font-size: 20rpx;
+  color: #A98B4E;
+  letter-spacing: 3rpx;
+}
+
+.title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #191512;
+  letter-spacing: 3rpx;
+}
+
+.tip {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 23rpx;
+  color: #9A9184;
+}
+
+/* 表单 */
+.form {
+  margin-top: 30rpx;
+}
+
+.field {
+  margin-bottom: 26rpx;
+}
+
+.field__label {
+  display: block;
+  margin-bottom: 12rpx;
+  font-size: 23rpx;
+  color: #6B6257;
+  letter-spacing: 1rpx;
+}
+
+.field__input {
+  height: 92rpx;
+  padding: 0 28rpx;
+  border-radius: 16rpx;
+  background: #FFFDF7;
+  border: 1rpx solid #E7DFCF;
+  font-size: 28rpx;
+  color: #2A2521;
+}
+
+.field__ph {
+  color: #B4AA9A;
+}
+
+.error {
+  display: block;
+  margin-bottom: 18rpx;
+  font-size: 24rpx;
+  color: #9C2824;
+}
+
+.submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 96rpx;
+  margin-top: 10rpx;
+  border-radius: 48rpx;
+  background: #9C2824;
+  color: #FDF6EC;
+  font-size: 31rpx;
+  font-weight: 500;
+  letter-spacing: 4rpx;
+}
+
+.submit:active {
+  opacity: 0.86;
+}
+
+.submit--busy {
+  opacity: 0.6;
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  margin-top: 30rpx;
+}
+
+.link {
+  margin: 0 20rpx;
+  font-size: 25rpx;
+  color: #A98B4E;
+}
+
+.footer {
+  padding: 80rpx 0 60rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #B4AA9A;
+  letter-spacing: 1rpx;
+}

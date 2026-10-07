@@ -1,0 +1,33 @@
+<view class="fcard" bindtap="onTapCard" hover-class="fcard--hover" hover-stay-time="80">
+  <view class="fcard__cover-wrap">
+    <image class="fcard__cover" src="{{view.cover}}" mode="aspectFill" lazy-load />
+    <view class="fcard__badge" wx:if="{{view.seriesShort}}">{{view.seriesShort}}</view>
+  </view>
+
+  <view class="fcard__body">
+    <view class="fcard__head">
+      <text class="fcard__name ellipsis">{{view.displayName}}</text>
+      <view class="fcard__like">
+        <view class="fcard__heart icon icon--heart" />
+        <text class="fcard__like-num">{{view.likeCount}}</text>
+      </view>
+    </view>
+
+    <text class="fcard__meta ellipsis">{{view.meta}}</text>
+
+    <view class="fcard__actions" wx:if="{{showActions}}">
+      <view class="fcard__action" catchtap="onTapTryOn">
+        <view class="fcard__act-icon icon icon--tryon" />
+        <text>试穿</text>
+      </view>
+      <view class="fcard__action" catchtap="onTapShare">
+        <view class="fcard__act-icon icon icon--share" />
+        <text>分享</text>
+      </view>
+      <view class="fcard__action" catchtap="onTapComment">
+        <view class="fcard__act-icon icon icon--comment" />
+        <text>评价</text>
+      </view>
+    </view>
+  </view>
+</view>

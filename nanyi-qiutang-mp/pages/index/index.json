@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "fabric-card": "../../components/fabric-card/index"
+  },
+  "navigationStyle": "custom",
+  "enablePullDownRefresh": true,
+  "backgroundTextStyle": "dark",
+  "backgroundColor": "#F4F0E4"
+}

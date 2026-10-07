@@ -1,6 +1,8 @@
 /**
  * AI 试衣前端辅助（从 index.html 抽出的纯函数/存储层，供 Vue 方法复用）
  * Phase C / Q1：不改动业务流，仅外置可独立测试的逻辑。
+ *
+ * 调用方：frontend/index.html（saveTryOnResult / openTryOnOriginal / autoDownloadTryOnResult 等）
  */
 (function (window) {
     'use strict';
@@ -39,6 +41,59 @@
     function filenameFromUrl(url) {
         if (!url) return 'tryon.jpg';
         return (url.split('/').pop() || 'tryon.jpg').replace(/\\?.*$/, '');
+    }
+
+    function isWeChatUA() {
+        return /MicroMessenger/i.test(navigator.userAgent || '');
+    }
+
+    function isMobileUA() {
+        return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+    }
+
+    function triggerBlobDownload(blob, filename) {
+        var blobUrl = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename || 'tryon.jpg';
+        a.rel = 'noopener';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function () {
+            try { URL.revokeObjectURL(blobUrl); } catch (e) { /* ignore */ }
+        }, 2500);
+        return blobUrl;
+    }
+
+    function fetchImageBlob(url) {
+        return fetch(url, { mode: 'cors', credentials: 'omit', cache: 'force-cache' }).then(function (resp) {
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            return resp.blob();
+        });
+    }
+
+    function canvasBlobFromImageEl(imgEl, quality) {
+        return new Promise(function (resolve, reject) {
+            try {
+                if (!imgEl || !imgEl.naturalWidth) {
+                    reject(new Error('image not ready'));
+                    return;
+                }
+                var canvas = document.createElement('canvas');
+                canvas.width = imgEl.naturalWidth;
+                canvas.height = imgEl.naturalHeight;
+                var ctx = canvas.getContext('2d');
+                ctx.drawImage(imgEl, 0, 0);
+                canvas.toBlob(function (blob) {
+                    if (blob) resolve(blob);
+                    else reject(new Error('toBlob failed'));
+                }, 'image/jpeg', quality == null ? 0.92 : quality);
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
 
     function buildTaskStatePayload(state) {
@@ -98,6 +153,11 @@
         extractBaseBrandName: extractBaseBrandName,
         toAbsoluteUrl: toAbsoluteUrl,
         filenameFromUrl: filenameFromUrl,
+        isWeChatUA: isWeChatUA,
+        isMobileUA: isMobileUA,
+        triggerBlobDownload: triggerBlobDownload,
+        fetchImageBlob: fetchImageBlob,
+        canvasBlobFromImageEl: canvasBlobFromImageEl,
         persistTaskState: persistTaskState,
         clearTaskState: clearTaskState,
         loadTaskState: loadTaskState

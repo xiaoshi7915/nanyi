@@ -150,19 +150,19 @@
 
 .modal-category-skeleton-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-    gap: 0.4rem;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.65rem;
 }
 
 .modal-category-skeleton-grid .skeleton-image-item {
     height: auto;
     aspect-ratio: 3 / 4;
-    border-radius: 4px;
+    border-radius: 6px;
 }
 
 @media (max-width: 768px) {
     .modal-category-skeleton-grid {
-        grid-template-columns: repeat(auto-fill, minmax(max(48px, calc((100% - 36px) / 10)), 1fr));
-        gap: 4px;
+        grid-template-columns: repeat(auto-fill, minmax(max(100px, calc((100% - 16px) / 3)), 1fr));
+        gap: 0.5rem;
     }
 }

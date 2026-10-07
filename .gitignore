@@ -201,9 +201,29 @@ MANIFEST
 .cursor/debug.log
 # Cursor 本地 API 配置（含密钥，勿入库）
 .cursor/cursor.json
+# Cursor 本地 hooks 状态（勿入库）
+.cursor/hooks/
+
+# 本地会话/设备工具目录（勿入库）
+.revyl/
+
+# 私钥与凭证文件（勿入库）
+*.pem
+*.p12
+*.pfx
+*credentials*
+*secret*.json
+id_rsa
+id_rsa.pub
+*.key
+!package-lock.json
+!*.example
+!*.example.*
 
 # 环境变量文件
 .env
+.env.*
+!.env.example
 .env.local
 .env.development.local
 .env.test.local

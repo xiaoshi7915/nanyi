@@ -265,6 +265,30 @@
             color: white !important;
         }
         
+        .card-back-fab {
+            position: fixed;
+            top: calc(12px + env(safe-area-inset-top, 0px));
+            left: auto;
+            right: 12px;
+            z-index: 1100;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #667eea;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+            cursor: pointer;
+        }
+
+        .card-back-fab i {
+            font-size: 0.9rem;
+        }
+
         .share-actions {
             position: fixed;
             bottom: 20px;
@@ -346,17 +370,7 @@
         }
         
         .share-hint {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: none;
-            z-index: 999;
+            display: none !important;
         }
     </style>
     
@@ -369,6 +383,10 @@
 </head>
 <body>
     <div id="wx-share-summary" aria-hidden="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;"></div>
+    <button type="button" class="card-back-fab" onclick="goBackToSource()" aria-label="返回上一级">
+        <i class="fas fa-arrow-left"></i>
+        <span>返回</span>
+    </button>
     <div class="share-card" id="shareCard">
         <div class="card-header">
             <div class="watermark">南意秋棠</div>
@@ -424,12 +442,7 @@
         
         <div class="card-footer">
             <div class="footer-actions">
-                <div class="footer-left">
-                    <div class="home-link" onclick="goToHomepage()" style="cursor: pointer;">
-                        <i class="fas fa-home" style="font-size: 1rem; color: #667eea;"></i>
-                        <span style="margin-left: 5px; font-size: 0.8rem; color: #667eea;">主页</span>
-                    </div>
-                </div>
+                <div class="footer-left"></div>
                 <div class="footer-center">
                     <div class="logo-footer">
                         <i class="fas fa-leaf"></i>
@@ -447,22 +460,11 @@
         </div>
     </div>
     
-    <!-- 分享按钮 -->
+    <!-- 仅保留下载；微信转发请用右上角「…」 -->
     <div class="share-actions">
-        <button class="share-btn" onclick="shareCardPageAction()" title="分享卡片">
-            <i class="fas fa-share-alt" style="color: #07c160;"></i>
-        </button>
-        <button class="share-btn" onclick="downloadCard()" title="保存图片">
+        <button class="share-btn" onclick="downloadCard()" title="保存图片" aria-label="下载卡片">
             <i class="fas fa-download" style="color: #667eea;"></i>
         </button>
-        <button class="share-btn" onclick="shareToWechat()" title="微信分享">
-            <i class="fab fa-weixin" style="color: #07c160;"></i>
-        </button>
-    </div>
-    
-    <!-- 长按提示：OG-only 路径下引导用户用微信菜单分享 -->
-    <div class="share-hint" id="shareHint">
-        请点击右上角「…」→「转发给朋友 / 分享到朋友圈」，勿复制链接粘贴（粘贴只会显示网址）
     </div>
     
     <script>
@@ -490,7 +492,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadCardData();
             initializeShare();
-            showShareHint();
+            // 不再自动弹出黑色分享提示框
             
             // 如果URL包含debug参数，显示调试信息
             const urlParams = new URLSearchParams(window.location.search);
@@ -861,11 +863,11 @@
             
             shareCard.addEventListener('touchstart', function() {
                 longPressTimer = setTimeout(function() {
-                    // 长按逻辑
+                    // 长按逻辑：触发下载/保存
                     if (navigator.vibrate) {
                         navigator.vibrate(50);
                     }
-                    shareToWechat();
+                    downloadCard();
                 }, 800);
             });
             
@@ -1056,26 +1058,35 @@
             }, 2000);
         }
         
-        // 显示分享提示（OG-only：无 JSSDK 自定义分享时必须引导右上角菜单）
-        function showShareHint() {
-            setTimeout(() => {
-                const hint = document.getElementById('shareHint');
-                if (hint) {
-                    hint.style.display = 'block';
-                    setTimeout(() => {
-                        hint.style.display = 'none';
-                    }, 4000);
+        // 返回来源：详情/首页（优先 history.back，避免新开主页）
+        function goBackToSource() {
+            try {
+                const params = new URLSearchParams(window.location.search || '');
+                const from = params.get('from') || '';
+                const sameOriginRef = document.referrer && document.referrer.indexOf(window.location.origin) === 0;
+                if (sameOriginRef && window.history.length > 1) {
+                    window.history.back();
+                    return;
                 }
-                if (isWechatBrowser()) {
-                    showToast('请点击右上角「…」转发，即可展示链接卡片预览');
+                if (window.opener && !window.opener.closed) {
+                    window.close();
+                    return;
                 }
-            }, 1000);
+                const base = window.location.pathname.replace(/[^/]*$/, '');
+                // from=detail 时带回品牌参数，首页可再开详情（若已实现）
+                let target = base + 'index.html';
+                const brand = params.get('brand');
+                if (from === 'detail' && brand) {
+                    target += '?brand=' + encodeURIComponent(brand);
+                }
+                window.location.href = target;
+            } catch (e) {
+                window.location.href = window.location.origin + '/';
+            }
         }
-        
-        // 跳转到主页
+
         function goToHomepage() {
-            window.open(window.location.origin, '_blank');
-            showToast('正在跳转到主页...');
+            goBackToSource();
         }
         
         // 点赞功能

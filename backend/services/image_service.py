@@ -7,7 +7,7 @@
 import os
 from urllib.parse import quote, unquote
 import re
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 from backend.services.base_service import BaseService
 
@@ -25,40 +25,63 @@ class ImageService(BaseService):
             images_dir = os.path.join(project_root, 'frontend', 'static', 'images')
         
         self.images_dir = images_dir
-        self.allowed_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'}
+        self.image_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'}
+        self.video_extensions = {'mp4', 'webm'}
+        self.allowed_extensions = self.image_extensions | self.video_extensions
         
         self.log_info(f"本地图片服务初始化: {self.images_dir}")
+
+    @staticmethod
+    def get_media_type(filename: str) -> str:
+        """按后缀判断 media_type：image | video"""
+        if not filename or '.' not in filename:
+            return 'image'
+        ext = filename.rsplit('.', 1)[1].lower()
+        if ext in {'mp4', 'webm'}:
+            return 'video'
+        return 'image'
+
+    @staticmethod
+    def is_video_media(item: Dict) -> bool:
+        """判断媒体项是否为视频文件（不把「视频」类型封面图算作视频）"""
+        if not item:
+            return False
+        if item.get('media_type') == 'video':
+            return True
+        if item.get('media_type') == 'image':
+            return False
+        filename = str(item.get('filename') or item.get('relative_path') or item.get('url') or '')
+        return ImageService.get_media_type(filename) == 'video'
     
     def parse_filename(self, filename: str) -> Dict[str, str]:
         """解析文件名获取品牌信息"""
         name_without_ext = os.path.splitext(filename)[0]
-        
-        # 匹配格式1: 品牌名-图片类型-编号
-        pattern1 = r'^([^-]+)-([^-]+)-(\d+)$'
-        match1 = re.match(pattern1, name_without_ext)
-        
-        if match1:
+
+        # 优先匹配花色格式: 品牌名(颜色)-图片类型-编号
+        # （须在无括号规则之前，否则「碧梧(山雪)-视频-01」会被误解析为 brand=碧梧(山雪)）
+        pattern_color = r'^([^(]+)\(([^)]+)\)-([^-]+)-(\d+)$'
+        match_color = re.match(pattern_color, name_without_ext)
+        if match_color:
             return {
-                'brand_name': match1.group(1).strip(),
-                'image_type': match1.group(2).strip(),
-                'number': match1.group(3).strip(),
+                'brand_name': match_color.group(1).strip(),
+                'color': match_color.group(2).strip(),
+                'image_type': match_color.group(3).strip(),
+                'number': match_color.group(4).strip(),
+                'has_color': True
+            }
+
+        # 无花色: 品牌名-图片类型-编号
+        pattern_plain = r'^([^-]+)-([^-]+)-(\d+)$'
+        match_plain = re.match(pattern_plain, name_without_ext)
+        if match_plain:
+            return {
+                'brand_name': match_plain.group(1).strip(),
+                'image_type': match_plain.group(2).strip(),
+                'number': match_plain.group(3).strip(),
                 'color': None,
                 'has_color': False
             }
-        
-        # 匹配格式2: 品牌名(颜色)-图片类型-编号
-        pattern2 = r'^([^(]+)\(([^)]+)\)-([^-]+)-(\d+)$'
-        match2 = re.match(pattern2, name_without_ext)
-        
-        if match2:
-            return {
-                'brand_name': match2.group(1).strip(),
-                'color': match2.group(2).strip(),
-                'image_type': match2.group(3).strip(),
-                'number': match2.group(4).strip(),
-                'has_color': True
-            }
-        
+
         return {
             'brand_name': name_without_ext,
             'image_type': '其他',
@@ -68,9 +91,54 @@ class ImageService(BaseService):
         }
     
     def is_allowed_file(self, filename: str) -> bool:
-        """检查文件是否为允许的图片格式"""
+        """检查文件是否为允许的图片/视频格式"""
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in self.allowed_extensions
-    
+
+    def _build_media_entry(self, filename: str, relative_path: str, brand_name: str, parsed_info: Dict, size: int) -> Dict:
+        """构建统一媒体条目（含 media_type）"""
+        media_type = self.get_media_type(filename)
+        image_type = parsed_info.get('image_type') or '其他'
+        if media_type == 'video' and image_type == '其他':
+            image_type = '视频'
+        url = self.encode_static_image_url(relative_path)
+        return {
+            'filename': filename,
+            'relative_path': relative_path,
+            'brand_name': brand_name,
+            'image_type': image_type,
+            'media_type': media_type,
+            'color': parsed_info.get('color'),
+            'has_color': parsed_info.get('has_color', False),
+            'size': size,
+            'url': url,
+            'thumbnail': url,
+            'original': url,
+            'poster': None,
+        }
+
+    def _attach_video_posters(self, media_list: List[Dict]) -> List[Dict]:
+        """为视频挂载同名封面图（品牌名-视频-01.jpg）"""
+        if not media_list:
+            return media_list
+        image_by_stem: Dict[str, Dict] = {}
+        for item in media_list:
+            if self.is_video_media(item):
+                continue
+            relative_path = str(item.get('relative_path') or '')
+            stem = os.path.splitext(relative_path)[0]
+            if stem:
+                image_by_stem[stem] = item
+        for item in media_list:
+            if not self.is_video_media(item):
+                continue
+            relative_path = str(item.get('relative_path') or '')
+            stem = os.path.splitext(relative_path)[0]
+            poster_item = image_by_stem.get(stem)
+            if poster_item:
+                item['poster'] = poster_item.get('url') or poster_item.get('thumbnail')
+                poster_item['is_video_poster'] = True
+        return media_list
+
     def get_all_images(self) -> List[Dict]:
         """获取所有图片信息 - 带缓存的本地版本"""
         # 使用基础服务的缓存方法（统一命名空间）
@@ -106,27 +174,21 @@ class ImageService(BaseService):
             'logo.png', 'logo.jpg', 'logo.jpeg', 'logo.svg'  # 也排除logo文件
         }
         
-        # 扫描根目录下的图片文件
+        # 扫描根目录下的媒体文件
         for filename in os.listdir(self.images_dir):
             if self.is_allowed_file(filename) and filename.lower() not in social_icons:
                 filepath = os.path.join(self.images_dir, filename)
                 if os.path.isfile(filepath):
                     parsed_info = self.parse_filename(filename)
-                    images.append({
-                        'filename': filename,
-                        'relative_path': filename,
-                        'brand_name': parsed_info['brand_name'],
-                        'image_type': parsed_info['image_type'],
-                        'color': parsed_info['color'],
-                        'has_color': parsed_info['has_color'],
-                        'size': os.path.getsize(filepath),
-                        # 本地图片URL
-                        'url': self.encode_static_image_url(filename),
-                        'thumbnail': self.encode_static_image_url(filename),
-                        'original': self.encode_static_image_url(filename)
-                    })
+                    images.append(self._build_media_entry(
+                        filename=filename,
+                        relative_path=filename,
+                        brand_name=parsed_info['brand_name'],
+                        parsed_info=parsed_info,
+                        size=os.path.getsize(filepath),
+                    ))
         
-        # 扫描子文件夹中的图片
+        # 扫描子文件夹中的媒体文件
         for item in os.listdir(self.images_dir):
             item_path = os.path.join(self.images_dir, item)
             if os.path.isdir(item_path):
@@ -136,21 +198,18 @@ class ImageService(BaseService):
                         if os.path.isfile(filepath):
                             parsed_info = self.parse_filename(filename)
                             relative_path = f"{item}/{filename}"
-                            images.append({
-                                'filename': filename,
-                                'relative_path': relative_path,
-                                'brand_name': parsed_info['brand_name'] or item,
-                                'image_type': parsed_info['image_type'],
-                                'color': parsed_info['color'],
-                                'has_color': parsed_info['has_color'],
-                                'size': os.path.getsize(filepath),
-                                # 本地图片URL
-                                'url': self.encode_static_image_url(relative_path),
-                                'thumbnail': self.encode_static_image_url(relative_path),
-                                'original': self.encode_static_image_url(relative_path)
-                            })
-        
-        self.log_info(f"本地图片扫描完成: 共{len(images)}张图片")
+                            images.append(self._build_media_entry(
+                                filename=filename,
+                                relative_path=relative_path,
+                                brand_name=parsed_info['brand_name'] or item,
+                                parsed_info=parsed_info,
+                                size=os.path.getsize(filepath),
+                            ))
+
+        images = self._attach_video_posters(images)
+        image_count = sum(1 for m in images if not self.is_video_media(m))
+        video_count = len(images) - image_count
+        self.log_info(f"本地媒体扫描完成: 共{len(images)}个（图片{image_count}/视频{video_count}）")
         return sorted(images, key=lambda x: x['brand_name'] or '')
     
     def get_brand_images(self, brand_name: str) -> List[Dict]:
@@ -206,7 +265,7 @@ class ImageService(BaseService):
     
     def sort_images_by_priority(self, images: List[Dict]) -> List[Dict]:
         """按图片类型优先级排序"""
-        # 定义图片类型优先级
+        # 定义图片类型优先级（视频排最后，详情由前端单独分区）
         type_priority = {
             '概念图': 1,
             '设计图': 2,
@@ -216,13 +275,33 @@ class ImageService(BaseService):
             '买家秀图': 6,
             '细节图': 7,
             '效果图': 8,
-            '其他': 9
+            '其他': 9,
+            '视频': 99,
         }
         
         def get_priority(img):
-            return type_priority.get(img.get('image_type', '其他'), 6)
+            if self.is_video_media(img):
+                return 99
+            return type_priority.get(img.get('image_type', '其他'), 9)
         
         return sorted(images, key=get_priority)
+
+    @staticmethod
+    def split_images_and_videos(media_list: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
+        """拆分图片与视频列表；同名封面图仅作 poster，不进入图片 gallery"""
+        images: List[Dict] = []
+        videos: List[Dict] = []
+        for item in media_list or []:
+            if ImageService.is_video_media(item):
+                videos.append(item)
+            elif item.get('is_video_poster'):
+                continue
+            elif (item.get('image_type') or '') == '视频':
+                # 未匹配到视频的「视频」类型静图也不进 gallery
+                continue
+            else:
+                images.append(item)
+        return images, videos
     
 
     @staticmethod

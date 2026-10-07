@@ -1,0 +1,114 @@
+@import "../../styles/icons.wxss";
+
+.fcard {
+  background: #FCF8F0;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(120, 100, 70, 0.06);
+  transition: opacity 0.15s;
+}
+
+.fcard--hover {
+  opacity: 0.9;
+}
+
+/* 图片区：比例贴近设计图（高略大于宽） */
+.fcard__cover-wrap {
+  position: relative;
+  width: 100%;
+  padding-bottom: 106%;
+  background: #EDE7DA;
+}
+
+.fcard__cover {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 左上角系列角标 */
+.fcard__badge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  padding: 8rpx 18rpx 8rpx 16rpx;
+  background: rgba(36, 64, 72, 0.82);
+  color: #F3EEE0;
+  font-size: 21rpx;
+  letter-spacing: 2rpx;
+  border-bottom-right-radius: 16rpx;
+}
+
+.fcard__body {
+  padding: 20rpx 20rpx 16rpx;
+}
+
+.fcard__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.fcard__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #191512;
+  letter-spacing: 1rpx;
+}
+
+.fcard__like {
+  display: flex;
+  align-items: center;
+  margin-left: 12rpx;
+}
+
+.fcard__heart {
+  width: 28rpx;
+  height: 28rpx;
+  background-color: #9C2824;
+}
+
+.fcard__like-num {
+  margin-left: 6rpx;
+  font-size: 26rpx;
+  color: #9C2824;
+}
+
+.fcard__meta {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 22rpx;
+  color: #9A9184;
+  letter-spacing: 0.5rpx;
+}
+
+.fcard__actions {
+  display: flex;
+  align-items: center;
+  margin-top: 18rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #EDE6D7;
+}
+
+.fcard__action {
+  display: flex;
+  align-items: center;
+  margin-right: 28rpx;
+  font-size: 22rpx;
+  color: #A98B4E;
+}
+
+.fcard__action:last-child {
+  margin-right: 0;
+}
+
+.fcard__act-icon {
+  width: 26rpx;
+  height: 26rpx;
+  margin-right: 8rpx;
+  background-color: #A98B4E;
+}

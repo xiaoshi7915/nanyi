@@ -1,0 +1,114 @@
+<view class="page">
+  <!-- 顶部标题 -->
+  <view class="header" style="padding-top:{{navTotalHeight}}px">
+    <text class="header__title">AI 试穿</text>
+    <text class="header__sub">上传照片，生成专属上身效果</text>
+  </view>
+
+  <view class="body">
+    <!-- 1 选择款式 -->
+    <view class="step">
+      <view class="step__no">1</view>
+      <text class="step__title">选择款式</text>
+      <view class="step__more" bindtap="onToggleAllStyles">
+        <text>{{showAllStyles ? '收起' : '全部款式'}}</text>
+        <view class="step__more-arrow icon icon--chevron" />
+      </view>
+    </view>
+
+    <scroll-view class="styles" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view
+        class="style {{activeStyle.brandName === item.brandName ? 'style--active' : ''}}"
+        wx:for="{{displayStyles}}"
+        wx:key="brandName"
+        data-index="{{index}}"
+        bindtap="onSelectStyle"
+      >
+        <view class="style__thumb">
+          <image class="style__img" src="{{item.previewImage}}" mode="aspectFill" lazy-load />
+          <view class="style__check icon icon--check" wx:if="{{activeStyle.brandName === item.brandName}}" />
+        </view>
+        <text class="style__name ellipsis">{{item.color ? item.baseBrand + ' · ' + item.color : item.baseBrand}}</text>
+      </view>
+      <view class="style-empty" wx:if="{{!loadingStyles && !displayStyles.length}}">暂无款式</view>
+      <view class="style-empty" wx:if="{{loadingStyles}}">加载中…</view>
+    </scroll-view>
+
+    <!-- 2 上传照片 -->
+    <view class="step">
+      <view class="step__no">2</view>
+      <text class="step__title">上传照片</text>
+    </view>
+
+    <view class="upload" wx:if="{{!photoPath}}" bindtap="onChoosePhoto">
+      <view class="upload__icon icon icon--camera" />
+      <text class="upload__title">点击上传照片</text>
+      <text class="upload__tip">支持全身、半身或头像，结果为全身效果</text>
+      <text class="upload__tip">支持 JPG / PNG / WEBP，最大 10MB</text>
+    </view>
+
+    <view class="upload upload--filled" wx:else>
+      <image class="upload__preview" src="{{photoPath}}" mode="aspectFill" bindtap="onPreviewPhoto" />
+      <view class="upload__remove" catchtap="onRemovePhoto">
+        <view class="upload__remove-icon icon icon--close" />
+      </view>
+      <text class="upload__name ellipsis">{{photoName}}</text>
+    </view>
+
+    <!-- 生成 -->
+    <view
+      class="generate {{submitting || status === 'processing' ? 'generate--busy' : ''}}"
+      bindtap="onStart"
+    >
+      <view class="generate__icon icon icon--wand" />
+      <text>开始生成试衣效果</text>
+    </view>
+    <text class="generate__tip">生成中请耐心等待，通常需要 1-3 分钟</text>
+
+    <!-- 试衣效果 -->
+    <view class="result" wx:if="{{status}}">
+      <view class="result__head">
+        <text class="result__title">试衣效果</text>
+        <text class="result__badge {{status === 'completed' ? 'is-done' : ''}}">
+          {{status === 'completed' ? '已生成' : (status === 'failed' ? '生成失败' : '生成中')}}
+        </text>
+      </view>
+
+      <view class="result__main">
+        <view class="result__media">
+          <image
+            class="result__img"
+            wx:if="{{resultUrl}}"
+            src="{{resultUrl}}"
+            mode="aspectFill"
+            bindtap="onPreviewResult"
+          />
+          <view class="result__placeholder" wx:else>
+            <view class="result__spinner" wx:if="{{status === 'processing'}}" />
+            <text class="result__pct" wx:if="{{status === 'processing'}}">{{progress}}%</text>
+            <text class="result__pct" wx:elif="{{status === 'failed'}}">重试</text>
+          </view>
+        </view>
+
+        <view class="result__info">
+          <text class="result__label">试穿款式 · {{activeStyle.baseBrand}}</text>
+          <text class="result__desc" wx:if="{{status === 'completed'}}">试衣结果仅本次可见，请及时保存到相册；关闭弹窗后将无法再次查看。</text>
+          <text class="result__desc" wx:elif="{{status === 'processing'}}">{{statusText}}</text>
+          <text class="result__desc result__desc--error" wx:else>{{errorMessage || '生成失败，请重试'}}</text>
+
+          <view class="result__actions" wx:if="{{status === 'completed'}}">
+            <view class="result__btn result__btn--ghost" bindtap="onRegenerate">重新生成</view>
+            <view class="result__btn result__btn--primary" bindtap="onSaveToAlbum">保存到相册</view>
+          </view>
+          <view class="result__actions" wx:elif="{{status === 'failed'}}">
+            <view class="result__btn result__btn--primary result__btn--full" bindtap="onRegenerate">重新生成</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer" style="padding-bottom:{{safeBottom + 200}}px">
+    <text>© 2017 - 2026 南意秋棠</text>
+  </view>
+</view>

@@ -405,8 +405,8 @@
     }
 
     .image-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
-        gap: 0.35rem;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.5rem;
     }
 
     .hero-section {
@@ -489,8 +489,8 @@
     }
 
     .image-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
-        gap: 0.3rem;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.45rem;
     }
 
     .section-title {
@@ -577,22 +577,28 @@
     .brands-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
-    /* 详情缩略图：移动端高密度横排，约一行最多 10 张 */
+    /* 详情缩略图：移动端约一行 3 张，便于点选浏览 */
     .modal-body .image-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(max(48px, calc((100% - 36px) / 10)), 1fr)) !important;
-        gap: 4px !important;
+        grid-template-columns: repeat(auto-fill, minmax(max(100px, calc((100% - 16px) / 3)), 1fr)) !important;
+        gap: 0.5rem !important;
     }
     .modal-body .gallery-item {
         aspect-ratio: 3 / 4;
-        border-radius: 4px;
+        border-radius: 6px;
     }
     .modal-body .image-actions {
-        top: 2px;
-        right: 2px;
+        top: 4px;
+        right: 4px;
     }
     .modal-body .action-btn {
-        width: 22px;
-        height: 22px;
-        font-size: 0.65rem;
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+    .modal-body .video-section .video-column {
+        max-width: 100%;
+    }
+    .modal-body .detail-video {
+        border-radius: 0;
     }
 }

@@ -85,8 +85,14 @@ class BrandController:
             logger.warning(f"品牌不存在: {decoded_brand_name}")
             return None
         
-        # 从brand_info中获取images
-        brand_images = brand_info.get('images', [])
+        # 从brand_info中获取images，拆分视频
+        from backend.services.image_service import ImageService
+        brand_media = brand_info.get('images', [])
+        brand_images, brand_videos = ImageService.split_images_and_videos(brand_media)
+        brand_info['images'] = brand_images
+        brand_info['videos'] = brand_videos
+        brand_info['imageCount'] = len(brand_images)
+        brand_info['videoCount'] = len(brand_videos)
         
         # 构建品牌信息字典
         brand_info_dict = {
@@ -104,14 +110,19 @@ class BrandController:
             logger.warning(f"获取点赞数失败: {e}")
             brand_info_dict['like_count'] = 0
         
-        logger.debug(f"返回品牌详情成功: {brand_info.get('name', '未知')}, 图片数量: {len(brand_images)}")
+        logger.debug(
+            f"返回品牌详情成功: {brand_info.get('name', '未知')}, "
+            f"图片数量: {len(brand_images)}, 视频数量: {len(brand_videos)}"
+        )
         
         # 构建返回结果
         result = {
             'success': True,
             'brand_info': brand_info_dict,
             'images': brand_images,
-            'imageCount': len(brand_images)
+            'videos': brand_videos,
+            'imageCount': len(brand_images),
+            'videoCount': len(brand_videos),
         }
         
         # 缓存结果（24 小时，图片与元数据变更频率低）
@@ -141,18 +152,21 @@ class BrandController:
         base_brand_name = decoded_brand_name.split('(')[0] if '(' in decoded_brand_name else decoded_brand_name
 
         image_service = ImageService()
-        brand_images = image_service.get_brand_images(decoded_brand_name)
-        if not brand_images and base_brand_name != decoded_brand_name:
-            brand_images = image_service.get_brand_images(base_brand_name)
+        brand_media = image_service.get_brand_images(decoded_brand_name)
+        if not brand_media and base_brand_name != decoded_brand_name:
+            brand_media = image_service.get_brand_images(base_brand_name)
 
-        if not brand_images:
+        if not brand_media:
             logger.warning(f"品牌图片不存在: {decoded_brand_name}")
             return None
 
+        brand_images, brand_videos = ImageService.split_images_and_videos(brand_media)
         result = {
             'success': True,
             'images': brand_images,
+            'videos': brand_videos,
             'imageCount': len(brand_images),
+            'videoCount': len(brand_videos),
         }
         cache_service.set(cache_key, result, ttl=86400)
         return result

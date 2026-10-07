@@ -1,0 +1,213 @@
+/**
+ * 图标系统
+ * 采用 SVG 内联遮罩（-webkit-mask）实现：零图片资源、任意着色、矢量清晰。
+ * 用法：<view class="icon icon--home icon-c-primary" />
+ * 注：mask 仅取形状透明度，SVG 内 fill 统一为 black，颜色由 background-color 决定。
+ * 兼容性：data URI 未做百分号编码，WebView 内核可正常解析；若个别机型不显示，
+ *        可把对应 mask-image 换成 base64 形式（data:image/svg+xml;base64,...）。
+ */
+
+.icon {
+  display: inline-block;
+  width: 40rpx;
+  height: 40rpx;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  flex-shrink: 0;
+}
+
+/* ---------- 颜色 ---------- */
+.icon-c-ink { background-color: #2A2521; }
+.icon-c-ink2 { background-color: #6B6257; }
+.icon-c-ink3 { background-color: #9A9184; }
+.icon-c-primary { background-color: #9C2824; }
+.icon-c-gold { background-color: #A98B4E; }
+.icon-c-green { background-color: #244048; }
+.icon-c-light { background-color: #FCF8F0; }
+.icon-c-white { background-color: #FFFDF7; }
+
+/* ---------- 形状 ---------- */
+/* 首页 */
+.icon--home {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.6 2.2 11.1h2.7v9.3h5.6v-5.6h3v5.6h5.6v-9.3h2.7z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.6 2.2 11.1h2.7v9.3h5.6v-5.6h3v5.6h5.6v-9.3h2.7z' fill='black'/></svg>");
+}
+
+/* 试穿（旗袍人形） */
+.icon--dress {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='4.2' r='2.9' fill='black'/><path d='M9.1 8.4h5.8l1.8 4.6-1.5.6 1.7 8.2h-9.8l1.7-8.2-1.5-.6z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='4.2' r='2.9' fill='black'/><path d='M9.1 8.4h5.8l1.8 4.6-1.5.6 1.7 8.2h-9.8l1.7-8.2-1.5-.6z' fill='black'/></svg>");
+}
+
+/* 我的（人形） */
+.icon--user {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='7.6' r='4.2' fill='black'/><path d='M3.6 21.2c0-4.5 3.8-7.8 8.4-7.8s8.4 3.3 8.4 7.8z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='7.6' r='4.2' fill='black'/><path d='M3.6 21.2c0-4.5 3.8-7.8 8.4-7.8s8.4 3.3 8.4 7.8z' fill='black'/></svg>");
+}
+
+/* 我的（圆形边框人形，用于顶部导航） */
+.icon--user-circle {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.2A9.8 9.8 0 1 0 21.8 12 9.8 9.8 0 0 0 12 2.2zm0 4.3a3.5 3.5 0 1 1-3.5 3.5A3.5 3.5 0 0 1 12 6.5zm0 12.9a8.1 8.1 0 0 1-5.3-2c.8-2.1 3-3.4 5.3-3.4s4.5 1.3 5.3 3.4a8.1 8.1 0 0 1-5.3 2z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.2A9.8 9.8 0 1 0 21.8 12 9.8 9.8 0 0 0 12 2.2zm0 4.3a3.5 3.5 0 1 1-3.5 3.5A3.5 3.5 0 0 1 12 6.5zm0 12.9a8.1 8.1 0 0 1-5.3-2c.8-2.1 3-3.4 5.3-3.4s4.5 1.3 5.3 3.4a8.1 8.1 0 0 1-5.3 2z' fill='black'/></svg>");
+}
+
+/* 客服（耳机） */
+.icon--service {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.4A8.6 8.6 0 0 0 3.4 11v4.9A3.1 3.1 0 0 0 6.5 19h1.7v-8H5.4v0A6.6 6.6 0 0 1 12 4.4a6.6 6.6 0 0 1 6.6 6.6v0h-2.8v8h1.7a3.1 3.1 0 0 0 3.1-3.1V11A8.6 8.6 0 0 0 12 2.4z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.4A8.6 8.6 0 0 0 3.4 11v4.9A3.1 3.1 0 0 0 6.5 19h1.7v-8H5.4v0A6.6 6.6 0 0 1 12 4.4a6.6 6.6 0 0 1 6.6 6.6v0h-2.8v8h1.7a3.1 3.1 0 0 0 3.1-3.1V11A8.6 8.6 0 0 0 12 2.4z' fill='black'/></svg>");
+}
+
+/* 搜索 */
+.icon--search {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M10.6 2.8a7.8 7.8 0 1 1-4.7 14l-3.1 3.1-1.5-1.5 3.1-3.1a7.8 7.8 0 0 1 6.2-12.5zm0 2.1a5.7 5.7 0 1 0 0 11.4 5.7 5.7 0 0 0 0-11.4z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M10.6 2.8a7.8 7.8 0 1 1-4.7 14l-3.1 3.1-1.5-1.5 3.1-3.1a7.8 7.8 0 0 1 6.2-12.5zm0 2.1a5.7 5.7 0 1 0 0 11.4 5.7 5.7 0 0 0 0-11.4z' fill='black'/></svg>");
+}
+
+/* 分享 */
+.icon--share {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17.8 2.4a3.6 3.6 0 0 1 1.1 7 3.6 3.6 0 0 1-4.6-2.2L9.9 9.4a3.7 3.7 0 0 1 0 5.2l4.4 2.2a3.6 3.6 0 1 1-.9 2.2L9 16.8a3.6 3.6 0 1 1 0-9.6l4.4-2.2a3.6 3.6 0 0 1 4.4-2.6z'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M17.8 2.4a3.6 3.6 0 0 1 1.1 7 3.6 3.6 0 0 1-4.6-2.2L9.9 9.4a3.7 3.7 0 0 1 0 5.2l4.4 2.2a3.6 3.6 0 1 1-.9 2.2L9 16.8a3.6 3.6 0 1 1 0-9.6l4.4-2.2a3.6 3.6 0 0 1 4.4-2.6z'/></svg>");
+}
+
+/* 评价（气泡） */
+.icon--comment {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2A9 9 0 0 1 21 12a9 9 0 0 1-9 8.8 9.6 9.6 0 0 1-3-.5l-4.6 1.5 1.2-4A8.7 8.7 0 0 1 3 12a9 9 0 0 1 9-8.8zm0 2A7 7 0 0 0 5 12a6.7 6.7 0 0 0 1.4 4.2l.3.4-.7 2.3 2.5-.8.4.2A7.6 7.6 0 0 0 12 18.8 7 7 0 0 0 19 12a7 7 0 0 0-7-6.8z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2A9 9 0 0 1 21 12a9 9 0 0 1-9 8.8 9.6 9.6 0 0 1-3-.5l-4.6 1.5 1.2-4A8.7 8.7 0 0 1 3 12a9 9 0 0 1 9-8.8zm0 2A7 7 0 0 0 5 12a6.7 6.7 0 0 0 1.4 4.2l.3.4-.7 2.3 2.5-.8.4.2A7.6 7.6 0 0 0 12 18.8 7 7 0 0 0 19 12a7 7 0 0 0-7-6.8z' fill='black'/></svg>");
+}
+
+/* 爱心（实心） */
+.icon--heart {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 20.6 10.6 19.3C5.4 14.7 2.2 11.8 2.2 8.2A5.3 5.3 0 0 1 7.5 2.9c1.7 0 3.3.8 4.5 2.1a5.9 5.9 0 0 1 4.5-2.1 5.3 5.3 0 0 1 5.3 5.3c0 3.6-3.2 6.5-8.4 11.1z'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 20.6 10.6 19.3C5.4 14.7 2.2 11.8 2.2 8.2A5.3 5.3 0 0 1 7.5 2.9c1.7 0 3.3.8 4.5 2.1a5.9 5.9 0 0 1 4.5-2.1 5.3 5.3 0 0 1 5.3 5.3c0 3.6-3.2 6.5-8.4 11.1z'/></svg>");
+}
+
+/* 爱心（描边） */
+.icon--heart-line {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 20.6 10.6 19.3C5.4 14.7 2.2 11.8 2.2 8.2A5.3 5.3 0 0 1 7.5 2.9c1.7 0 3.3.8 4.5 2.1a5.9 5.9 0 0 1 4.5-2.1 5.3 5.3 0 0 1 5.3 5.3c0 3.6-3.2 6.5-8.4 11.1zm0-2.8c3.8-3.4 6-5.7 6-8.3a3.2 3.2 0 0 0-3.2-3.2c-1.1 0-2.2.6-2.8 1.6-.6-1-1.7-1.6-2.8-1.6A3.2 3.2 0 0 0 6 9.5c0 2.6 2.2 4.9 6 8.3z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 20.6 10.6 19.3C5.4 14.7 2.2 11.8 2.2 8.2A5.3 5.3 0 0 1 7.5 2.9c1.7 0 3.3.8 4.5 2.1a5.9 5.9 0 0 1 4.5-2.1 5.3 5.3 0 0 1 5.3 5.3c0 3.6-3.2 6.5-8.4 11.1zm0-2.8c3.8-3.4 6-5.7 6-8.3a3.2 3.2 0 0 0-3.2-3.2c-1.1 0-2.2.6-2.8 1.6-.6-1-1.7-1.6-2.8-1.6A3.2 3.2 0 0 0 6 9.5c0 2.6 2.2 4.9 6 8.3z' fill='black'/></svg>");
+}
+
+/* 店铺 */
+.icon--shop {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4.2 3h15.6l1.6 5.2a3.2 3.2 0 0 1-1.3 3.5V21H4V11.7A3.2 3.2 0 0 1 2.6 8.2zm1.9 2-.8 2.6a1.3 1.3 0 0 0 2.5.2l.6-2.8zm5.3 0h-.1l-.4 2.8a1.3 1.3 0 0 0 2.5 0l-.3-2.8zm4.7 0-.3 2.8a1.3 1.3 0 0 0 2.6-.1L18 5zm-8.1 8v6h9.4v-6a3.3 3.3 0 0 1-2.6-.5 3.3 3.3 0 0 1-4 0 3.3 3.3 0 0 1-2.8.5z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4.2 3h15.6l1.6 5.2a3.2 3.2 0 0 1-1.3 3.5V21H4V11.7A3.2 3.2 0 0 1 2.6 8.2zm1.9 2-.8 2.6a1.3 1.3 0 0 0 2.5.2l.6-2.8zm5.3 0h-.1l-.4 2.8a1.3 1.3 0 0 0 2.5 0l-.3-2.8zm4.7 0-.3 2.8a1.3 1.3 0 0 0 2.6-.1L18 5zm-8.1 8v6h9.4v-6a3.3 3.3 0 0 1-2.6-.5 3.3 3.3 0 0 1-4 0 3.3 3.3 0 0 1-2.8.5z' fill='black'/></svg>");
+}
+
+/* 手提袋 */
+.icon--bag {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7.4 6.6V5.4a4.6 4.6 0 0 1 9.2 0v1.2h2.6l1 14.2H3.8l1-14.2zM9.4 5.4v1.2h5.2V5.4a2.6 2.6 0 0 0-5.2 0z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M7.4 6.6V5.4a4.6 4.6 0 0 1 9.2 0v1.2h2.6l1 14.2H3.8l1-14.2zM9.4 5.4v1.2h5.2V5.4a2.6 2.6 0 0 0-5.2 0z' fill='black'/></svg>");
+}
+
+/* 书本 */
+.icon--book {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 3.4h6.6a3 3 0 0 1 1.4.4 3 3 0 0 1 1.4-.4H20v14.4h-6.6a1.6 1.6 0 0 0-1.4.9 1.6 1.6 0 0 0-1.4-.9H4zm2 2v10.4h4.6a3.6 3.6 0 0 1 1.4.3V6.6a1.4 1.4 0 0 0-1.4-1.2zm7.4 1.2v9.5a3.6 3.6 0 0 1 1.4-.3H18V5.4h-4.6a1.4 1.4 0 0 0-1.4 1.2z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M4 3.4h6.6a3 3 0 0 1 1.4.4 3 3 0 0 1 1.4-.4H20v14.4h-6.6a1.6 1.6 0 0 0-1.4.9 1.6 1.6 0 0 0-1.4-.9H4zm2 2v10.4h4.6a3.6 3.6 0 0 1 1.4.3V6.6a1.4 1.4 0 0 0-1.4-1.2zm7.4 1.2v9.5a3.6 3.6 0 0 1 1.4-.3H18V5.4h-4.6a1.4 1.4 0 0 0-1.4 1.2z' fill='black'/></svg>");
+}
+
+/* 定位 */
+.icon--pin {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.4a7.6 7.6 0 0 1 7.6 7.6c0 4.4-3.9 8.9-7 11.7l-.6.5-.6-.5c-3.1-2.8-7-7.3-7-11.7A7.6 7.6 0 0 1 12 2.4zm0 2.4a5.2 5.2 0 0 0-5.2 5.2c0 3 2.6 6.5 5.2 9.1 2.6-2.6 5.2-6.1 5.2-9.1A5.2 5.2 0 0 0 12 4.8zm0 2.6a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2.4a7.6 7.6 0 0 1 7.6 7.6c0 4.4-3.9 8.9-7 11.7l-.6.5-.6-.5c-3.1-2.8-7-7.3-7-11.7A7.6 7.6 0 0 1 12 2.4zm0 2.4a5.2 5.2 0 0 0-5.2 5.2c0 3 2.6 6.5 5.2 9.1 2.6-2.6 5.2-6.1 5.2-9.1A5.2 5.2 0 0 0 12 4.8zm0 2.6a2.6 2.6 0 1 1 0 5.2 2.6 2.6 0 0 1 0-5.2z' fill='black'/></svg>");
+}
+
+/* 微信（气泡） */
+.icon--chat {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.3 3.2c4.1 0 7.4 2.7 7.4 6 0 3.4-3.3 6.1-7.4 6.1a9 9 0 0 1-1.9-.2l-2.9 1.6.7-2.5A5.9 5.9 0 0 1 1.9 9.2c0-3.3 3.3-6 7.4-6zm0 1.9c-3.1 0-5.5 1.9-5.5 4.1 0 1.5 1 2.8 2.5 3.5l.6.3-.4 1.4 1.6-.9.3.1a7.4 7.4 0 0 0 1 .1c3.1 0 5.5-1.9 5.5-4.1s-2.4-4.5-5.6-4.5zm8.6 4.6c3 0 5.4 2 5.4 4.4a4.3 4.3 0 0 1-1.9 3.5l.5 1.9-2.2-1.2a6.6 6.6 0 0 1-1.8.2c-3 0-5.4-2-5.4-4.4v-.4h1.9v.4c0 1.5 1.7 2.6 3.5 2.6a4.8 4.8 0 0 0 1.3-.2l.4-.1 1 .5-.2-.9.6-.3a2.6 2.6 0 0 0 1.2-2c0-1.5-1.7-2.6-3.5-2.6h-.3v-1.3z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.3 3.2c4.1 0 7.4 2.7 7.4 6 0 3.4-3.3 6.1-7.4 6.1a9 9 0 0 1-1.9-.2l-2.9 1.6.7-2.5A5.9 5.9 0 0 1 1.9 9.2c0-3.3 3.3-6 7.4-6zm0 1.9c-3.1 0-5.5 1.9-5.5 4.1 0 1.5 1 2.8 2.5 3.5l.6.3-.4 1.4 1.6-.9.3.1a7.4 7.4 0 0 0 1 .1c3.1 0 5.5-1.9 5.5-4.1s-2.4-4.5-5.6-4.5zm8.6 4.6c3 0 5.4 2 5.4 4.4a4.3 4.3 0 0 1-1.9 3.5l.5 1.9-2.2-1.2a6.6 6.6 0 0 1-1.8.2c-3 0-5.4-2-5.4-4.4v-.4h1.9v.4c0 1.5 1.7 2.6 3.5 2.6a4.8 4.8 0 0 0 1.3-.2l.4-.1 1 .5-.2-.9.6-.3a2.6 2.6 0 0 0 1.2-2c0-1.5-1.7-2.6-3.5-2.6h-.3v-1.3z' fill='black'/></svg>");
+}
+
+/* 邮件 */
+.icon--mail {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 5.2h18v13.6H3zm2.9 2-.1.1L12 11.9l6.2-4.6-.1-.1zm-1 1.2v8.4h14.2V8.4l-6.5 4.8-.6.5-.6-.5z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 5.2h18v13.6H3zm2.9 2-.1.1L12 11.9l6.2-4.6-.1-.1zm-1 1.2v8.4h14.2V8.4l-6.5 4.8-.6.5-.6-.5z' fill='black'/></svg>");
+}
+
+/* 返回箭头（细描边） */
+.icon--arrow-left {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M11.1 3.4 12.5 4.8 6.6 10.7h15.1v2H6.6l5.9 5.9-1.4 1.4-7.1-7.1 .8-.8-.8-.8z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M11.1 3.4 12.5 4.8 6.6 10.7h15.1v2H6.6l5.9 5.9-1.4 1.4-7.1-7.1 .8-.8-.8-.8z' fill='black'/></svg>");
+}
+
+/* 右箭头 */
+.icon--arrow-right {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12.9 3.4 11.5 4.8l5.9 5.9H2.3v2h15.1l-5.9 5.9 1.4 1.4 7.1-7.1-.8-.8.8-.8z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12.9 3.4 11.5 4.8l5.9 5.9H2.3v2h15.1l-5.9 5.9 1.4 1.4 7.1-7.1-.8-.8.8-.8z' fill='black'/></svg>");
+}
+
+/* 右尖括号 */
+.icon--chevron {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M8.6 3.7 7.2 5.1 14.1 12l-6.9 6.9 1.4 1.4L17 12z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M8.6 3.7 7.2 5.1 14.1 12l-6.9 6.9 1.4 1.4L17 12z' fill='black'/></svg>");
+}
+
+/* 向下箭头 */
+.icon--chevron-down {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3.7 8.6 5.1 7.2 12 14.1l6.9-6.9 1.4 1.4L12 17z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3.7 8.6 5.1 7.2 12 14.1l6.9-6.9 1.4 1.4L12 17z' fill='black'/></svg>");
+}
+
+/* 向上箭头 */
+.icon--chevron-up {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M20.3 15.4 18.9 16.8 12 9.9 5.1 16.8 3.7 15.4 12 7z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M20.3 15.4 18.9 16.8 12 9.9 5.1 16.8 3.7 15.4 12 7z' fill='black'/></svg>");
+}
+
+/* 相机 */
+.icon--camera {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M8.6 3.4h6.8l1.5 2.4H21v14.4H3V5.8h4.1zm.9 2-1.5 2.4H5v10.4h14V7.8h-4l-1.5-2.4z' fill='black'/><circle cx='12' cy='13' r='4' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M8.6 3.4h6.8l1.5 2.4H21v14.4H3V5.8h4.1zm.9 2-1.5 2.4H5v10.4h14V7.8h-4l-1.5-2.4z' fill='black'/><circle cx='12' cy='13' r='4' fill='black'/></svg>");
+}
+
+/* 历史（时钟回溯） */
+.icon--history {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2a8.8 8.8 0 1 1-8.4 6.1H1.4l3.4-3.4 3.4 3.4H5.2A7 7 0 1 0 12 5.1z' fill='black'/><path d='M11 7.6h2v4.6l3.2 1.9-1 1.7-4.2-2.5z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3.2a8.8 8.8 0 1 1-8.4 6.1H1.4l3.4-3.4 3.4 3.4H5.2A7 7 0 1 0 12 5.1z' fill='black'/><path d='M11 7.6h2v4.6l3.2 1.9-1 1.7-4.2-2.5z' fill='black'/></svg>");
+}
+
+/* 勾选 */
+.icon--check {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.4 17.5 4 12.1l1.6-1.6 3.8 3.8 9.1-9.1L20.1 7z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M9.4 17.5 4 12.1l1.6-1.6 3.8 3.8 9.1-9.1L20.1 7z' fill='black'/></svg>");
+}
+
+/* 分享卡片 */
+.icon--card {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 4.4h18v15.2H3zm2 2v11.2h14V6.4zm1.6 2.2h6v4.4h-6zm7.6 0h3.2v2h-3.2zm0 3.2h3.2v2h-3.2zm-7.6 4h10.8v2H6.6z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 4.4h18v15.2H3zm2 2v11.2h14V6.4zm1.6 2.2h6v4.4h-6zm7.6 0h3.2v2h-3.2zm0 3.2h3.2v2h-3.2zm-7.6 4h10.8v2H6.6z' fill='black'/></svg>");
+}
+
+/* 下载 */
+.icon--download {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16z' fill='black'/><path d='M4 18h16v3H4z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16z' fill='black'/><path d='M4 18h16v3H4z' fill='black'/></svg>");
+}
+
+/* 加号 */
+.icon--plus {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z' fill='black'/></svg>");
+}
+
+/* 关闭 */
+.icon--close {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='m5.6 4.2 6.4 6.4 6.4-6.4 1.4 1.4-6.4 6.4 6.4 6.4-1.4 1.4-6.4-6.4-6.4 6.4-1.4-1.4 6.4-6.4-6.4-6.4z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='m5.6 4.2 6.4 6.4 6.4-6.4 1.4 1.4-6.4 6.4 6.4 6.4-1.4 1.4-6.4-6.4-6.4 6.4-1.4-1.4 6.4-6.4-6.4-6.4z' fill='black'/></svg>");
+}
+
+/* 灵感（魔棒） */
+.icon--wand {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M14.6 2.4 16 5l2.6 1.4L16 7.8 14.6 10.4 13.2 7.8 10.6 6.4 13.2 5zm5.2 8.2.9 1.7 1.7.9-1.7.9-.9 1.7-.9-1.7-1.7-.9 1.7-.9zM8.7 7.6l1.7 3.2 3.2 1.7-3.2 1.7-1.7 3.2-1.7-3.2-3.2-1.7 3.2-1.7zm6.5 6.1 2.4 1.9-8.5 6.1-2.9-2.8z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M14.6 2.4 16 5l2.6 1.4L16 7.8 14.6 10.4 13.2 7.8 10.6 6.4 13.2 5zm5.2 8.2.9 1.7 1.7.9-1.7.9-.9 1.7-.9-1.7-1.7-.9 1.7-.9zM8.7 7.6l1.7 3.2 3.2 1.7-3.2 1.7-1.7 3.2-1.7-3.2-3.2-1.7 3.2-1.7zm6.5 6.1 2.4 1.9-8.5 6.1-2.9-2.8z' fill='black'/></svg>");
+}
+
+/* 试穿（人形，实心，用于按钮） */
+.icon--tryon {
+  -webkit-mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='4.3' r='2.9' fill='black'/><path d='M8.9 8.5h6.2l1.7 4.4-1.5.6 1.8 8.1h-10.2l1.8-8.1-1.5-.6z' fill='black'/></svg>");
+  mask-image: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='4.3' r='2.9' fill='black'/><path d='M8.9 8.5h6.2l1.7 4.4-1.5.6 1.8 8.1h-10.2l1.8-8.1-1.5-.6z' fill='black'/></svg>");
+}

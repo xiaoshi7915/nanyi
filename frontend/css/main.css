@@ -957,7 +957,7 @@ body {
     color: var(--c-rose);
 }
 
-/* 点赞功能 - 点击后显示黄色 */
+/* 点赞功能 - 卡片角标 */
 .like-display {
     position: static;
     flex-shrink: 0;
@@ -965,46 +965,65 @@ body {
     align-items: center;
     gap: 0.3rem;
     background: rgba(252, 250, 243, 0.95);
-    padding: 0.2rem 0.5rem;
+    padding: 0.22rem 0.55rem;
     border-radius: var(--r-pill);
     font-size: 0.6rem;
     font-weight: 500;
-    color: #666;
+    color: #6B6350;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(194, 161, 90, 0.35);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .like-display i {
     font-size: 0.6rem;
-    color: #999;  /* 未点赞时改为灰色 */
-    transition: color 0.3s ease;
+    color: #8A8270;
+    transition: color 0.2s ease, transform 0.15s ease;
 }
 
-/* 点赞后的红色状态 */
+/* 点赞后的状态 */
 .like-display.liked {
-    background: rgba(220, 53, 69, 0.95);  /* 点赞后改为红色背景 */
-    border-color: rgba(220, 53, 69, 0.8);
+    background: #9E2B25;
+    border-color: #9E2B25;
+    color: #FCFAF3;
+    box-shadow: 0 2px 6px rgba(158, 43, 37, 0.28);
 }
 
 .like-display.liked i {
-    color: #fff;
+    color: #FCFAF3;
+    transform: scale(1.1);
 }
 
 .like-display.liked {
-    color: #fff;
+    color: #FCFAF3;
 }
 
-/* 点赞悬停效果 */
+/* 点赞悬停 / 按下 */
 .like-display:hover {
     transform: translateY(-1px);
+    border-color: rgba(158, 43, 37, 0.45);
+    color: #9E2B25;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 
 .like-display:hover i {
-    color: #dc3545;  /* 悬停时改为红色 */
+    color: #9E2B25;
+}
+
+.like-display:active {
+    transform: translateY(0) scale(0.96);
+}
+
+.like-display.liked:hover {
+    background: #7F221D;
+    border-color: #7F221D;
+    color: #FCFAF3;
+}
+
+.like-display.liked:hover i {
+    color: #FCFAF3;
 }
 
 /* 首页布料卡片底部：试穿 + 分享强制同一行并排 */
@@ -1591,9 +1610,11 @@ body {
     max-width: 90vw;
     max-height: 90vh;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     transform: scale(0.9);
     transition: transform 0.3s ease;
     box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    position: relative;
 }
 
 .modal-overlay.active .modal-content {
@@ -1606,6 +1627,30 @@ body {
     align-items: center;
     padding: 1.5rem;
     border-bottom: 1px solid #e5e7eb;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--c-moon);
+}
+
+.modal-close-fab {
+    display: none;
+    position: fixed;
+    top: calc(10px + env(safe-area-inset-top, 0px));
+    left: auto;
+    right: 12px;
+    z-index: 1100;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(28, 52, 59, 0.82);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
 }
 
 .modal-title {
@@ -1744,11 +1789,11 @@ body {
     border-left: 3px solid var(--c-gold);
 }
 
-/* 详情缩略图：高密度横排，约一行最多 10 张 */
+/* 详情缩略图：适中网格，桌面约一行 4–6 张，自动换行 */
 .image-gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-    gap: 0.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.65rem;
 }
 
 .gallery-item {
@@ -1769,6 +1814,49 @@ body {
     width: 100%;
     height: 100%;
     object-fit: contain; /* 改为contain以保持原始比例 */
+}
+
+.gallery-expand-btn {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+    background: #f9fafb;
+    color: #4b5563;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.gallery-expand-btn:hover {
+    background: #f3f4f6;
+    border-color: var(--c-gold, #c9a227);
+    color: #111827;
+}
+
+/* 详情视频区：图片分类之后纵向一列 */
+.video-section .video-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.video-card {
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #111827;
+}
+
+.detail-video {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    height: auto;
+    background: #000;
 }
 
 /* 图片操作按钮 */
@@ -1842,11 +1930,57 @@ body {
     z-index: 1001;
 }
 
+.preview-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    background: rgba(28, 52, 59, 0.45);
+    color: #FCFAF3;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.preview-nav-btn:hover {
+    background: rgba(28, 52, 59, 0.72);
+    border-color: rgba(194, 161, 90, 0.65);
+}
+
+.preview-nav-prev { left: -56px; }
+.preview-nav-next { right: -56px; }
+
+.preview-counter {
+    margin-top: 0.75rem;
+    color: rgba(252, 250, 243, 0.85);
+    font-size: 0.85rem;
+    letter-spacing: 0.04em;
+}
+
+@media (max-width: 768px) {
+    .preview-nav-prev { left: 8px; }
+    .preview-nav-next { right: 8px; }
+    .preview-nav-btn {
+        width: 38px;
+        height: 38px;
+        background: rgba(28, 52, 59, 0.55);
+    }
+    .preview-close-btn { top: -40px; }
+}
+
 .preview-image {
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
     border-radius: 8px;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 .preview-actions {
@@ -2206,7 +2340,13 @@ body {
     }
 
     .modal-header {
-        padding: 1rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .modal-close-fab {
+        display: inline-flex;
+        left: auto !important;
+        right: 12px !important;
     }
 
     .modal-body {
@@ -2226,8 +2366,8 @@ body {
     }
 
     .image-gallery {
-        grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-        gap: 0.4rem;
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        gap: 0.5rem;
     }
 }
 
@@ -2764,33 +2904,42 @@ body {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.5rem 1rem;
-    background: rgba(153, 153, 153, 0.1);  /* 未点赞时改为灰色背景 */
-    border: 2px solid rgba(153, 153, 153, 0.3);
-    border-radius: 20px;
-    color: #999;  /* 未点赞时改为灰色 */
+    padding: 0.45rem 0.95rem;
+    background: rgba(252, 250, 243, 0.92);
+    border: 1.5px solid rgba(194, 161, 90, 0.4);
+    border-radius: 999px;
+    color: #6B6350;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-size: 1.1rem;  /* 调整点赞按钮文字大小，但小于标题 */
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    font-size: 1.05rem;
     outline: none;
+    box-shadow: 0 1px 2px rgba(28, 52, 59, 0.06);
 }
 
 .detail-like-btn:hover {
-    background: #dc3545;  /* 悬停时改为红色 */
-    border-color: #dc3545;
-    color: white;
+    background: rgba(158, 43, 37, 0.08);
+    border-color: rgba(158, 43, 37, 0.45);
+    color: #9E2B25;
     transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(158, 43, 37, 0.12);
+}
+
+.detail-like-btn:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow: none;
 }
 
 .detail-like-btn.liked {
-    background: #dc3545;  /* 点赞后改为红色 */
-    border-color: #dc3545;
-    color: white;
+    background: #9E2B25;
+    border-color: #9E2B25;
+    color: #FCFAF3;
+    box-shadow: 0 2px 8px rgba(158, 43, 37, 0.28);
 }
 
 .detail-like-btn.liked:hover {
-    background: #c82333;  /* 点赞后悬停时使用深红色 */
-    border-color: #c82333;
+    background: #7F221D;
+    border-color: #7F221D;
+    color: #FCFAF3;
 }
 
 .detail-like-btn.loading {
@@ -2800,13 +2949,21 @@ body {
 }
 
 .detail-like-btn i {
-    font-size: 0.8rem;  /* 保持图标大小不变 */
+    font-size: 0.85rem;
     transition: transform 0.2s ease;
 }
 
+.detail-like-btn:hover i {
+    transform: scale(1.08);
+}
+
 .detail-like-btn.liked i {
-    color: white;
-    transform: scale(1.1);
+    color: #FCFAF3;
+    transform: scale(1.12);
+}
+
+.detail-like-btn.liked:active i {
+    transform: scale(1.02);
 }
 
 .like-count {
@@ -3234,6 +3391,22 @@ body {
 }
 .related-brand-card .related-meta {
     padding: 0 10px 10px; font-size: 0.7rem; color: var(--c-gray-500);
+}
+/* 桌面端缩略图缩小：更多列 + 限制网格宽度 */
+@media (min-width: 769px) {
+    .related-brands-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        max-width: 460px;
+    }
+    .related-brand-card .related-name {
+        padding: 6px 8px;
+        font-size: 0.74rem;
+    }
+    .related-brand-card .related-meta {
+        padding: 0 8px 8px;
+        font-size: 0.65rem;
+    }
 }
 @media (max-width: 768px) {
     .related-brands-grid { gap: 8px; }

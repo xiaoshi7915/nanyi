@@ -1,0 +1,54 @@
+@import "../styles/icons.wxss";
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  background: #FCF8F0;
+  border-top: 1rpx solid #E7DFCF;
+  box-shadow: 0 -2rpx 16rpx rgba(120, 100, 70, 0.06);
+}
+
+.tabbar__item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 110rpx;
+  padding-top: 12rpx;
+}
+
+.tabbar__icon {
+  width: 40rpx;
+  height: 40rpx;
+  margin-bottom: 6rpx;
+  background-color: #9A9184;
+  transition: background-color 0.15s;
+}
+
+.tabbar__item--emphasize .tabbar__icon {
+  width: 52rpx;
+  height: 52rpx;
+  margin-top: -10rpx;
+  margin-bottom: 2rpx;
+}
+
+.tabbar__icon.is-active {
+  background-color: #9C2824;
+}
+
+.tabbar__text {
+  font-size: 21rpx;
+  color: #9A9184;
+  letter-spacing: 1rpx;
+}
+
+.tabbar__text.is-active {
+  color: #9C2824;
+  font-weight: 500;
+}

@@ -1,0 +1,106 @@
+<view class="page">
+  <!-- 顶部品牌栏 -->
+  <view class="header" style="padding-top:{{navTotalHeight}}px">
+    <view class="header__row">
+      <view class="header__brand">
+        <view class="header__logo">棠</view>
+        <view class="header__names">
+          <text class="header__cn">{{brand.name}}</text>
+          <text class="header__en">{{brand.enName}} · {{brand.slogan}}</text>
+        </view>
+      </view>
+      <view class="header__actions">
+        <view class="header__action" bindtap="onTapService">
+          <view class="header__action-icon icon icon--service icon-c-green" />
+        </view>
+        <view class="header__action" bindtap="onTapMine">
+          <view class="header__action-icon icon icon--user-circle icon-c-green" />
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="page-body">
+    <!-- 主视觉 Banner -->
+    <view class="banner" bindtap="onKnowSeries">
+      <view class="banner__watermark">秋棠</view>
+      <view class="banner__deco" />
+      <view class="banner__copy">
+        <text class="banner__eyebrow">画韵春秋 · 2026 新章</text>
+        <text class="banner__title">传承经典　美美与共</text>
+        <text class="banner__sub">古典美学设计，望君着美于裳</text>
+        <view class="banner__cta">
+          <view class="banner__btn banner__btn--solid" catchtap="onViewAll">浏览全部</view>
+          <view class="banner__btn banner__btn--outline" catchtap="onKnowSeries">了解系列</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 搜索 -->
+    <view class="search">
+      <view class="search__icon icon icon--search icon-c-ink3" />
+      <input
+        class="search__input"
+        value="{{keyword}}"
+        placeholder="搜索款式 / 材质 / 系列"
+        placeholder-class="search__ph"
+        confirm-type="search"
+        bindinput="onKeywordInput"
+        bindconfirm="onSearch"
+      />
+      <view class="search__clear icon icon--close icon-c-ink3" wx:if="{{keyword}}" catchtap="onClearKeyword" />
+      <view class="search__btn" catchtap="onSearch">搜索</view>
+    </view>
+
+    <!-- 年份筛选 -->
+    <scroll-view class="years" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view
+        class="chip {{activeYear === item ? 'chip--active' : ''}}"
+        wx:for="{{years}}"
+        wx:key="*this"
+        data-year="{{item}}"
+        bindtap="onYearChange"
+      >{{item}}</view>
+    </scroll-view>
+
+    <!-- 布料网格 -->
+    <view class="grid" wx:if="{{!loading && cards.length}}">
+      <view class="grid__item" wx:for="{{cards}}" wx:key="index">
+        <fabric-card
+          brand="{{item}}"
+          bind:tapcard="onTapCard"
+          bind:tryon="onCardTryOn"
+          bind:share="onCardShare"
+          bind:comment="onCardComment"
+        />
+      </view>
+    </view>
+
+    <!-- 骨架屏 -->
+    <view class="grid" wx:if="{{loading}}">
+      <view class="grid__item" wx:for="{{[1,2]}}" wx:key="*this">
+        <view class="ph-card">
+          <view class="ph-card__cover skeleton" />
+          <view class="ph-card__line skeleton" style="width:50%" />
+          <view class="ph-card__line skeleton" style="width:80%" />
+        </view>
+      </view>
+    </view>
+
+    <!-- 空态 -->
+    <view class="empty" wx:if="{{!loading && !cards.length}}">
+      <text wx:if="{{error}}">{{error}}</text>
+      <text wx:else>没有找到相关款式</text>
+    </view>
+
+    <!-- 查看全部 -->
+    <view class="view-all" bindtap="onViewAll" wx:if="{{!loading}}">
+      <text>查看全部 {{totalBrands}} 款布料</text>
+      <view class="view-all__arrow icon icon--chevron" />
+    </view>
+  </view>
+
+  <view class="footer">
+    <text class="footer__line">{{brand.copyright}}</text>
+  </view>
+</view>

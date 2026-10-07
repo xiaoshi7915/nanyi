@@ -111,7 +111,11 @@ class NanyiAPI {
                 message: response.message,
                 brand_info: inner.brand_info,
                 images: inner.images,
-                imageCount: inner.imageCount
+                videos: inner.videos || [],
+                imageCount: inner.imageCount,
+                videoCount: inner.videoCount != null
+                    ? inner.videoCount
+                    : (inner.videos || []).length
             };
         }
         return response;
@@ -129,7 +133,11 @@ class NanyiAPI {
                 success: true,
                 message: response.message,
                 images: inner.images,
-                imageCount: inner.imageCount
+                videos: inner.videos || [],
+                imageCount: inner.imageCount,
+                videoCount: inner.videoCount != null
+                    ? inner.videoCount
+                    : (inner.videos || []).length
             };
         }
         return response;

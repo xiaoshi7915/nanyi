@@ -1,0 +1,442 @@
+@import "../../styles/icons.wxss";
+
+.page {
+  min-height: 100vh;
+  background: #F4F0E4;
+  padding-bottom: 220rpx;
+}
+
+/* ---------------- 顶部大图 ---------------- */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 640rpx;
+  background: #E6E1D4;
+  overflow: hidden;
+}
+
+.hero__swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.hero__img {
+  width: 100%;
+  height: 100%;
+}
+
+.hero__empty {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+.hero__nav {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 24rpx;
+}
+
+.hero__circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 76rpx;
+  height: 76rpx;
+  border-radius: 50%;
+  background: rgba(252, 248, 240, 0.88);
+  box-shadow: 0 2rpx 10rpx rgba(40, 32, 20, 0.14);
+}
+
+/* button 作为分享按钮时去掉默认行内样式 */
+.hero__circle--share {
+  margin: 0;
+  padding: 0;
+  line-height: normal;
+}
+
+.hero__circle--share::after {
+  border: none;
+}
+
+.hero__circle-icon {
+  width: 38rpx;
+  height: 38rpx;
+}
+
+.hero__dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero__dot {
+  width: 12rpx;
+  height: 12rpx;
+  margin: 0 8rpx;
+  border-radius: 6rpx;
+  background: rgba(252, 248, 240, 0.55);
+}
+
+.hero__dot.is-active {
+  width: 30rpx;
+  background: #C9AE74;
+}
+
+/* ---------------- 内容 ---------------- */
+.body {
+  padding: 34rpx 30rpx 0;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  font-size: 58rpx;
+  font-weight: 600;
+  color: #191512;
+  letter-spacing: 4rpx;
+  font-family: "Songti SC", "STSong", serif;
+}
+
+.like {
+  display: flex;
+  align-items: center;
+  padding-left: 20rpx;
+}
+
+.like__icon {
+  width: 42rpx;
+  height: 42rpx;
+  background-color: #9C2824;
+}
+
+.like__num {
+  margin-left: 8rpx;
+  font-size: 30rpx;
+  color: #9C2824;
+}
+
+.subtitle {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 23rpx;
+  color: #A98B4E;
+  letter-spacing: 4rpx;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 24rpx;
+}
+
+.tag {
+  height: 54rpx;
+  padding: 0 22rpx;
+  margin: 0 14rpx 14rpx 0;
+  display: flex;
+  align-items: center;
+  border-radius: 10rpx;
+  background: #EAE5D8;
+  font-size: 23rpx;
+  color: #6B6257;
+  letter-spacing: 1rpx;
+}
+
+/* 参数卡 */
+.params {
+  display: flex;
+  align-items: center;
+  margin-top: 16rpx;
+  padding: 30rpx 0;
+  border-radius: 16rpx;
+  background: #FFFDF7;
+  box-shadow: 0 2rpx 12rpx rgba(120, 100, 70, 0.05);
+}
+
+.param {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.param::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 6rpx;
+  bottom: 6rpx;
+  width: 1rpx;
+  background: #EDE6D7;
+}
+
+.param:last-child::after {
+  display: none;
+}
+
+.param__label {
+  font-size: 22rpx;
+  color: #9A9184;
+  letter-spacing: 1rpx;
+}
+
+.param__value {
+  margin-top: 12rpx;
+  font-size: 28rpx;
+  color: #2A2521;
+  letter-spacing: 1rpx;
+  text-align: center;
+  padding: 0 8rpx;
+}
+
+/* 诗句 */
+.verse {
+  padding: 40rpx 30rpx;
+  border-radius: 16rpx;
+  background: #FFFDF7;
+  box-shadow: 0 2rpx 12rpx rgba(120, 100, 70, 0.05);
+}
+
+.verse__line {
+  display: block;
+  text-align: center;
+  font-size: 29rpx;
+  color: #4A4239;
+  letter-spacing: 3rpx;
+  line-height: 2;
+  font-family: "Songti SC", "STSong", serif;
+}
+
+.brief {
+  display: block;
+  margin-top: 24rpx;
+  font-size: 24rpx;
+  color: #6B6257;
+  line-height: 1.85;
+  letter-spacing: 1rpx;
+}
+
+/* 猜你也喜欢 */
+.related {
+  display: flex;
+  justify-content: space-between;
+}
+
+.related__item {
+  width: 32%;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #EDE7DA;
+}
+
+.related__img {
+  width: 100%;
+  height: 150rpx;
+}
+
+/* ---------------- 底部操作 ---------------- */
+.bottom {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  padding: 18rpx 30rpx;
+  background: #FCF8F0;
+  border-top: 1rpx solid #E7DFCF;
+  box-shadow: 0 -2rpx 16rpx rgba(120, 100, 70, 0.06);
+}
+
+.bottom__ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 92rpx;
+  border-radius: 46rpx;
+  border: 2rpx solid #D9CFBB;
+  background: #FFFDF7;
+  font-size: 28rpx;
+  color: #2A2521;
+  letter-spacing: 1rpx;
+}
+
+.bottom__primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1.35;
+  height: 92rpx;
+  margin-left: 20rpx;
+  border-radius: 46rpx;
+  background: #9C2824;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #FDF6EC;
+  letter-spacing: 2rpx;
+}
+
+.bottom__icon {
+  width: 34rpx;
+  height: 34rpx;
+  margin-right: 12rpx;
+}
+
+.bottom__ghost .bottom__icon {
+  background-color: #2A2521;
+}
+
+.bottom__primary .bottom__icon {
+  background-color: #FDF6EC;
+}
+
+.bottom__ghost:active,
+.bottom__primary:active {
+  opacity: 0.85;
+}
+
+/* 离屏画布 */
+.share-canvas {
+  position: fixed;
+  left: -2000rpx;
+  top: 0;
+  width: 600px;
+  height: 900px;
+}
+
+
+/* ---------------- 评价区 ---------------- */
+.section-head__meta {
+  font-size: 22rpx;
+  color: #9A9184;
+}
+
+.review-form {
+  margin-bottom: 20rpx;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background: #FFFDF7;
+  box-shadow: 0 2rpx 12rpx rgba(120, 100, 70, 0.05);
+}
+
+.review-stars {
+  display: flex;
+  align-items: center;
+}
+
+.review-star {
+  width: 40rpx;
+  height: 40rpx;
+  margin-right: 12rpx;
+  background-color: #9C2824;
+}
+
+.review-stars__hint {
+  margin-left: 8rpx;
+  font-size: 22rpx;
+  color: #9A9184;
+}
+
+.review-input {
+  width: 100%;
+  min-height: 140rpx;
+  margin-top: 20rpx;
+  padding: 18rpx 20rpx;
+  box-sizing: border-box;
+  border-radius: 12rpx;
+  background: #F4F0E4;
+  font-size: 26rpx;
+  color: #2A2521;
+  line-height: 1.6;
+}
+
+.review-input__ph {
+  color: #B4AA9A;
+}
+
+.review-submit {
+  margin-top: 20rpx;
+  height: 72rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 36rpx;
+  background: #9C2824;
+  color: #FDF6EC;
+  font-size: 26rpx;
+  letter-spacing: 2rpx;
+}
+
+.review-submit.is-busy {
+  opacity: 0.6;
+}
+
+.review-list {
+  margin-bottom: 12rpx;
+}
+
+.review-item {
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #EDE6D7;
+}
+
+.review-item__head {
+  display: flex;
+  align-items: center;
+}
+
+.review-item__name {
+  font-size: 26rpx;
+  color: #2A2521;
+  font-weight: 500;
+}
+
+.review-item__rating {
+  margin-left: 16rpx;
+  font-size: 22rpx;
+  color: #9C2824;
+}
+
+.review-item__time {
+  margin-left: auto;
+  font-size: 22rpx;
+  color: #9A9184;
+}
+
+.review-item__content {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 25rpx;
+  color: #6B6257;
+  line-height: 1.7;
+}
+
+.review-more,
+.review-empty {
+  padding: 20rpx 0 8rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #9A9184;
+}

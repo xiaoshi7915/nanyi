@@ -1,0 +1,91 @@
+@import "../../styles/icons.wxss";
+
+.page {
+  min-height: 100vh;
+  background: #F4F0E4;
+  padding-bottom: 40rpx;
+}
+
+/* 导航栏 */
+.nav {
+  background: #F4F0E4;
+}
+
+.nav__bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav__back {
+  position: absolute;
+  left: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72rpx;
+  height: 72rpx;
+}
+
+.nav__back-icon {
+  width: 40rpx;
+  height: 40rpx;
+}
+
+.nav__title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #191512;
+  letter-spacing: 3rpx;
+}
+
+.nav__count {
+  position: absolute;
+  font-size: 24rpx;
+  color: #9A9184;
+}
+
+/* 筛选摘要 */
+.filter-bar {
+  margin: 6rpx 30rpx 20rpx;
+  padding: 18rpx 24rpx;
+  border-radius: 14rpx;
+  background: #FFFDF7;
+}
+
+.filter-bar__text {
+  display: block;
+  font-size: 24rpx;
+  color: #6B6257;
+  letter-spacing: 1rpx;
+}
+
+/* 网格 */
+.grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 0 30rpx;
+}
+
+.grid__item {
+  width: 48.6%;
+  margin-bottom: 22rpx;
+}
+
+.list-end {
+  padding: 40rpx 0 20rpx;
+  text-align: center;
+  font-size: 23rpx;
+  color: #B4AA9A;
+  letter-spacing: 2rpx;
+}
+
+.footer {
+  padding: 30rpx 0 40rpx;
+  text-align: center;
+  font-size: 22rpx;
+  color: #9A9184;
+  letter-spacing: 1rpx;
+}

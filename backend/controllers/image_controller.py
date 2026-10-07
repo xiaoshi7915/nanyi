@@ -46,8 +46,11 @@ class ImageController:
         )
 
     def _pick_cover_image(self, images: List[Dict]) -> Optional[Dict]:
-        """为列表接口选取单张封面图元数据"""
-        safe = [img for img in (images or []) if img and not self._is_generated_image_source(img)]
+        """为列表接口选取单张封面图元数据（排除视频）"""
+        safe = [
+            img for img in (images or [])
+            if img and not self._is_generated_image_source(img) and not ImageService.is_video_media(img)
+        ]
         if not safe:
             return None
         for image_type in self._COVER_TYPE_PRIORITY:
@@ -57,13 +60,18 @@ class ImageController:
         return safe[0]
 
     def _pick_preview_images(self, images: List[Dict]) -> List[Dict]:
-        """列表接口：每个分类最多 1 张预览图，供详情弹窗乐观展示"""
-        safe = [img for img in (images or []) if img and not self._is_generated_image_source(img)]
+        """列表接口：每个分类最多 1 张预览图，供详情弹窗乐观展示（排除视频）"""
+        safe = [
+            img for img in (images or [])
+            if img and not self._is_generated_image_source(img) and not ImageService.is_video_media(img)
+        ]
         if not safe:
             return []
         by_type: Dict[str, Dict] = {}
         for img in safe:
             image_type = img.get('image_type') or '其他'
+            if image_type == '视频':
+                continue
             if image_type not in by_type:
                 by_type[image_type] = img
         previews: List[Dict] = []
@@ -78,12 +86,14 @@ class ImageController:
     def _compact_brand_for_list(self, brand_data: Dict) -> Dict:
         """列表响应只保留封面图，避免每个品牌携带完整 images 数组"""
         images = brand_data.get('images') or []
-        cover = self._pick_cover_image(images)
-        previews = self._pick_preview_images(images)
+        only_images, videos = ImageService.split_images_and_videos(images)
+        cover = self._pick_cover_image(only_images)
+        previews = self._pick_preview_images(only_images)
         compact = {k: v for k, v in brand_data.items() if k != 'images'}
         compact['images'] = [cover] if cover else []
         compact['preview_images'] = previews
-        compact['imageCount'] = brand_data.get('imageCount', len(images))
+        compact['imageCount'] = len(only_images)
+        compact['videoCount'] = len(videos)
         return compact
     
     def get_images_with_pagination(
@@ -144,10 +154,12 @@ class ImageController:
         
         # 为每个基础品牌创建合并后的品牌信息
         for base_brand_name, brand_images in base_brands.items():
-            # 收集所有颜色
+            # 收集所有颜色（优先用解析出的 color 字段；兼容旧缓存里 brand_name 自带括号）
             brand_colors = set()
             for img in brand_images:
-                if '(' in img['brand_name'] and ')' in img['brand_name']:
+                if img.get('color'):
+                    brand_colors.add(img['color'])
+                elif '(' in (img.get('brand_name') or '') and ')' in img['brand_name']:
                     color = img['brand_name'].split('(')[1].split(')')[0]
                     brand_colors.add(color)
             
@@ -212,7 +224,14 @@ class ImageController:
             
             brand_list.append({
                 **brand_data,
-                'imageCount': len(brand_data['images']),
+                'imageCount': len([
+                    img for img in brand_data['images']
+                    if not ImageService.is_video_media(img)
+                ]),
+                'videoCount': len([
+                    img for img in brand_data['images']
+                    if ImageService.is_video_media(img)
+                ]),
                 'like_count': like_count  # 添加点赞数
             })
         
